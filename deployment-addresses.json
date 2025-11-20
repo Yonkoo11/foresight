@@ -1,0 +1,26 @@
+{
+  "network": "Base Sepolia",
+  "chainId": 84532,
+  "timestamp": "2025-11-16T12:41:00Z",
+  "deployer": "0x414A1F683feB519C4F24EbAbF782FF71A75C7BC0",
+  "contracts": {
+    "treasury": "0x7A395d0B4E1542335DB3478171a08Cf34E97180f",
+    "reputationEngine": "0x24C8171af3e2EbA7fCF53BDB5B958Ed2AB36fb0c",
+    "foresightNFT": "0x8DCEb1aC97d3Ab305b6d7B2D44305d3F52c26bfa",
+    "ctDraft": "0x378105C2081Cc2235e6637DC9757a63F20263aa9",
+    "timecasterArena": "0x5b8e61e873da5EC1616b3931F4Bc7Fc32D1B9F62",
+    "dailyGauntlet": "0x16ABD5fC02Ba7E64527320b2C042BaaCBc2BB854"
+  },
+  "configuration": {
+    "keeper": "0x414A1F683feB519C4F24EbAbF782FF71A75C7BC0",
+    "oracle": "0x414A1F683feB519C4F24EbAbF782FF71A75C7BC0"
+  },
+  "basescan": {
+    "treasury": "https://sepolia.basescan.org/address/0x7A395d0B4E1542335DB3478171a08Cf34E97180f",
+    "reputationEngine": "https://sepolia.basescan.org/address/0x24C8171af3e2EbA7fCF53BDB5B958Ed2AB36fb0c",
+    "foresightNFT": "https://sepolia.basescan.org/address/0x8DCEb1aC97d3Ab305b6d7B2D44305d3F52c26bfa",
+    "ctDraft": "https://sepolia.basescan.org/address/0x378105C2081Cc2235e6637DC9757a63F20263aa9",
+    "timecasterArena": "https://sepolia.basescan.org/address/0x5b8e61e873da5EC1616b3931F4Bc7Fc32D1B9F62",
+    "dailyGauntlet": "https://sepolia.basescan.org/address/0x16ABD5fC02Ba7E64527320b2C042BaaCBc2BB854"
+  }
+}

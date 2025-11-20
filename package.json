@@ -1,0 +1,37 @@
+{
+  "name": "ct-league",
+  "version": "0.1.0",
+  "description": "CT league - Revolutionary prediction & fantasy gaming ecosystem",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\"",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "build": "pnpm --filter frontend build && pnpm --filter backend build",
+    "build:frontend": "pnpm --filter frontend build",
+    "build:backend": "pnpm --filter backend build",
+    "contracts:build": "cd contracts && forge build",
+    "contracts:test": "cd contracts && forge test",
+    "contracts:test:verbose": "cd contracts && forge test -vvv",
+    "contracts:deploy:sepolia": "cd contracts && forge script script/Deploy.s.sol --rpc-url base-sepolia --broadcast --verify",
+    "contracts:deploy:local": "cd contracts && forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast",
+    "db:migrate": "pnpm --filter backend db:migrate",
+    "db:seed": "pnpm --filter backend db:seed",
+    "db:reset": "pnpm --filter backend db:reset",
+    "test": "pnpm --filter backend test && pnpm contracts:test",
+    "lint": "pnpm --filter frontend lint && pnpm --filter backend lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "clean": "rm -rf node_modules frontend/node_modules backend/node_modules contracts/out contracts/cache"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.1"
+  },
+  "keywords": ["base", "farcaster", "fantasy", "predictions", "web3", "crypto-twitter"],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

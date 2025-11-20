@@ -1,0 +1,511 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "calculateMasteryScore",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ctDraft",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "dailyGauntlet",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getReputation",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ReputationEngine.UserReputation",
+        "components": [
+          {
+            "name": "draftRank",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "draftScore",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "ctIQ",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "whispererStreak",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "arenaWins",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "arenaLosses",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "totalStaked",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "totalWinnings",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "gauntletDays",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "totalCorrect",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "totalPredictions",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "ctMasteryScore",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lastUpdated",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "keeper",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "reputations",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "draftRank",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "draftScore",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ctIQ",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "whispererStreak",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "arenaWins",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "arenaLosses",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalStaked",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalWinnings",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "gauntletDays",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalCorrect",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalPredictions",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ctMasteryScore",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lastUpdated",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setContracts",
+    "inputs": [
+      {
+        "name": "_arena",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_gauntlet",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_draft",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setKeeper",
+    "inputs": [
+      {
+        "name": "_keeper",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setTotalPlayers",
+    "inputs": [
+      {
+        "name": "_totalPlayers",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "timecasterArena",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalPlayers",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateDuelStats",
+    "inputs": [
+      {
+        "name": "winner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "loser",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "stake",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateGauntletStats",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "correctCount",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateOffChainStats",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "draftRank",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "draftScore",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ctIQ",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "whispererStreak",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ContractsSet",
+    "inputs": [
+      {
+        "name": "arena",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "gauntlet",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "draft",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "KeeperUpdated",
+    "inputs": [
+      {
+        "name": "newKeeper",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ReputationUpdated",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newScore",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyArena",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyGauntlet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyKeeper",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyOwner",
+    "inputs": []
+  }
+]

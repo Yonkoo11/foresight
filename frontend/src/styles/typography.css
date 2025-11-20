@@ -1,0 +1,222 @@
+/* Typography System for Timecaster */
+
+/* Type Scale - Based on modular scale 1.25 (Major Third) */
+:root {
+  /* Font sizes */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+
+  /* Line heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* Letter spacing */
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+
+  /* Font weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+}
+
+/* Heading Styles */
+.heading-1 {
+  font-size: var(--text-4xl);
+  font-weight: var(--font-extrabold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  background: linear-gradient(to right, #06b6d4, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.heading-2 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: white;
+}
+
+.heading-3 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  color: white;
+}
+
+.heading-4 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-normal);
+  color: white;
+}
+
+/* Body Text Styles */
+.body-large {
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: #d1d5db; /* gray-300 */
+}
+
+.body-base {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: #d1d5db; /* gray-300 */
+}
+
+.body-small {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: #9ca3af; /* gray-400 */
+}
+
+.body-tiny {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: #6b7280; /* gray-500 */
+}
+
+/* Specialty Text Styles */
+.stat-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(to right, #06b6d4, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: #9ca3af; /* gray-400 */
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Interactive Text */
+.link {
+  color: #06b6d4; /* cyan-500 */
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.link:hover {
+  text-decoration-color: #06b6d4;
+}
+
+/* Status Text Colors */
+.text-success {
+  color: #10b981; /* green-500 */
+  font-weight: var(--font-medium);
+}
+
+.text-warning {
+  color: #f59e0b; /* amber-500 */
+  font-weight: var(--font-medium);
+}
+
+.text-error {
+  color: #ef4444; /* red-500 */
+  font-weight: var(--font-medium);
+}
+
+.text-info {
+  color: #06b6d4; /* cyan-500 */
+  font-weight: var(--font-medium);
+}
+
+/* Card Headings */
+.card-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.card-subtitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Section Headings */
+.section-heading {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  color: white;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-subtitle {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: #9ca3af; /* gray-400 */
+  margin-bottom: 2rem;
+  max-width: 65ch;
+}
+
+/* Utility Classes */
+.text-gradient-cyan-blue {
+  background: linear-gradient(to right, #06b6d4, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-green-emerald {
+  background: linear-gradient(to right, #10b981, #059669);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-orange-red {
+  background: linear-gradient(to right, #f97316, #ef4444);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-purple-pink {
+  background: linear-gradient(to right, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+  :root {
+    --text-3xl: 1.5rem;    /* 24px on mobile */
+    --text-4xl: 1.875rem;  /* 30px on mobile */
+    --text-5xl: 2.25rem;   /* 36px on mobile */
+  }
+}

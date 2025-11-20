@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnpm-debug.log
+
+# Environment
+.env
+.env.local
+
+# Build outputs
+dist/
+build/
+out/
+
+# Cache
+cache/
+.cache/
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/lib/
+contracts/src-old/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Backend specific
+backend/dist/
+backend/.env
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+
+# Archived documentation
+archive_docs/
