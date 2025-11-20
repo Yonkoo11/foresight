@@ -78,7 +78,7 @@ router.get('/team/me', authenticateToken, async (req: Request, res: Response) =>
         ...team,
         picks,
         total_budget_used: totalBudget,
-        max_budget: 25.0,
+        max_budget: 100,
       },
       contest,
     });
@@ -133,9 +133,9 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
       return res.status(400).json({ error: 'One or more influencers not found or inactive' });
     }
 
-    // Validate budget: max 25M
+    // Validate budget: max 100 points
     const totalPrice = influencers.reduce((sum, inf) => sum + parseFloat(inf.price || 0), 0);
-    const MAX_BUDGET = 25.0;
+    const MAX_BUDGET = 100;
 
     if (totalPrice > MAX_BUDGET) {
       return res.status(400).json({
@@ -201,7 +201,7 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
         ...team,
         picks,
         total_budget_used: totalBudget,
-        max_budget: 25.0,
+        max_budget: 100,
       },
     });
   } catch (error: any) {
@@ -255,9 +255,9 @@ router.put('/team/update', authenticateToken, async (req: Request, res: Response
       return res.status(400).json({ error: 'One or more influencers not found or inactive' });
     }
 
-    // Validate budget: max 25M
+    // Validate budget: max 100 points
     const totalPrice = influencers.reduce((sum, inf) => sum + parseFloat(inf.price || 0), 0);
-    const MAX_BUDGET = 25.0;
+    const MAX_BUDGET = 100;
 
     if (totalPrice > MAX_BUDGET) {
       return res.status(400).json({
@@ -306,7 +306,7 @@ router.put('/team/update', authenticateToken, async (req: Request, res: Response
         ...team,
         picks,
         total_budget_used: totalBudget,
-        max_budget: 25.0,
+        max_budget: 100,
       },
     });
   } catch (error: any) {
@@ -392,9 +392,9 @@ router.get('/influencers', async (req: Request, res: Response) => {
     res.json({
       influencers,
       budget_info: {
-        max_budget: 25.0,
+        max_budget: 100,
         team_size: 5,
-        currency: 'M (millions)',
+        currency: 'points',
       },
     });
   } catch (error: any) {
