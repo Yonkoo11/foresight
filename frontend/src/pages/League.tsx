@@ -625,9 +625,30 @@ export default function League() {
             </div>
           ) : (
             <div>
-              {/* Create Team */}
-              <div className="bg-gray-800/50 rounded-xl p-8 mb-6 border border-gray-700">
-                <h2 className="heading-2 mb-6 text-center">Create Your Team</h2>
+              {/* Authentication Check */}
+              {!isAuthenticated ? (
+                <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-2 border-cyan-500/50 rounded-xl p-12 mb-6 text-center">
+                  <div className="text-5xl mb-4">🔐</div>
+                  <h2 className="heading-2 mb-4">Connect Your Wallet to Play</h2>
+                  <p className="text-gray-400 mb-6">
+                    Sign in with your wallet to create your CT Fantasy team and start competing!
+                  </p>
+                  <button
+                    onClick={handleManualSignIn}
+                    disabled={!isConnected || loading}
+                    className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-lg font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {!isConnected ? 'Connect Wallet First (Top Right)' : loading ? 'Signing In...' : 'Sign In with Wallet'}
+                  </button>
+                  {authError && (
+                    <p className="mt-4 text-red-400 text-sm">{authError}</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Create Team */}
+                  <div className="bg-gray-800/50 rounded-xl p-8 mb-6 border border-gray-700">
+                    <h2 className="heading-2 mb-6 text-center">Create Your Team</h2>
 
                 <div className="mb-6">
                   <label className="block text-sm font-semibold mb-2">Team Name</label>
@@ -694,6 +715,8 @@ export default function League() {
                   </button>
                 </div>
               </div>
+                </>
+              )}
 
               {/* How It Works */}
               <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
