@@ -223,13 +223,20 @@ export default function LeagueUltra() {
         message = new SiweMessage(siweConfig);
         console.log('SIWE message created successfully');
       } catch (siweError) {
+        console.error('=== SIWE ERROR ===');
         console.error('Failed to create SiweMessage:', siweError);
+        console.error('Error type:', typeof siweError);
+        console.error('Error instanceof Error:', siweError instanceof Error);
         console.error('Error details:', {
           name: (siweError as any)?.name,
           message: (siweError as any)?.message,
           stack: (siweError as any)?.stack,
+          constructor: (siweError as any)?.constructor?.name,
         });
-        throw new Error(`Failed to create SIWE message: ${siweError instanceof Error ? siweError.message : String(siweError)}`);
+        console.error('Full SIWE error:', JSON.stringify(siweError, Object.getOwnPropertyNames(siweError), 2));
+
+        const errorMsg = siweError instanceof Error ? siweError.message : JSON.stringify(siweError);
+        throw new Error(`Failed to create SIWE message: ${errorMsg}`);
       }
 
       let messageToSign: string;

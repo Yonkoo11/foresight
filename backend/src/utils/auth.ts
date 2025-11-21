@@ -43,9 +43,12 @@ export async function verifySiweMessage(
 
 /**
  * Generate nonce for SIWE
+ * Must be alphanumeric only (at least 8 characters)
  */
 export function generateNonce(): string {
-  return crypto.randomBytes(16).toString('base64');
+  // Generate alphanumeric-only nonce (letters and numbers)
+  // Base64url encoding removes +, /, and = characters
+  return crypto.randomBytes(16).toString('base64url');
 }
 
 /**
