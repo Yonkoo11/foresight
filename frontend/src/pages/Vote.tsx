@@ -1,13 +1,16 @@
 /**
- * Daily Voting Page
- * Vote for best CT take of the day
+ * CT Spotlight - Weekly Voting Page
+ * Vote for the top CT performer of the week
  */
 
 import { useState, useEffect } from 'react';
 import { useAccount, useSignMessage } from 'wagmi';
 import { SiweMessage } from 'siwe';
 import axios from 'axios';
-import { ThumbsUp, TrendUp, CheckCircle, Fire, Warning } from '@phosphor-icons/react';
+import {
+  ThumbsUp, TrendUp, CheckCircle, Fire, Warning, Lock,
+  Crown, Sparkle, Star, Trophy, Lightning, CalendarBlank
+} from '@phosphor-icons/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -19,14 +22,26 @@ interface Influencer {
   tier: string;
   vote_count?: number;
   weighted_score?: number;
+  follower_count?: number;
+}
+
+interface Contest {
+  id: number;
+  contest_key: string;
+  start_date: string;
+  end_date: string;
 }
 
 interface VoteStatus {
   has_voted: boolean;
   vote: {
+    influencer_id: number;
     influencer_name: string;
     influencer_handle: string;
+    profile_image_url?: string;
+    tier?: string;
   } | null;
+  contest: Contest | null;
 }
 
 export default function Vote() {
@@ -39,81 +54,109 @@ export default function Vote() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Rarity mapping
+  const getRarityInfo = (tier: string) => {
+    const rarities: Record<string, { label: string; gradient: string; badge: string; icon: any }> = {
+      S: {
+        label: 'Legendary',
+        gradient: 'from-amber-400 via-yellow-500 to-amber-600',
+        badge: 'bg-gradient-to-r from-yellow-400 to-amber-500',
+        icon: Crown
+      },
+      A: {
+        label: 'Epic',
+        gradient: 'from-purple-400 via-fuchsia-500 to-purple-600',
+        badge: 'bg-gradient-to-r from-purple-400 to-fuchsia-500',
+        icon: Sparkle
+      },
+      B: {
+        label: 'Rare',
+        gradient: 'from-blue-400 via-cyan-500 to-blue-600',
+        badge: 'bg-gradient-to-r from-cyan-400 to-blue-500',
+        icon: Star
+      },
+      C: {
+        label: 'Common',
+        gradient: 'from-gray-400 via-gray-500 to-gray-600',
+        badge: 'bg-gradient-to-r from-gray-400 to-gray-500',
+        icon: Fire
+      }
+    };
+    return rarities[tier] || rarities.C;
+  };
+
+  // Format date range
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+    return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+  };
 
   useEffect(() => {
-    // Check if authenticated
     const token = localStorage.getItem('authToken');
     setIsAuthenticated(!!token);
 
+    // Fetch public data (no auth required)
+    fetchInfluencers();
+    fetchLeaderboard();
+
+    // Fetch user-specific data only if authenticated
     if (isConnected && token) {
-      fetchInfluencers();
       fetchVoteStatus();
-      fetchLeaderboard();
     }
   }, [isConnected, address]);
 
   const handleManualSignIn = async () => {
-    if (!address || !chainId) return;
+    if (!address) {
+      setAuthError('Wallet not connected');
+      return;
+    }
 
     try {
       setLoading(true);
       setAuthError(null);
-      console.log('🔐 Manual sign-in with SIWE...');
 
-      // Step 1: Get nonce from backend
-      const nonceResponse = await axios.get(`${API_URL}/api/auth/nonce`);
-      const nonce = nonceResponse.data.nonce;
-
-      // Step 2: Create SIWE message
+      const nonceResponse = await axios.get(`${API_URL}/api/auth/nonce?address=${address}`);
       const message = new SiweMessage({
         domain: window.location.host,
         address,
-        statement: 'Sign in to CT Draft',
+        statement: 'Sign in to CT Spotlight',
         uri: window.location.origin,
         version: '1',
-        chainId,
-        nonce,
+        chainId: chainId || 1, // Default to mainnet if chainId is undefined
+        nonce: nonceResponse.data.nonce,
       });
 
-      const messageToSign = message.prepareMessage();
-
-      // Step 3: Sign message
-      const signature = await signMessageAsync({ message: messageToSign });
-
-      // Step 4: Verify and get tokens
+      const signature = await signMessageAsync({ message: message.prepareMessage() });
       const verifyResponse = await axios.post(`${API_URL}/api/auth/verify`, {
-        message: messageToSign,
+        message: message.prepareMessage(),
         signature,
       });
 
-      const { accessToken, refreshToken } = verifyResponse.data;
-
-      // Step 5: Store tokens
-      localStorage.setItem('authToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-
-      console.log('✅ Sign-in successful!');
+      localStorage.setItem('authToken', verifyResponse.data.token);
       setIsAuthenticated(true);
 
-      // Reload page to fetch data with new auth
-      window.location.reload();
+      await fetchInfluencers();
+      await fetchVoteStatus();
+      await fetchLeaderboard();
     } catch (error: any) {
-      console.error('❌ Sign-in failed:', error);
-      setAuthError(error.message || 'Failed to sign in. Please try again.');
+      console.error('Sign-in failed:', error);
+      const errorMsg = error.response?.data?.error
+        || error.message
+        || 'Failed to sign in. Please try again.';
+      setAuthError(errorMsg);
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchInfluencers = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
-      const response = await axios.get(`${API_URL}/api/league/influencers`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setInfluencers(response.data.influencers);
+      const response = await axios.get(`${API_URL}/api/league/influencers`);
+      setInfluencers(response.data.influencers || []);
     } catch (error) {
       console.error('Error fetching influencers:', error);
     }
@@ -129,6 +172,9 @@ export default function Vote() {
       });
 
       setVoteStatus(response.data);
+      if (response.data.vote) {
+        setSelectedInfluencer(response.data.vote.influencer_id);
+      }
     } catch (error) {
       console.error('Error fetching vote status:', error);
     }
@@ -136,14 +182,8 @@ export default function Vote() {
 
   const fetchLeaderboard = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
-      const response = await axios.get(`${API_URL}/api/league/vote/leaderboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setLeaderboard(response.data.leaderboard);
+      const response = await axios.get(`${API_URL}/api/league/vote/leaderboard`);
+      setLeaderboard(response.data.leaderboard || []);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     }
@@ -151,6 +191,12 @@ export default function Vote() {
 
   const handleVote = async () => {
     if (!selectedInfluencer) return;
+
+    // Require authentication to vote
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -164,7 +210,7 @@ export default function Vote() {
         }
       );
 
-      alert(`Vote submitted! Vote weight: ${response.data.vote_weight}x (+10 XP)`);
+      alert(`${response.data.message}! Vote weight: ${response.data.vote_weight}x (+10 XP)`);
       await fetchVoteStatus();
       await fetchLeaderboard();
     } catch (error: any) {
@@ -174,224 +220,314 @@ export default function Vote() {
     }
   };
 
-  if (!isConnected) {
-    return (
-      <div className="text-center py-12">
-        <ThumbsUp size={64} weight="duotone" className="mx-auto mb-4 text-cyan-400" />
-        <h2 className="heading-2 mb-3">Daily CT Vote</h2>
-        <p className="text-gray-400">Connect your wallet to vote</p>
-      </div>
-    );
-  }
-
-  if (isConnected && !isAuthenticated) {
-    return (
-      <div className="text-center py-12 max-w-md mx-auto">
-        <Warning size={64} weight="duotone" className="mx-auto mb-4 text-yellow-400" />
-        <h2 className="heading-2 mb-3">Sign In Required</h2>
-        <p className="text-gray-400 mb-6">
-          You need to sign a message with your wallet to access voting. This proves you own the wallet address.
-        </p>
-        {authError && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-            <p className="text-red-400 text-sm">{authError}</p>
-          </div>
-        )}
-        <button
-          onClick={handleManualSignIn}
-          disabled={loading}
-          className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-lg font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Signing In...' : 'Sign In with Ethereum'}
-        </button>
-        <p className="text-xs text-gray-500 mt-4">
-          No gas fees required. This is a free signature to verify wallet ownership.
-        </p>
-      </div>
-    );
-  }
-
+  // Main Interface
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="heading-1 mb-3">Vote for Best CT Take</h1>
-        <p className="body-base text-gray-400 mb-6">
-          Vote daily for the CT influencer with the best take. Your vote helps scores in the Fantasy League!
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowAuthModal(false)}>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl border-2 border-cyan-500/30 p-8 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <Lock size={64} weight="bold" className="mx-auto mb-4 text-cyan-400" />
+              <h3 className="text-3xl font-black text-white mb-3">Sign In Required</h3>
+              <p className="text-gray-300 mb-6">
+                {!isConnected
+                  ? 'Connect your wallet to vote for this week\'s CT Spotlight'
+                  : 'Sign a message to verify your wallet ownership. No gas fees required.'}
+              </p>
 
-        {/* Vote Status Banner */}
-        {voteStatus?.has_voted ? (
-          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6 mb-6">
-            <div className="flex items-center gap-3">
-              <CheckCircle size={32} weight="fill" className="text-green-400" />
-              <div>
-                <div className="font-bold text-green-400 text-lg mb-1">Vote Submitted!</div>
-                <div className="text-sm text-gray-300">
-                  You voted for <span className="font-semibold">{voteStatus.vote?.influencer_name}</span> (@
-                  {voteStatus.vote?.influencer_handle})
+              {authError && (
+                <div className="bg-red-500/10 border-2 border-red-500/30 rounded-xl p-3 mb-4">
+                  <p className="text-red-400 text-sm">{authError}</p>
                 </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-6 mb-6">
-            <div className="flex items-center gap-3">
-              <Fire size={32} weight="fill" className="text-cyan-400" />
-              <div>
-                <div className="font-bold text-lg mb-1">Daily Vote Available</div>
-                <div className="text-sm text-gray-300">Vote now to earn 10 XP and support your favorite influencer!</div>
-              </div>
-            </div>
-          </div>
-        )}
+              )}
 
-        {/* Your Vote Weight */}
-        <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-4 text-center">
-          <div className="text-sm text-gray-400 mb-1">Your Vote Power</div>
-          <div className="text-2xl font-bold text-cyan-400">
-            {voteStatus?.has_voted ? 'Used for Today' : 'Ready to Vote'}
-          </div>
-          <div className="text-xs text-gray-500 mt-2">
-            Higher levels = more vote weight
-          </div>
-        </div>
-      </div>
-
-      {/* Voting Section */}
-      {!voteStatus?.has_voted && (
-        <div className="mb-8">
-          <h2 className="heading-2 mb-6">Select Influencer</h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            {influencers.map((influencer) => {
-              const isSelected = selectedInfluencer === influencer.id;
-              return (
+              {!isConnected ? (
                 <button
-                  key={influencer.id}
-                  onClick={() => setSelectedInfluencer(influencer.id)}
-                  className={`p-5 rounded-xl border-2 transition-all ${
-                    isSelected
-                      ? 'border-cyan-500 bg-cyan-500/20 scale-105'
-                      : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:scale-105'
-                  }`}
+                  onClick={() => setShowAuthModal(false)}
+                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-xl font-bold transition-all transform hover:scale-105"
                 >
-                  <div className="text-3xl mb-3 text-center">{influencer.tier}</div>
-                  <div className="text-sm font-semibold text-center mb-1">{influencer.name}</div>
-                  <div className="text-xs text-gray-400 text-center">@{influencer.handle}</div>
-                  {isSelected && (
-                    <div className="mt-3 flex justify-center">
-                      <CheckCircle size={24} weight="fill" className="text-cyan-400" />
-                    </div>
-                  )}
+                  Close & Connect Wallet
                 </button>
-              );
-            })}
-          </div>
-
-          <div className="text-center">
-            <button
-              onClick={handleVote}
-              disabled={loading || !selectedInfluencer}
-              className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-lg font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto"
-            >
-              <ThumbsUp size={24} weight="fill" />
-              Submit Vote (+10 XP)
-            </button>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    onClick={async () => {
+                      await handleManualSignIn();
+                      setShowAuthModal(false);
+                    }}
+                    disabled={loading}
+                    className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-xl font-bold transition-all transform hover:scale-105 disabled:opacity-50"
+                  >
+                    {loading ? 'Signing In...' : 'Sign In with Ethereum'}
+                  </button>
+                  <button
+                    onClick={() => setShowAuthModal(false)}
+                    className="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Today's Leaderboard */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="heading-2">Today's Rankings</h2>
-          <div className="text-sm text-gray-400">Updated live</div>
+      <div className="max-w-6xl mx-auto px-6 py-8">
+
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl mb-6 shadow-2xl">
+            <Fire size={56} weight="bold" className="text-white" />
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black text-white mb-4">CT Spotlight</h1>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            Vote for the top CT performer this week. Help boost your team's score!
+          </p>
+
+          {/* Week Info */}
+          {voteStatus?.contest && (
+            <div className="mt-6 inline-flex items-center gap-3 bg-gray-900/50 px-6 py-3 rounded-xl border-2 border-gray-700">
+              <CalendarBlank size={20} weight="bold" className="text-cyan-400" />
+              <span className="text-gray-300">
+                Week of {formatDateRange(voteStatus.contest.start_date, voteStatus.contest.end_date)}
+              </span>
+            </div>
+          )}
         </div>
 
-        {leaderboard.length === 0 ? (
-          <div className="text-center py-12 bg-gray-800/30 rounded-xl">
-            <TrendUp size={64} weight="duotone" className="mx-auto mb-4 text-gray-600" />
-            <p className="text-gray-400">No votes yet today. Be the first to vote!</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {leaderboard.map((influencer, index) => (
-              <div
-                key={influencer.id}
-                className={`bg-gray-800/50 rounded-xl p-5 border-2 transition-all ${
-                  index === 0
-                    ? 'border-yellow-500/50'
-                    : 'border-gray-700'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`text-2xl font-bold w-12 h-12 flex items-center justify-center rounded-full ${
-                        index === 0
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : index === 1
-                          ? 'bg-gray-400/20 text-gray-300'
-                          : index === 2
-                          ? 'bg-orange-400/20 text-orange-400'
-                          : 'bg-gray-700/20 text-gray-500'
-                      }`}
-                    >
-                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                    </div>
-                    <div>
-                      <div className="font-bold text-lg">{influencer.name}</div>
-                      <div className="text-sm text-gray-400">@{influencer.handle}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <div className="text-xs text-gray-400 mb-1">Votes</div>
-                        <div className="text-lg font-bold">{influencer.vote_count || 0}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-400 mb-1">Score</div>
-                        <div className="text-2xl font-bold text-cyan-400">{influencer.weighted_score || 0}</div>
-                      </div>
-                    </div>
-                  </div>
+        {/* Current Vote Status */}
+        {voteStatus?.has_voted && voteStatus.vote ? (
+          <div className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border-2 border-cyan-500/30 rounded-3xl p-8 mb-10 shadow-2xl">
+            <div className="flex items-center gap-4">
+              <CheckCircle size={56} weight="fill" className="text-cyan-400 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="font-black text-2xl mb-2 text-white">Current Vote: {voteStatus.vote.influencer_name}</div>
+                <div className="text-lg text-gray-300 mb-3">
+                  @{voteStatus.vote.influencer_handle} • You can change your vote anytime before Sunday
+                </div>
+                <div className="flex items-center gap-2 text-sm text-cyan-400">
+                  <Lightning size={16} weight="fill" />
+                  <span>Select a different influencer below to update your vote</span>
                 </div>
               </div>
-            ))}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-orange-500/10 via-red-500/10 to-orange-600/10 border-2 border-orange-500/30 rounded-3xl p-8 mb-10 shadow-2xl">
+            <div className="flex items-center gap-4">
+              <Fire size={56} weight="fill" className="text-orange-400 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="font-black text-2xl mb-2 text-white">Vote This Week</div>
+                <div className="text-lg text-gray-300">Vote now to earn <span className="text-yellow-400 font-bold">+10 XP</span> and potentially boost your team's score!</div>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Info Box */}
-      <div className="mt-8 bg-gray-800/30 border border-gray-700 rounded-xl p-6">
-        <h3 className="text-lg font-bold mb-4">How Voting Works</h3>
-        <div className="space-y-3 text-sm text-gray-300">
-          <div className="flex items-start gap-3">
-            <div className="text-cyan-400 mt-1">•</div>
-            <div>
-              <strong>One vote per day:</strong> Choose the influencer with the best CT take
+        {/* Spotlight Bonus Info */}
+        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-yellow-500/30 p-8 mb-10 shadow-2xl">
+          <h2 className="text-2xl font-black text-white mb-4 flex items-center gap-3">
+            <Trophy size={28} weight="fill" className="text-yellow-400" />
+            CT Spotlight Bonus
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gray-900/50 rounded-xl p-4 text-center border-2 border-yellow-500/30">
+              <div className="text-3xl mb-2">🥇</div>
+              <div className="font-bold text-yellow-400 text-xl mb-1">+10%</div>
+              <div className="text-sm text-gray-300">#1 Most Voted</div>
+            </div>
+            <div className="bg-gray-900/50 rounded-xl p-4 text-center border-2 border-gray-500/30">
+              <div className="text-3xl mb-2">🥈</div>
+              <div className="font-bold text-gray-400 text-xl mb-1">+5%</div>
+              <div className="text-sm text-gray-300">#2 Most Voted</div>
+            </div>
+            <div className="bg-gray-900/50 rounded-xl p-4 text-center border-2 border-orange-500/30">
+              <div className="text-3xl mb-2">🥉</div>
+              <div className="font-bold text-orange-400 text-xl mb-1">+5%</div>
+              <div className="text-sm text-gray-300">#3 Most Voted</div>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="text-cyan-400 mt-1">•</div>
-            <div>
-              <strong>Weighted voting:</strong> Higher level users have more vote weight
+          <p className="text-sm text-gray-400 text-center mt-4">
+            If your drafted influencer gets top 3 votes, your team gets a score bonus at week's end!
+          </p>
+        </div>
+
+        {/* Voting Section */}
+        {influencers.length > 0 && (
+          <div className="mb-12">
+            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
+              <h2 className="text-3xl font-black text-white mb-6 flex items-center gap-3">
+                <Lightning size={32} weight="fill" className="text-yellow-400" />
+                {voteStatus?.has_voted ? 'Change Your Vote' : 'Cast Your Vote'}
+              </h2>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+                {influencers.slice(0, 20).map((influencer) => {
+                  const isSelected = selectedInfluencer === influencer.id;
+                  const rarity = getRarityInfo(influencer.tier);
+                  const RarityIcon = rarity.icon;
+
+                  return (
+                    <button
+                      key={influencer.id}
+                      onClick={() => setSelectedInfluencer(influencer.id)}
+                      className={`relative p-6 rounded-2xl border-2 transition-all duration-300 text-left group ${
+                        isSelected
+                          ? `border-cyan-400 bg-gradient-to-br ${rarity.gradient} shadow-2xl shadow-cyan-500/30 scale-105`
+                          : 'border-gray-700 bg-gradient-to-br from-gray-800/80 to-gray-900/80 hover:border-gray-600 hover:scale-105 hover:shadow-xl'
+                      }`}
+                    >
+                      {/* Rarity Badge */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <div className={`${rarity.badge} px-2 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
+                          <RarityIcon size={12} weight="fill" className="text-white" />
+                          <span className="text-xs font-bold text-white">{influencer.tier}</span>
+                        </div>
+                      </div>
+
+                      {/* Profile Picture */}
+                      <div className="mb-3">
+                        <div className={`w-20 h-20 mx-auto rounded-full border-4 ${isSelected ? 'border-white' : 'border-gray-600'} shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800`}>
+                          {influencer.profile_image_url ? (
+                            <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Name */}
+                      <div className="text-center">
+                        <h3 className="font-bold text-white text-sm mb-1 line-clamp-1">{influencer.name}</h3>
+                        <p className="text-xs text-gray-300">@{influencer.handle}</p>
+                      </div>
+
+                      {/* Selection Indicator */}
+                      {isSelected && (
+                        <div className="mt-3 flex justify-center">
+                          <CheckCircle size={24} weight="fill" className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={handleVote}
+                  disabled={loading || !selectedInfluencer}
+                  className="px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 rounded-2xl font-bold text-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-orange-500/30 flex items-center gap-3 mx-auto"
+                >
+                  <Fire size={28} weight="fill" />
+                  {!isConnected
+                    ? 'Connect Wallet to Vote'
+                    : !isAuthenticated
+                    ? 'Sign In to Vote'
+                    : voteStatus?.has_voted
+                    ? 'Update Vote'
+                    : 'Submit Vote'}
+                  <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm">+10 XP</span>
+                </button>
+                {!isConnected && (
+                  <p className="text-sm text-gray-400 mt-3">
+                    Connect your wallet in the top right to vote
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="text-cyan-400 mt-1">•</div>
-            <div>
-              <strong>Earn XP & help teams:</strong> Get 10 XP per vote, and your vote gives points to Fantasy teams
-            </div>
+        )}
+
+        {/* Weekly Leaderboard */}
+        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-black text-white flex items-center gap-3">
+              <Trophy size={32} weight="fill" className="text-yellow-400" />
+              This Week's Rankings
+            </h2>
+            <div className="text-sm text-gray-400 bg-gray-900/50 px-4 py-2 rounded-xl">Updated live</div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="text-cyan-400 mt-1">•</div>
-            <div>
-              <strong>Rankings update live:</strong> Watch the leaderboard change as votes come in
+
+          {leaderboard.length === 0 ? (
+            <div className="text-center py-20">
+              <TrendUp size={80} weight="duotone" className="mx-auto mb-6 text-gray-600" />
+              <h3 className="text-2xl font-bold text-white mb-2">No votes yet this week</h3>
+              <p className="text-gray-400 text-lg">Be the first to vote!</p>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              {leaderboard.map((influencer, index) => {
+                const rarity = getRarityInfo(influencer.tier);
+
+                return (
+                  <div
+                    key={influencer.id}
+                    className={`relative bg-gradient-to-r from-gray-800/80 to-gray-900/80 rounded-2xl p-6 border-2 transition-all hover:scale-102 ${
+                      index === 0
+                        ? 'border-yellow-500/50 shadow-xl shadow-yellow-500/20'
+                        : index === 1
+                        ? 'border-gray-400/50'
+                        : index === 2
+                        ? 'border-orange-400/50'
+                        : 'border-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-6">
+                      {/* Rank */}
+                      <div
+                        className={`text-3xl font-black w-16 h-16 flex items-center justify-center rounded-2xl ${
+                          index === 0
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : index === 1
+                            ? 'bg-gray-400/20 text-gray-300'
+                            : index === 2
+                            ? 'bg-orange-400/20 text-orange-400'
+                            : 'bg-gray-700/20 text-gray-500'
+                        }`}
+                      >
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                      </div>
+
+                      {/* Profile Picture */}
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-full border-4 border-gray-600 shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
+                          {influencer.profile_image_url ? (
+                            <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
+                          )}
+                        </div>
+                        <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full ${rarity.badge} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
+                          {influencer.tier}
+                        </div>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1">
+                        <div className="font-bold text-xl text-white">{influencer.name}</div>
+                        <div className="text-sm text-gray-400">@{influencer.handle}</div>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-6">
+                        <div className="text-center">
+                          <div className="text-xs text-gray-400 mb-1">Votes</div>
+                          <div className="text-xl font-bold text-white">{influencer.vote_count || 0}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-gray-400 mb-1">Score</div>
+                          <div className="text-3xl font-black text-cyan-400">{influencer.weighted_score || 0}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

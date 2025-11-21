@@ -22,7 +22,7 @@ export default function Layout({ children }: LayoutProps) {
   const navItems: Array<{ path: string; label: string; icon: any; highlight?: boolean }> = [
     { path: '/', label: 'Home', icon: House },
     { path: '/draft', label: 'CT Draft', icon: Trophy, highlight: true },
-    { path: '/vote', label: 'Vote', icon: Target },
+    { path: '/vote', label: 'CT Spotlight', icon: Target },
     { path: '/profile', label: 'Profile', icon: Users },
   ];
 

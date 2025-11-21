@@ -370,13 +370,20 @@ router.post('/team/lock', authenticateToken, async (req: Request, res: Response)
  */
 router.get('/influencers', async (req: Request, res: Response) => {
   try {
-    // Get all 20 influencers with pricing (S, A, B tiers)
+    // Get all 50 influencers with pricing (S, A, B, C tiers)
+    // Order by tier: S (Legendary) first, then A (Epic), B (Rare), C (Common)
     const influencers = await db('influencers')
       .where({ is_active: true })
-      .whereIn('tier', ['S', 'A', 'B'])
-      .orderBy('tier', 'asc')
+      .whereIn('tier', ['S', 'A', 'B', 'C'])
+      .orderByRaw(`
+        CASE tier
+          WHEN 'S' THEN 1
+          WHEN 'A' THEN 2
+          WHEN 'B' THEN 3
+          WHEN 'C' THEN 4
+        END ASC
+      `)
       .orderBy('price', 'desc')
-      .limit(20)
       .select(
         'id',
         'display_name as name',
@@ -445,32 +452,27 @@ router.get('/leaderboard/:contest_id?', async (req: Request, res: Response) => {
 });
 
 /**
- * Submit daily vote
+ * Submit weekly spotlight vote (CT Spotlight)
  * POST /api/league/vote
- * Body: { influencer_id: number, category: 'general' }
+ * Body: { influencer_id: number }
+ * Note: Users can vote once per week and update their vote anytime during the week
  */
 router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
-    const { influencer_id, category = 'general' } = req.body;
+    const { influencer_id } = req.body;
 
     if (!influencer_id) {
       return res.status(400).json({ error: 'influencer_id required' });
     }
 
-    const today = new Date().toISOString().split('T')[0];
-
-    // Check if user already voted today in this category
-    const existingVote = await db('daily_votes')
-      .where({
-        user_id: userId,
-        vote_date: today,
-        category,
-      })
+    // Get active contest
+    const activeContest = await db('fantasy_contests')
+      .where({ status: 'active' })
       .first();
 
-    if (existingVote) {
-      return res.status(400).json({ error: 'You have already voted today in this category' });
+    if (!activeContest) {
+      return res.status(404).json({ error: 'No active contest. Check back when a new week starts!' });
     }
 
     // Verify influencer exists
@@ -487,87 +489,93 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
       .where({ user_id: userId })
       .first();
 
-    const voteWeight = userXP ? Math.floor(userXP.current_level / 5) + 1 : 1; // Level 1-4 = weight 1, 5-9 = weight 2, etc.
+    const voteWeight = userXP ? Math.floor(userXP.current_level / 5) + 1 : 1;
 
-    // Submit vote and update scores in transaction
-    await db.transaction(async (trx) => {
-      // Insert vote
-      await trx('daily_votes').insert({
+    // Check if user already voted this week
+    const existingVote = await db('weekly_spotlight_votes')
+      .where({
         user_id: userId,
-        influencer_id,
-        vote_date: today,
-        vote_weight: voteWeight,
-        category,
-      });
+        contest_id: activeContest.id,
+      })
+      .first();
 
-      // Update or create influencer score for today
-      const existingScore = await trx('influencer_scores')
-        .where({
-          influencer_id,
-          score_date: today,
-          category,
-        })
-        .first();
+    let isUpdate = false;
+    let previousInfluencerId = null;
 
-      if (existingScore) {
-        await trx('influencer_scores')
-          .where({ id: existingScore.id })
-          .update({
-            vote_count: existingScore.vote_count + 1,
-            weighted_score: existingScore.weighted_score + voteWeight,
-            updated_at: db.fn.now(),
-          });
-      } else {
-        await trx('influencer_scores').insert({
-          influencer_id,
-          score_date: today,
-          vote_count: 1,
-          weighted_score: voteWeight,
-          category,
+    if (existingVote) {
+      isUpdate = true;
+      previousInfluencerId = existingVote.influencer_id;
+
+      // Don't allow voting for the same influencer
+      if (previousInfluencerId === influencer_id) {
+        return res.json({
+          success: true,
+          message: 'You already voted for this influencer',
+          vote_weight: voteWeight,
+          is_update: false,
         });
       }
 
-      // Update team picks scores if influencer is in active teams
-      const activeContest = await trx('fantasy_contests')
-        .where({ status: 'active' })
-        .first();
+      // Update existing vote
+      await db('weekly_spotlight_votes')
+        .where({ id: existingVote.id })
+        .update({
+          influencer_id,
+          vote_weight: voteWeight,
+          updated_at: db.fn.now(),
+        });
 
-      if (activeContest) {
-        const picks = await trx('team_picks')
-          .join('user_teams', 'team_picks.team_id', 'user_teams.id')
-          .where({
-            'user_teams.contest_id': activeContest.id,
-            'team_picks.influencer_id': influencer_id,
-          })
-          .select('team_picks.id');
+      // Decrement previous influencer's vote count
+      await db.raw(`
+        UPDATE influencer_weekly_votes
+        SET vote_count = GREATEST(vote_count - 1, 0),
+            weighted_score = GREATEST(weighted_score - ?, 0)
+        WHERE influencer_id = ? AND contest_id = ?
+      `, [voteWeight, previousInfluencerId, activeContest.id]);
+    } else {
+      // Insert new vote
+      await db('weekly_spotlight_votes').insert({
+        user_id: userId,
+        influencer_id,
+        contest_id: activeContest.id,
+        vote_weight: voteWeight,
+        created_at: db.fn.now(),
+        updated_at: db.fn.now(),
+      });
+    }
 
-        if (picks.length > 0) {
-          for (const pick of picks) {
-            await trx('team_picks')
-              .where({ id: pick.id })
-              .increment('daily_points', voteWeight)
-              .increment('total_points', voteWeight);
-          }
+    // Update or create influencer weekly vote count
+    const existingInfluencerVote = await db('influencer_weekly_votes')
+      .where({
+        influencer_id,
+        contest_id: activeContest.id,
+      })
+      .first();
 
-          // Update team total scores
-          await trx.raw(`
-            UPDATE user_teams
-            SET total_score = (
-              SELECT COALESCE(SUM(total_points), 0)
-              FROM team_picks
-              WHERE team_picks.team_id = user_teams.id
-            ),
-            updated_at = NOW()
-            WHERE contest_id = ?
-          `, [activeContest.id]);
-        }
-      }
-    });
+    if (existingInfluencerVote) {
+      await db('influencer_weekly_votes')
+        .where({ id: existingInfluencerVote.id })
+        .update({
+          vote_count: db.raw('vote_count + 1'),
+          weighted_score: db.raw('weighted_score + ?', [voteWeight]),
+          updated_at: db.fn.now(),
+        });
+    } else {
+      await db('influencer_weekly_votes').insert({
+        influencer_id,
+        contest_id: activeContest.id,
+        vote_count: 1,
+        weighted_score: voteWeight,
+        created_at: db.fn.now(),
+        updated_at: db.fn.now(),
+      });
+    }
 
     res.json({
       success: true,
-      message: 'Vote submitted successfully',
+      message: isUpdate ? 'Vote updated successfully' : 'Vote submitted successfully',
       vote_weight: voteWeight,
+      is_update: isUpdate,
     });
   } catch (error: any) {
     console.error('Error submitting vote:', error);
@@ -576,30 +584,51 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
 });
 
 /**
- * Get today's voting status
+ * Get weekly spotlight voting status
  * GET /api/league/vote/status
  */
 router.get('/vote/status', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
-    const today = new Date().toISOString().split('T')[0];
 
-    const vote = await db('daily_votes')
-      .join('influencers', 'daily_votes.influencer_id', 'influencers.id')
+    // Get active contest
+    const activeContest = await db('fantasy_contests')
+      .where({ status: 'active' })
+      .first();
+
+    if (!activeContest) {
+      return res.json({
+        has_voted: false,
+        vote: null,
+        contest: null,
+        message: 'No active contest',
+      });
+    }
+
+    const vote = await db('weekly_spotlight_votes')
+      .join('influencers', 'weekly_spotlight_votes.influencer_id', 'influencers.id')
       .where({
-        'daily_votes.user_id': userId,
-        'daily_votes.vote_date': today,
+        'weekly_spotlight_votes.user_id': userId,
+        'weekly_spotlight_votes.contest_id': activeContest.id,
       })
       .select(
-        'daily_votes.*',
-        'influencers.name as influencer_name',
-        'influencers.handle as influencer_handle'
+        'weekly_spotlight_votes.*',
+        'influencers.display_name as influencer_name',
+        'influencers.twitter_handle as influencer_handle',
+        'influencers.avatar_url as profile_image_url',
+        'influencers.tier'
       )
       .first();
 
     res.json({
       has_voted: !!vote,
       vote: vote || null,
+      contest: {
+        id: activeContest.id,
+        contest_key: activeContest.contest_key,
+        start_date: activeContest.start_date,
+        end_date: activeContest.end_date,
+      },
     });
   } catch (error: any) {
     console.error('Error fetching vote status:', error);
@@ -608,32 +637,51 @@ router.get('/vote/status', authenticateToken, async (req: Request, res: Response
 });
 
 /**
- * Get today's voting leaderboard
- * GET /api/league/vote/leaderboard
+ * Get weekly spotlight leaderboard
+ * GET /api/league/vote/leaderboard (PUBLIC - no auth required)
  */
-router.get('/vote/leaderboard', authenticateToken, async (req: Request, res: Response) => {
+router.get('/vote/leaderboard', async (req: Request, res: Response) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    // Get active contest
+    const activeContest = await db('fantasy_contests')
+      .where({ status: 'active' })
+      .first();
 
-    const leaderboard = await db('influencer_scores')
-      .join('influencers', 'influencer_scores.influencer_id', 'influencers.id')
+    if (!activeContest) {
+      return res.json({
+        leaderboard: [],
+        contest: null,
+        message: 'No active contest',
+      });
+    }
+
+    const leaderboard = await db('influencer_weekly_votes')
+      .join('influencers', 'influencer_weekly_votes.influencer_id', 'influencers.id')
       .where({
-        'influencer_scores.score_date': today,
-        'influencer_scores.category': 'general',
+        'influencer_weekly_votes.contest_id': activeContest.id,
       })
-      .orderBy('influencer_scores.weighted_score', 'desc')
-      .limit(10)
+      .orderBy('influencer_weekly_votes.weighted_score', 'desc')
+      .orderBy('influencer_weekly_votes.vote_count', 'desc')
+      .limit(20)
       .select(
         'influencers.id',
-        'influencers.name',
-        'influencers.handle',
-        'influencers.profile_image_url',
+        'influencers.display_name as name',
+        'influencers.twitter_handle as handle',
+        'influencers.avatar_url as profile_image_url',
         'influencers.tier',
-        'influencer_scores.vote_count',
-        'influencer_scores.weighted_score'
+        'influencer_weekly_votes.vote_count',
+        'influencer_weekly_votes.weighted_score'
       );
 
-    res.json({ leaderboard });
+    res.json({
+      leaderboard,
+      contest: {
+        id: activeContest.id,
+        contest_key: activeContest.contest_key,
+        start_date: activeContest.start_date,
+        end_date: activeContest.end_date,
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching vote leaderboard:', error);
     res.status(500).json({ error: error.message });

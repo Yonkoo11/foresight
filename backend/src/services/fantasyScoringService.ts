@@ -98,6 +98,7 @@ async function getTeamsWithInfluencers(contestId: number): Promise<TeamWithInflu
 
 /**
  * Calculate scores for all teams in a contest
+ * Includes weekly spotlight bonus for top voted influencers
  */
 export async function calculateContestScores(contestId: number): Promise<void> {
   console.log('========================================');
@@ -109,12 +110,50 @@ export async function calculateContestScores(contestId: number): Promise<void> {
 
     console.log(`Found ${teamsWithInfluencers.length} teams to score...`);
 
+    // Get top 3 voted influencers for weekly spotlight bonus
+    const topVotedInfluencers = await db('influencer_weekly_votes')
+      .where('contest_id', contestId)
+      .orderBy('weighted_score', 'desc')
+      .limit(3)
+      .select('influencer_id', 'weighted_score', 'vote_count');
+
+    const spotlightBonuses: Record<number, number> = {};
+    if (topVotedInfluencers.length > 0) {
+      spotlightBonuses[topVotedInfluencers[0].influencer_id] = 0.10; // #1 gets 10% bonus
+      if (topVotedInfluencers.length > 1) {
+        spotlightBonuses[topVotedInfluencers[1].influencer_id] = 0.05; // #2 gets 5% bonus
+      }
+      if (topVotedInfluencers.length > 2) {
+        spotlightBonuses[topVotedInfluencers[2].influencer_id] = 0.05; // #3 gets 5% bonus
+      }
+
+      console.log('\n🔥 CT Spotlight Bonuses:');
+      topVotedInfluencers.forEach((inf, idx) => {
+        const bonus = spotlightBonuses[inf.influencer_id];
+        console.log(`   ${idx + 1}. Influencer #${inf.influencer_id}: +${(bonus * 100).toFixed(0)}% (${inf.vote_count} votes, ${inf.weighted_score} score)`);
+      });
+      console.log('');
+    }
+
     for (const team of teamsWithInfluencers) {
-      // Calculate total score for this team
-      const totalScore = team.influencers.reduce((sum, influencer) => {
+      // Calculate base score for this team
+      let totalScore = team.influencers.reduce((sum, influencer) => {
         const influencerScore = calculateInfluencerScore(influencer);
         return sum + influencerScore;
       }, 0);
+
+      // Apply weekly spotlight bonus if any team members are in top 3
+      let bonusAmount = 0;
+      for (const influencer of team.influencers) {
+        if (spotlightBonuses[influencer.id]) {
+          const bonus = totalScore * spotlightBonuses[influencer.id];
+          bonusAmount += bonus;
+        }
+      }
+
+      if (bonusAmount > 0) {
+        totalScore += bonusAmount;
+      }
 
       // Round to integer for leaderboard ranking
       const roundedScore = Math.round(totalScore);
@@ -130,11 +169,13 @@ export async function calculateContestScores(contestId: number): Promise<void> {
           current_score: roundedScore,
           total_score: roundedScore,
           score_change: scoreChange,
+          spotlight_bonus: Math.round(bonusAmount),
           last_score_update: db.fn.now(),
           updated_at: db.fn.now(),
         });
 
-      console.log(`✓ Team "${team.team_name}": ${roundedScore} pts (${scoreChange >= 0 ? '+' : ''}${scoreChange})`);
+      const bonusText = bonusAmount > 0 ? ` +${Math.round(bonusAmount)} spotlight bonus` : '';
+      console.log(`✓ Team "${team.team_name}": ${roundedScore} pts (${scoreChange >= 0 ? '+' : ''}${scoreChange})${bonusText}`);
     }
 
     console.log('\n✅ All team scores calculated');

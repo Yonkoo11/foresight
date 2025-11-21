@@ -12,7 +12,7 @@ import Layout from './components/Layout';
 // Pages
 import Home from './pages/Home';
 import Profile from './pages/Profile';
-import League from './pages/League';
+import LeagueUltra from './pages/LeagueUltra';
 import Vote from './pages/Vote';
 
 const queryClient = new QueryClient();
@@ -23,8 +23,8 @@ function AppContent() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/draft" element={<League />} />
-          <Route path="/league" element={<League />} />
+          <Route path="/draft" element={<LeagueUltra />} />
+          <Route path="/league" element={<LeagueUltra />} />
           <Route path="/vote" element={<Vote />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
