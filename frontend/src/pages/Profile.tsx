@@ -1,6 +1,6 @@
 /**
- * Profile Page - Ultra Premium Edition
- * Shows user's Fantasy League stats and teams with premium design
+ * Profile Page
+ * Shows user's Fantasy League stats and teams
  */
 
 import { useState, useEffect } from 'react';
@@ -58,26 +58,26 @@ export default function Profile() {
     const rarities: Record<string, { label: string; gradient: string; badge: string; icon: any }> = {
       S: {
         label: 'Legendary',
-        gradient: 'from-amber-400 via-yellow-500 to-amber-600',
-        badge: 'bg-gradient-to-r from-yellow-400 to-amber-500',
+        gradient: 'from-yellow-500/20 to-amber-500/20',
+        badge: 'bg-yellow-500',
         icon: Crown
       },
       A: {
         label: 'Epic',
-        gradient: 'from-purple-400 via-fuchsia-500 to-purple-600',
-        badge: 'bg-gradient-to-r from-purple-400 to-fuchsia-500',
+        gradient: 'from-brand-500/20 to-brand-600/20',
+        badge: 'bg-brand-500',
         icon: Sparkle
       },
       B: {
         label: 'Rare',
-        gradient: 'from-blue-400 via-cyan-500 to-blue-600',
-        badge: 'bg-gradient-to-r from-cyan-400 to-blue-500',
+        gradient: 'from-green-500/20 to-green-600/20',
+        badge: 'bg-green-500',
         icon: Star
       },
       C: {
         label: 'Common',
-        gradient: 'from-gray-400 via-gray-500 to-gray-600',
-        badge: 'bg-gradient-to-r from-gray-400 to-gray-500',
+        gradient: 'from-gray-500/20 to-gray-600/20',
+        badge: 'bg-gray-500',
         icon: Fire
       }
     };
@@ -145,15 +145,15 @@ export default function Profile() {
   // Not Connected State
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-6">
-        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-12 max-w-md w-full text-center shadow-2xl">
-          <Lock size={80} weight="bold" className="mx-auto mb-6 text-cyan-400" />
-          <h2 className="text-4xl font-black text-white mb-4">Connect Your Wallet</h2>
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-6">
+        <div className="card p-12 max-w-md w-full text-center">
+          <Lock size={64} weight="bold" className="mx-auto mb-6 text-brand-400" />
+          <h2 className="text-3xl font-semibold text-white mb-4">Connect Your Wallet</h2>
           <p className="text-gray-300 text-lg mb-6">
             Connect your wallet to view your profile and Fantasy League stats
           </p>
           <div className="text-sm text-gray-400">
-            👆 Click "Connect Wallet" in the top right
+            Click "Connect Wallet" in the top right
           </div>
         </div>
       </div>
@@ -161,19 +161,19 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gray-950">
       <div className="max-w-7xl mx-auto px-6 py-8">
 
         {/* Header */}
         <div className="mb-10">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl mb-6 shadow-2xl">
-              <Users size={56} weight="bold" className="text-white" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-brand-600 rounded-xl mb-6 shadow-soft-lg">
+              <Users size={48} weight="bold" className="text-white" />
             </div>
-            <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl md:text-5xl font-semibold text-white mb-4">
               Your Profile
             </h1>
-            <div className="font-mono text-sm text-gray-400 bg-gray-900/50 px-4 py-2 rounded-xl inline-block">
+            <div className="font-mono text-sm text-gray-400 bg-gray-900/50 px-4 py-2 rounded-lg inline-block">
               {address}
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function Profile() {
 
           return (
             <div className="mb-10">
-              <div className={`relative overflow-hidden bg-gradient-to-br ${colors.bg} backdrop-blur-xl rounded-3xl border-2 ${colors.border} p-8 shadow-2xl`}>
+              <div className={`relative overflow-hidden bg-gradient-to-br ${colors.bg} backdrop-blur-xl rounded-xl border ${colors.border} p-8 shadow-soft-lg`}>
                 {/* Background Glow Effect */}
                 <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-br ${colors.gradient} opacity-10 blur-3xl`}></div>
 
@@ -258,7 +258,7 @@ export default function Profile() {
                   <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
                     {/* Vote Streak */}
                     {userStreak > 0 && (
-                      <div className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 shadow-lg">
+                      <div className="px-6 py-3 rounded-lg bg-amber-500 shadow-soft">
                         <div className="text-xs text-white/80 font-semibold mb-1 text-center">VOTE STREAK</div>
                         <div className="text-2xl font-black text-white text-center flex items-center gap-2">
                           <Fire size={24} weight="fill" className={userStreak >= 7 ? 'animate-pulse' : ''} />
@@ -268,17 +268,17 @@ export default function Profile() {
                     )}
 
                     {/* Vote Power */}
-                    <div className={`px-6 py-3 rounded-2xl bg-gradient-to-r ${colors.gradient} shadow-lg`}>
+                    <div className={`px-6 py-3 rounded-lg bg-gradient-to-r ${colors.gradient} shadow-soft`}>
                       <div className="text-xs text-white/80 font-semibold mb-1 text-center">VOTE POWER</div>
-                      <div className="text-2xl font-black text-white text-center">
+                      <div className="text-2xl font-bold text-white text-center">
                         {xpInfo.levelInfo.voteWeight}x
                       </div>
                     </div>
 
                     {/* Transfers */}
-                    <div className={`px-6 py-3 rounded-2xl bg-gradient-to-r ${colors.gradient} shadow-lg`}>
+                    <div className={`px-6 py-3 rounded-lg bg-gradient-to-r ${colors.gradient} shadow-soft`}>
                       <div className="text-xs text-white/80 font-semibold mb-1 text-center">TRANSFERS/WEEK</div>
-                      <div className="text-2xl font-black text-white text-center">
+                      <div className="text-2xl font-bold text-white text-center">
                         {xpInfo.levelInfo.maxTransfers === 999 ? '∞' : xpInfo.levelInfo.maxTransfers}
                       </div>
                     </div>
@@ -297,12 +297,14 @@ export default function Profile() {
           </div>
 
           {loading ? (
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-16 text-center shadow-2xl">
-              <div className="animate-spin text-6xl mb-4">⚡</div>
+            <div className="card p-16 text-center">
+              <div className="animate-spin mb-4">
+                <Fire size={48} weight="bold" className="text-brand-400" />
+              </div>
               <p className="text-gray-400 text-lg">Loading team data...</p>
             </div>
           ) : myTeam ? (
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
+            <div className="card p-8">
               {/* Team Header */}
               <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-gray-700">
                 <div>
@@ -316,7 +318,7 @@ export default function Profile() {
                     </div>
                   )}
                   <div className="text-sm text-gray-400">Total Score</div>
-                  <div className="text-4xl font-black text-cyan-400">{myTeam.total_score || 0}</div>
+                  <div className="text-4xl font-bold text-brand-400">{myTeam.total_score || 0}</div>
                 </div>
               </div>
 
@@ -329,26 +331,28 @@ export default function Profile() {
                   return (
                     <div
                       key={idx}
-                      className={`relative p-5 rounded-2xl border-2 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-700 hover:border-cyan-500/50 transition-all hover:scale-105 shadow-xl`}
+                      className={`relative p-5 rounded-lg border bg-gray-800/80 border-gray-700 hover:border-brand-500/50 transition-all shadow-soft`}
                     >
                       {/* Pick Number & Rarity Badge */}
                       <div className="flex items-center justify-between mb-3">
                         <div className="text-xs text-gray-500 font-bold bg-gray-900/50 px-2 py-1 rounded">
                           Pick #{idx + 1}
                         </div>
-                        <div className={`${rarity.badge} px-2 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
+                        <div className={`${rarity.badge} px-2 py-1 rounded-md flex items-center gap-1`}>
                           <RarityIcon size={10} weight="fill" className="text-white" />
-                          <span className="text-xs font-bold text-white">{pick.influencer_tier}</span>
+                          <span className="text-xs font-medium text-white">{pick.influencer_tier}</span>
                         </div>
                       </div>
 
                       {/* Profile Picture */}
                       <div className="mb-3">
-                        <div className="w-16 h-16 mx-auto rounded-full border-4 border-gray-600 shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
+                        <div className="w-14 h-14 mx-auto rounded-full border-2 border-gray-600 shadow-soft overflow-hidden bg-gray-700">
                           {pick.profile_image_url ? (
                             <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <Fire size={20} weight="bold" />
+                            </div>
                           )}
                         </div>
                       </div>
@@ -364,7 +368,7 @@ export default function Profile() {
                       {/* Score */}
                       <div className="bg-gray-900/60 rounded-lg p-2 text-center">
                         <div className="text-xs text-gray-400 mb-1">Points</div>
-                        <div className="text-lg font-bold text-cyan-400">{pick.total_points || 0}</div>
+                        <div className="text-lg font-bold text-brand-400">{pick.total_points || 0}</div>
                       </div>
                     </div>
                   );
@@ -372,43 +376,43 @@ export default function Profile() {
               </div>
 
               {/* Budget Info */}
-              <div className="bg-gray-900/50 rounded-2xl p-6">
+              <div className="bg-gray-900/50 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-gray-400 font-semibold">Budget Used</span>
-                  <span className="text-2xl font-black text-cyan-400">
+                  <span className="text-2xl font-bold text-brand-400">
                     {myTeam.total_budget_used || 0}/{myTeam.max_budget || 100}
                   </span>
                 </div>
                 <div className="relative h-3 bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all"
+                    className="absolute left-0 top-0 h-full bg-brand-500 transition-all"
                     style={{ width: `${((myTeam.total_budget_used || 0) / (myTeam.max_budget || 100)) * 100}%` }}
                   />
                 </div>
               </div>
 
               {/* Update Team CTA */}
-              <div className="mt-6 pt-6 border-t-2 border-gray-700 text-center">
+              <div className="mt-6 pt-6 border-t border-gray-700 text-center">
                 <Link
                   to="/draft"
-                  className="inline-block px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-2xl shadow-cyan-500/30"
+                  className="btn-primary inline-block px-8 py-4"
                 >
-                  Update Team →
+                  Update Team
                 </Link>
               </div>
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-16 text-center shadow-2xl">
-              <div className="text-7xl mb-6">⚡</div>
-              <h3 className="text-3xl font-black text-white mb-4">No Team Yet</h3>
+            <div className="card p-16 text-center">
+              <Fire size={48} weight="bold" className="text-brand-400 mx-auto mb-6" />
+              <h3 className="text-2xl font-semibold text-white mb-4">No Team Yet</h3>
               <p className="text-gray-300 text-lg mb-8 max-w-md mx-auto">
                 Create your first Fantasy League team and start competing!
               </p>
               <Link
                 to="/draft"
-                className="inline-block px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-2xl font-bold text-xl transition-all transform hover:scale-105 shadow-2xl shadow-green-500/30 flex items-center gap-3 mx-auto w-fit"
+                className="btn-primary inline-flex items-center gap-3 px-8 py-4"
               >
-                <Crown size={28} weight="bold" />
+                <Crown size={24} weight="bold" />
                 Create Team
                 <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm">+50 XP</span>
               </Link>
@@ -424,8 +428,10 @@ export default function Profile() {
           </div>
 
           {loading ? (
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-16 text-center shadow-2xl">
-              <div className="animate-spin text-6xl mb-4">⚡</div>
+            <div className="card p-16 text-center">
+              <div className="animate-spin mb-4">
+                <Fire size={48} weight="bold" className="text-brand-400" />
+              </div>
               <p className="text-gray-400 text-lg">Loading leagues...</p>
             </div>
           ) : myLeagues.length > 0 ? (
@@ -433,7 +439,7 @@ export default function Profile() {
               {myLeagues.map((league) => (
                 <div
                   key={league.id}
-                  className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-purple-500/30 p-8 shadow-2xl hover:scale-105 transition-all"
+                  className="card p-8 border-brand-500/30 hover:shadow-soft-lg transition-all"
                 >
                   <div className="flex items-start justify-between mb-6">
                     <div>
@@ -445,7 +451,7 @@ export default function Profile() {
                     {league.rank && (
                       <div className="text-right">
                         <div className="text-xs text-gray-400 mb-1">Your Rank</div>
-                        <div className="text-3xl font-black text-purple-400">#{league.rank}</div>
+                        <div className="text-3xl font-bold text-brand-400">#{league.rank}</div>
                       </div>
                     )}
                   </div>
@@ -457,7 +463,7 @@ export default function Profile() {
                     </div>
                     <div className="bg-gray-900/50 rounded-xl p-4 text-center">
                       <div className="text-xs text-gray-400 mb-2">Members</div>
-                      <div className="text-2xl font-bold text-cyan-400">
+                      <div className="text-2xl font-bold text-brand-400">
                         {league.current_members}/{league.max_members}
                       </div>
                     </div>
@@ -481,56 +487,56 @@ export default function Profile() {
               ))}
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-16 text-center shadow-2xl">
-              <div className="text-7xl mb-6">🏅</div>
-              <h3 className="text-3xl font-black text-white mb-4">No Private Leagues</h3>
+            <div className="card p-16 text-center">
+              <Trophy size={48} weight="bold" className="text-brand-400 mx-auto mb-6" />
+              <h3 className="text-2xl font-semibold text-white mb-4">No Private Leagues</h3>
               <p className="text-gray-300 text-lg mb-8 max-w-md mx-auto">
                 Join or create a private league to compete with friends!
               </p>
               <Link
                 to="/draft"
-                className="inline-block px-10 py-5 bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 rounded-2xl font-bold text-xl transition-all transform hover:scale-105 shadow-2xl shadow-purple-500/30"
+                className="btn-primary inline-block px-8 py-4"
               >
-                Explore Leagues →
+                Explore Leagues
               </Link>
             </div>
           )}
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-10 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border-2 border-cyan-500/30 rounded-3xl p-8 shadow-2xl">
-          <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
-            <Target size={28} weight="fill" className="text-cyan-400" />
+        <div className="mt-10 card-highlight p-8">
+          <h3 className="text-2xl font-semibold text-white mb-6 flex items-center gap-3">
+            <Target size={28} weight="fill" className="text-brand-400" />
             Quick Actions
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
               to="/draft"
-              className="flex items-center gap-4 p-6 bg-gray-900/50 rounded-2xl hover:bg-gray-900/70 transition-all border-2 border-gray-700 hover:border-cyan-500/50"
+              className="flex items-center gap-4 p-6 bg-gray-900/50 rounded-lg hover:bg-gray-900/70 transition-all border border-gray-700 hover:border-brand-500/50"
             >
-              <Crown size={32} weight="fill" className="text-cyan-400" />
+              <Crown size={32} weight="fill" className="text-brand-400" />
               <div>
-                <div className="font-bold text-white mb-1">Manage Team</div>
+                <div className="font-medium text-white mb-1">Manage Team</div>
                 <div className="text-sm text-gray-400">Update your picks</div>
               </div>
             </Link>
             <Link
               to="/vote"
-              className="flex items-center gap-4 p-6 bg-gray-900/50 rounded-2xl hover:bg-gray-900/70 transition-all border-2 border-gray-700 hover:border-orange-500/50"
+              className="flex items-center gap-4 p-6 bg-gray-900/50 rounded-lg hover:bg-gray-900/70 transition-all border border-gray-700 hover:border-amber-500/50"
             >
-              <Target size={32} weight="fill" className="text-orange-400" />
+              <Target size={32} weight="fill" className="text-amber-400" />
               <div>
-                <div className="font-bold text-white mb-1">Daily Vote</div>
+                <div className="font-medium text-white mb-1">Daily Vote</div>
                 <div className="text-sm text-gray-400">Vote for best CT take</div>
               </div>
             </Link>
             <Link
               to="/"
-              className="flex items-center gap-4 p-6 bg-gray-900/50 rounded-2xl hover:bg-gray-900/70 transition-all border-2 border-gray-700 hover:border-purple-500/50"
+              className="flex items-center gap-4 p-6 bg-gray-900/50 rounded-lg hover:bg-gray-900/70 transition-all border border-gray-700 hover:border-brand-500/50"
             >
-              <TrendUp size={32} weight="fill" className="text-purple-400" />
+              <TrendUp size={32} weight="fill" className="text-brand-400" />
               <div>
-                <div className="font-bold text-white mb-1">Leaderboard</div>
+                <div className="font-medium text-white mb-1">Leaderboard</div>
                 <div className="text-sm text-gray-400">Check rankings</div>
               </div>
             </Link>

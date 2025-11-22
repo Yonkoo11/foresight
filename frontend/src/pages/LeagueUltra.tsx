@@ -1,5 +1,5 @@
 /**
- * CT Fantasy League Page - Ultra Premium Edition
+ * CT Fantasy League Page - Professional Draft Interface
  * Two-column layout with live team preview and advanced filtering
  */
 
@@ -10,7 +10,7 @@ import axios from 'axios';
 import {
   Trophy, Users, Lock, CheckCircle, TrendUp, Warning,
   MagnifyingGlass, Sparkle, Crown, Star, Fire,
-  CaretDown, X, Medal, ChartBar
+  CaretDown, X, Medal, ChartBar, Circle
 } from '@phosphor-icons/react';
 import WelcomeModal from '../components/WelcomeModal';
 import { formatFollowerCount } from '../utils/formatFollowers';
@@ -100,64 +100,50 @@ export default function LeagueUltra() {
 
   // Personalization state
   const [teamBadge, setTeamBadge] = useState<string>('fire');
-  const [teamColor, setTeamColor] = useState<string>('cyan');
+  const [teamColor, setTeamColor] = useState<string>('brand');
   const [showPersonalization, setShowPersonalization] = useState(false);
 
-  // CT-themed badges
+  // Professional badges - no emojis
   const badges = {
-    fire: { icon: Fire, label: 'Fire', emoji: '🔥' },
-    diamond: { icon: Sparkle, label: 'Diamond Hands', emoji: '💎' },
-    rocket: { icon: TrendUp, label: 'To The Moon', emoji: '🚀' },
-    trophy: { icon: Trophy, label: 'Champion', emoji: '🏆' },
-    crown: { icon: Crown, label: 'King', emoji: '👑' },
-    star: { icon: Star, label: 'Star', emoji: '⭐' },
-    lightning: { icon: Fire, label: 'Lightning', emoji: '⚡' },
-    pepe: { icon: Fire, label: 'Pepe', emoji: '🐸' },
+    fire: { icon: Fire, label: 'Fire' },
+    diamond: { icon: Sparkle, label: 'Diamond Hands' },
+    rocket: { icon: TrendUp, label: 'To The Moon' },
+    trophy: { icon: Trophy, label: 'Champion' },
+    crown: { icon: Crown, label: 'King' },
+    star: { icon: Star, label: 'Star' },
+    lightning: { icon: Fire, label: 'Lightning' },
+    circle: { icon: Circle, label: 'Circle' },
   };
 
-  // Team color schemes
+  // Professional color schemes - single brand color
   const colorSchemes = {
-    cyan: {
-      name: 'Cyan Wave',
-      gradient: 'from-cyan-400 to-blue-500',
-      text: 'text-cyan-400',
-      bg: 'bg-cyan-500',
-      border: 'border-cyan-400'
-    },
-    purple: {
-      name: 'Purple Haze',
-      gradient: 'from-purple-400 to-pink-500',
-      text: 'text-purple-400',
-      bg: 'bg-purple-500',
-      border: 'border-purple-400'
+    brand: {
+      name: 'Brand Blue',
+      gradient: 'from-brand-500 to-brand-600',
+      text: 'text-brand-500',
+      bg: 'bg-brand-500',
+      border: 'border-brand-500'
     },
     green: {
-      name: 'Green Candle',
-      gradient: 'from-green-400 to-emerald-500',
-      text: 'text-green-400',
+      name: 'Green',
+      gradient: 'from-green-500 to-emerald-600',
+      text: 'text-green-500',
       bg: 'bg-green-500',
-      border: 'border-green-400'
+      border: 'border-green-500'
     },
     orange: {
-      name: 'Orange Pill',
-      gradient: 'from-orange-400 to-red-500',
-      text: 'text-orange-400',
+      name: 'Orange',
+      gradient: 'from-orange-500 to-red-600',
+      text: 'text-orange-500',
       bg: 'bg-orange-500',
-      border: 'border-orange-400'
+      border: 'border-orange-500'
     },
     yellow: {
-      name: 'Golden Bull',
-      gradient: 'from-yellow-400 to-amber-500',
-      text: 'text-yellow-400',
+      name: 'Gold',
+      gradient: 'from-yellow-500 to-amber-600',
+      text: 'text-yellow-500',
       bg: 'bg-yellow-500',
-      border: 'border-yellow-400'
-    },
-    pink: {
-      name: 'Hot Pink',
-      gradient: 'from-pink-400 to-rose-500',
-      text: 'text-pink-400',
-      bg: 'bg-pink-500',
-      border: 'border-pink-400'
+      border: 'border-yellow-500'
     },
   };
 
@@ -570,7 +556,9 @@ export default function LeagueUltra() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin text-6xl mb-6">⚡</div>
+          <div className="animate-spin mb-6">
+            <Circle size={48} weight="bold" className="text-brand-500" />
+          </div>
           <p className="text-xl text-gray-400">Loading Fantasy League...</p>
         </div>
       </div>
@@ -586,9 +574,9 @@ export default function LeagueUltra() {
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setCurrentView('draft')}
-            className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all ${
+            className={`flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition-all ${
               currentView === 'draft'
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-2xl shadow-cyan-500/30'
+                ? 'bg-brand-600 text-white shadow-soft-lg'
                 : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
@@ -598,9 +586,9 @@ export default function LeagueUltra() {
           {team && (
             <button
               onClick={() => setCurrentView('squad')}
-              className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all ${
+              className={`flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition-all ${
                 currentView === 'squad'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-2xl shadow-cyan-500/30'
+                  ? 'bg-brand-600 text-white shadow-soft-lg'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
@@ -610,16 +598,16 @@ export default function LeagueUltra() {
           )}
           <button
             onClick={() => setCurrentView('leaderboard')}
-            className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg transition-all ${
+            className={`flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition-all ${
               currentView === 'leaderboard'
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-2xl shadow-cyan-500/30'
+                ? 'bg-brand-600 text-white shadow-soft-lg'
                 : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
             <Trophy size={24} weight="bold" />
             Leaderboard
             {leaderboard.length > 0 && (
-              <span className="bg-cyan-400 text-gray-900 px-2 py-0.5 rounded-full text-sm font-bold">
+              <span className="bg-brand-500 text-white px-2 py-0.5 rounded-full text-sm font-bold">
                 {leaderboard.length}
               </span>
             )}
@@ -636,7 +624,7 @@ export default function LeagueUltra() {
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto space-y-4 mb-4" style={{ scrollbarWidth: 'thin' }}>
             {/* Team Name Card */}
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-5 shadow-2xl">
+            <div className="card bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl p-5 shadow-soft-lg">
               {!team ? (
                 <>
                   <h2 className="text-2xl font-bold mb-4 text-white">Create Team</h2>
@@ -645,7 +633,7 @@ export default function LeagueUltra() {
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     placeholder="Enter team name..."
-                    className="w-full px-4 py-3 bg-gray-900/80 border-2 border-gray-700 rounded-xl focus:outline-none focus:border-cyan-500 transition-all text-white placeholder:text-gray-500"
+                    className="w-full px-4 py-3 bg-gray-900/80 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-brand-500 transition-all text-white placeholder:text-gray-500"
                     maxLength={50}
                   />
                 </>
@@ -659,15 +647,15 @@ export default function LeagueUltra() {
                       </div>
                     )}
                   </div>
-                  <p className="text-cyan-400">{selectedInfluencers.length}/5 influencers</p>
+                  <p className="text-brand-500">{selectedInfluencers.length}/5 influencers</p>
                 </>
               )}
             </div>
 
             {/* Selected Squad */}
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-5 shadow-2xl">
+            <div className="card bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl p-5 shadow-soft-lg">
               <h3 className="text-lg font-bold mb-3 text-white flex items-center gap-2">
-                <Users size={22} weight="bold" className="text-cyan-400" />
+                <Users size={22} weight="bold" className="text-brand-500" />
                 Your Squad
               </h3>
 
@@ -694,7 +682,7 @@ export default function LeagueUltra() {
 
                   return (
                     <div key={influencer.id} className={`flex items-center gap-2 p-2 bg-gradient-to-r from-gray-800 to-gray-800/50 rounded-lg border-2 transition-all group ${
-                      isCaptain ? 'border-yellow-500 bg-gradient-to-r from-yellow-900/20 to-amber-900/20' : 'border-gray-700 hover:border-cyan-500/50'
+                      isCaptain ? 'border-yellow-500 bg-gradient-to-r from-yellow-900/20 to-amber-900/20' : 'border-gray-700 hover:border-brand-500/50'
                     }`}>
                       <div className="relative">
                         <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold text-sm">
@@ -723,7 +711,7 @@ export default function LeagueUltra() {
                       <div className="text-right">
                         <p className="font-bold text-yellow-400 text-xs">{parseFloat(influencer.price.toString()).toFixed(0)} pts</p>
                         {influencer.total_points !== undefined && (
-                          <p className="text-[10px] text-cyan-400">{influencer.total_points} pts {isCaptain && '× 2'}</p>
+                          <p className="text-[10px] text-brand-500">{influencer.total_points} pts {isCaptain && '× 2'}</p>
                         )}
                       </div>
                       <button
@@ -753,17 +741,17 @@ export default function LeagueUltra() {
                 <div className="mt-4 pt-4 border-t border-gray-700">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Total Score</span>
-                    <span className="text-3xl font-black text-cyan-400">{team.total_score}</span>
+                    <span className="text-3xl font-black text-brand-500">{team.total_score}</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Budget Tracker */}
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-5 shadow-2xl">
+            <div className="card bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl p-5 shadow-soft-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-400">Budget</span>
-                <span className={`text-2xl font-black ${budgetRemaining < 0 ? 'text-red-400' : 'text-cyan-400'}`}>
+                <span className={`text-2xl font-black ${budgetRemaining < 0 ? 'text-red-400' : 'text-brand-500'}`}>
                   {budgetUsed.toFixed(0)}/{TOTAL_BUDGET}
                 </span>
               </div>
@@ -772,7 +760,7 @@ export default function LeagueUltra() {
                   className={`absolute left-0 top-0 h-full transition-all duration-300 ${
                     budgetRemaining < 0
                       ? 'bg-gradient-to-r from-red-500 to-red-600'
-                      : 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                      : 'bg-brand-600'
                   }`}
                   style={{ width: `${Math.min((budgetUsed / TOTAL_BUDGET) * 100, 100)}%` }}
                 />
@@ -787,7 +775,7 @@ export default function LeagueUltra() {
 
             {/* Deadline Info */}
             {selectedContest && (
-              <div className="bg-gradient-to-r from-orange-900/20 to-red-900/20 border-2 border-orange-500/50 rounded-xl p-3">
+              <div className="bg-gradient-to-r from-orange-900/20 to-red-900/20 border-2 border-orange-500/50 rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <Warning size={16} weight="fill" className="text-orange-400 flex-shrink-0" />
                   <div className="text-[11px] text-orange-200">
@@ -805,7 +793,7 @@ export default function LeagueUltra() {
                 <button
                   onClick={handleManualSignIn}
                   disabled={!isConnected || loading}
-                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-2xl font-bold text-base transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-cyan-500/30"
+                  className="btn-primary w-full py-3 rounded-lg font-bold text-base transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft-lg"
                 >
                   <span className="flex items-center gap-2 justify-center">
                     <Lock size={20} weight="bold" />
@@ -816,16 +804,16 @@ export default function LeagueUltra() {
                 <button
                   onClick={handleCreateTeam}
                   disabled={loading || !teamName || selectedInfluencers.length !== 5 || budgetUsed > TOTAL_BUDGET}
-                  className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-2xl font-bold text-base transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-green-500/30"
+                  className="btn-primary w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-lg font-bold text-base transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft-lg"
                 >
                   <span className="flex items-center gap-2 justify-center">
                     <TrendUp size={20} weight="bold" />
                     Create Team
-                    <span className="bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full text-xs">+50 XP</span>
+                    <span className="badge-warning bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full text-xs">+50 XP</span>
                   </span>
                 </button>
               ) : team.is_locked ? (
-                <div className="w-full py-3 bg-gray-700 rounded-2xl text-center">
+                <div className="w-full py-3 bg-gray-700 rounded-lg text-center">
                   <span className="flex items-center gap-2 justify-center text-gray-400">
                     <Lock size={20} weight="bold" />
                     <span className="font-bold">Team Locked</span>
@@ -836,7 +824,7 @@ export default function LeagueUltra() {
                 <button
                   onClick={handleUpdateTeam}
                   disabled={loading || selectedInfluencers.length !== 5 || budgetUsed > TOTAL_BUDGET}
-                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-2xl font-bold text-base transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-cyan-500/30"
+                  className="btn-primary w-full py-3 rounded-lg font-bold text-base transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft-lg"
                 >
                   <span className="flex items-center gap-2 justify-center">
                     <TrendUp size={20} weight="bold" />
@@ -857,11 +845,11 @@ export default function LeagueUltra() {
                 <button
                   key={contestOption.id}
                   onClick={() => setSelectedContestId(contestOption.id)}
-                  className={`relative p-4 rounded-2xl border-2 transition-all text-left ${
+                  className={`card-hover relative p-4 rounded-lg border-2 transition-all text-left ${
                     selectedContestId === contestOption.id
                       ? contestOption.is_prize_league
-                        ? 'bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-yellow-500/70 shadow-lg shadow-yellow-500/20'
-                        : 'bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-cyan-500/70 shadow-lg shadow-cyan-500/20'
+                        ? 'bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-yellow-500/70 shadow-soft'
+                        : 'bg-brand-500/10 border-brand-500/70 shadow-soft'
                       : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
                   }`}
                 >
@@ -875,8 +863,8 @@ export default function LeagueUltra() {
                           </>
                         ) : (
                           <>
-                            <Users size={20} weight="bold" className="text-cyan-400" />
-                            <span className="font-bold text-cyan-400">Free League</span>
+                            <Users size={20} weight="bold" className="text-brand-500" />
+                            <span className="font-bold text-brand-500">Free League</span>
                           </>
                         )}
                       </div>
@@ -900,7 +888,7 @@ export default function LeagueUltra() {
                       </div>
                     </div>
                     {selectedContestId === contestOption.id && (
-                      <CheckCircle size={24} weight="fill" className={contestOption.is_prize_league ? 'text-yellow-400' : 'text-cyan-400'} />
+                      <CheckCircle size={24} weight="fill" className={contestOption.is_prize_league ? 'text-yellow-400' : 'text-brand-500'} />
                     )}
                   </div>
                 </button>
@@ -908,37 +896,37 @@ export default function LeagueUltra() {
             </div>
           )}
 
-          {/* Contest Info Bar - CT Style */}
+          {/* Contest Info Bar */}
           {selectedContest && (
-            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 rounded-2xl p-4 mb-4 flex items-center justify-between backdrop-blur-sm">
+            <div className="card bg-brand-500/10 border-2 border-brand-500/50 rounded-lg p-4 mb-4 flex items-center justify-between backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-brand-600 rounded-full flex items-center justify-center shadow-soft">
                   <Fire size={24} weight="fill" className="text-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded-full font-bold border border-purple-400/50">
+                    <span className="badge-primary text-xs px-2 py-0.5 rounded-full font-bold">
                       {getQuarterFromDate(selectedContest.start_date)}
                     </span>
                     <p className="text-lg font-black text-white">
                       GW{getGameweekNumber(selectedContest.start_date)}
                     </p>
                   </div>
-                  <p className="text-xs text-purple-300 font-semibold mt-1">
+                  <p className="text-xs text-brand-300 font-semibold mt-1">
                     {new Date(selectedContest.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(selectedContest.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs text-purple-300 font-bold">Deadline</p>
+                <p className="text-xs text-brand-300 font-bold">Deadline</p>
                 <p className="text-xl font-black text-white">{new Date(selectedContest.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                <p className="text-[10px] text-purple-400 mt-0.5">00:00 UTC</p>
+                <p className="text-[10px] text-brand-400 mt-0.5">00:00 UTC</p>
               </div>
             </div>
           )}
 
           {/* Search and Filters */}
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-6 mb-6 shadow-2xl">
+          <div className="card bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl p-6 mb-6 shadow-soft-lg">
             {/* Search Bar */}
             <div className="relative mb-4">
               <MagnifyingGlass size={20} weight="bold" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -947,7 +935,7 @@ export default function LeagueUltra() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search CT kings by name or @handle..."
-                className="w-full pl-12 pr-4 py-4 bg-gray-900/80 border-2 border-gray-700 rounded-xl focus:outline-none focus:border-cyan-500 transition-all text-white placeholder:text-gray-500 text-lg"
+                className="w-full pl-12 pr-4 py-4 bg-gray-900/80 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-brand-500 transition-all text-white placeholder:text-gray-500 text-lg"
               />
             </div>
 
@@ -958,10 +946,10 @@ export default function LeagueUltra() {
                 <button
                   key={tier}
                   onClick={() => setSelectedTier(tier)}
-                  className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                  className={`btn px-4 py-2 rounded-lg font-bold text-sm transition-all ${
                     selectedTier === tier
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg'
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      ? 'btn-primary shadow-soft'
+                      : 'btn-ghost'
                   }`}
                 >
                   {tier === 'All' ? 'All Tiers' : `${tier}-Tier`}
@@ -970,7 +958,7 @@ export default function LeagueUltra() {
 
               <button
                 onClick={handleResetFilters}
-                className="px-4 py-2 bg-gray-800 text-gray-400 hover:bg-gray-700 rounded-xl font-bold text-sm transition-all flex items-center gap-2"
+                className="btn-ghost px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
               >
                 <span>↻</span> Reset
               </button>
@@ -980,7 +968,7 @@ export default function LeagueUltra() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-4 py-2 bg-gray-800 border-2 border-gray-700 rounded-xl text-white font-semibold focus:outline-none focus:border-cyan-500"
+                  className="px-4 py-2 bg-gray-800 border-2 border-gray-700 rounded-lg text-white font-semibold focus:outline-none focus:border-brand-500"
                 >
                   <option value="price">Price (Low to High)</option>
                   <option value="followers">Followers (High to Low)</option>
@@ -988,19 +976,19 @@ export default function LeagueUltra() {
                 </select>
 
                 {/* View Toggle */}
-                <div className="flex bg-gray-800 rounded-xl border-2 border-gray-700">
+                <div className="flex bg-gray-800 rounded-lg border-2 border-gray-700">
                   <button
                     onClick={() => setInfluencerViewMode('grid')}
-                    className={`px-3 py-2 rounded-l-xl font-bold text-sm transition-all ${
-                      influencerViewMode === 'grid' ? 'bg-cyan-500 text-white' : 'text-gray-400'
+                    className={`px-3 py-2 rounded-l-lg font-bold text-sm transition-all ${
+                      influencerViewMode === 'grid' ? 'bg-brand-500 text-white' : 'text-gray-400'
                     }`}
                   >
                     Grid
                   </button>
                   <button
                     onClick={() => setInfluencerViewMode('list')}
-                    className={`px-3 py-2 rounded-r-xl font-bold text-sm transition-all ${
-                      influencerViewMode === 'list' ? 'bg-cyan-500 text-white' : 'text-gray-400'
+                    className={`px-3 py-2 rounded-r-lg font-bold text-sm transition-all ${
+                      influencerViewMode === 'list' ? 'bg-brand-500 text-white' : 'text-gray-400'
                     }`}
                   >
                     List
@@ -1012,17 +1000,17 @@ export default function LeagueUltra() {
             {/* Results Count & Auto-Pick */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-700">
               <p className="text-sm text-gray-400">
-                <span className="bg-cyan-500/20 text-cyan-400 px-3 py-1 rounded-full font-bold">{filteredInfluencers.length} influencers</span>
+                <span className="badge-primary bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full font-bold">{filteredInfluencers.length} influencers</span>
                 {' '}shown of {availableInfluencers.length} total
               </p>
 
               {selectedInfluencers.length < 5 && isAuthenticated && (
                 <button
                   onClick={handleAutoPick}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 rounded-xl font-bold text-sm transition-all text-white flex items-center gap-2 shadow-lg"
+                  className="btn-primary px-4 py-2 rounded-lg font-bold text-sm transition-all text-white flex items-center gap-2 shadow-soft"
                 >
                   <Sparkle size={16} weight="fill" />
-                  Auto-Fill (Alpha Mode)
+                  Auto-Fill
                 </button>
               )}
             </div>
@@ -1038,9 +1026,9 @@ export default function LeagueUltra() {
               // Form indicator based on form_score (0-100 scale, with 50 being average)
               const formScore = influencer.form_score || 50;
               const getFormInfo = () => {
-                if (formScore >= 70) return { emoji: '🔥', text: 'Hot', color: 'text-orange-400', bg: 'bg-orange-500/20 border-orange-500/50' };
-                if (formScore >= 40) return { emoji: '➡️', text: 'Steady', color: 'text-blue-400', bg: 'bg-blue-500/20 border-blue-500/50' };
-                return { emoji: '📉', text: 'Cold', color: 'text-gray-400', bg: 'bg-gray-500/20 border-gray-500/50' };
+                if (formScore >= 70) return { text: 'Hot', color: 'text-orange-400', bg: 'bg-orange-500/20 border-orange-500/50' };
+                if (formScore >= 40) return { text: 'Steady', color: 'text-blue-400', bg: 'bg-blue-500/20 border-blue-500/50' };
+                return { text: 'Cold', color: 'text-gray-400', bg: 'bg-gray-500/20 border-gray-500/50' };
               };
               const form = getFormInfo();
 
@@ -1049,22 +1037,21 @@ export default function LeagueUltra() {
                   key={influencer.id}
                   onClick={() => handleSelectInfluencer(influencer.id)}
                   disabled={!isSelected && selectedInfluencers.length >= 5}
-                  className={`relative p-6 rounded-2xl border-2 transition-all duration-300 text-left group ${
+                  className={`card-hover relative p-6 rounded-lg border-2 transition-all duration-300 text-left group ${
                     isSelected
-                      ? `border-cyan-400 bg-gradient-to-br ${rarity.gradient} shadow-2xl shadow-cyan-500/30 scale-105`
-                      : 'border-gray-700 bg-gradient-to-br from-gray-800/80 to-gray-900/80 hover:border-gray-600 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+                      ? `border-brand-500 bg-gradient-to-br ${rarity.gradient} shadow-soft-lg scale-105`
+                      : 'border-gray-700 bg-gradient-to-br from-gray-800/80 to-gray-900/80 hover:border-gray-600 hover:scale-105 hover:shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                   }`}
                 >
                   {/* Top Badges Row */}
                   <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between gap-2">
                     {/* Form Badge */}
-                    <div className={`${form.bg} border-2 px-2 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
-                      <span className="text-xs">{form.emoji}</span>
+                    <div className={`${form.bg} border-2 px-2 py-1 rounded-full flex items-center gap-1 shadow-soft`}>
                       <span className={`text-xs font-bold ${form.color}`}>{form.text}</span>
                     </div>
 
                     {/* Rarity Badge */}
-                    <div className={`${rarity.badge} px-3 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
+                    <div className={`${rarity.badge} px-3 py-1 rounded-full flex items-center gap-1 shadow-soft`}>
                       <RarityIcon size={14} weight="fill" className="text-white" />
                       <span className="text-xs font-bold text-white">{rarity.label}</span>
                     </div>
@@ -1072,11 +1059,13 @@ export default function LeagueUltra() {
 
                   {/* Profile Picture */}
                   <div className="mb-4 mt-6">
-                    <div className={`w-24 h-24 mx-auto rounded-full border-4 ${isSelected ? 'border-white' : 'border-gray-600'} shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 ${formScore >= 70 ? 'ring-2 ring-orange-500/50 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                    <div className={`w-24 h-24 mx-auto rounded-full border-4 ${isSelected ? 'border-white' : 'border-gray-600'} shadow-soft overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 ${formScore >= 70 ? 'ring-2 ring-orange-500/50 ring-offset-2 ring-offset-gray-900' : ''}`}>
                       {influencer.profile_image_url ? (
                         <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl">👤</div>
+                        <div className="w-full h-full flex items-center justify-center text-4xl text-gray-500">
+                          <Users size={48} weight="bold" />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1113,9 +1102,9 @@ export default function LeagueUltra() {
                   {/* Followers Badge */}
                   {influencer.follower_count && (
                     <div className="mb-4 text-center">
-                      <div className="inline-flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-3 py-1">
-                        <Users size={14} weight="bold" className="text-cyan-400" />
-                        <span className="text-xs font-bold text-cyan-400">
+                      <div className="inline-flex items-center gap-1 bg-brand-500/10 border border-brand-500/30 rounded-full px-3 py-1">
+                        <Users size={14} weight="bold" className="text-brand-500" />
+                        <span className="text-xs font-bold text-brand-500">
                           {formatFollowerCount(influencer.follower_count)}
                         </span>
                       </div>
@@ -1123,10 +1112,10 @@ export default function LeagueUltra() {
                   )}
 
                   {/* Draft Button */}
-                  <div className={`py-3 rounded-xl text-center font-bold transition-all ${
+                  <div className={`py-3 rounded-lg text-center font-bold transition-all ${
                     isSelected
                       ? 'bg-white/20 backdrop-blur text-white'
-                      : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 group-hover:from-cyan-500/30 group-hover:to-blue-500/30'
+                      : 'bg-brand-500/20 text-brand-400 group-hover:bg-brand-500/30'
                   }`}>
                     {isSelected ? (
                       <span className="flex items-center gap-2 justify-center">
@@ -1148,7 +1137,9 @@ export default function LeagueUltra() {
           {/* Empty State */}
           {filteredInfluencers.length === 0 && (
             <div className="text-center py-20">
-              <div className="text-6xl mb-4">🔍</div>
+              <div className="mb-4">
+                <MagnifyingGlass size={64} weight="bold" className="text-gray-600 mx-auto" />
+              </div>
               <h3 className="text-2xl font-bold text-white mb-2">No influencers found</h3>
               <p className="text-gray-400">Try adjusting your search or filters</p>
             </div>
@@ -1156,14 +1147,14 @@ export default function LeagueUltra() {
         </div>
       </div>
 
-      {/* My Squad View - CT Ultra Edition */}
+      {/* My Squad View */}
       {currentView === 'squad' && team && (
         <div className="max-w-[1400px] mx-auto px-6 pb-6">
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
-            {/* Squad Header - CT Style */}
+          <div className="card bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl p-8 shadow-soft-lg">
+            {/* Squad Header */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <div className={`p-4 bg-gradient-to-br ${colorSchemes[teamColor as keyof typeof colorSchemes].gradient} rounded-2xl shadow-xl`}>
+                <div className={`p-4 bg-gradient-to-br ${colorSchemes[teamColor as keyof typeof colorSchemes].gradient} rounded-lg shadow-soft`}>
                   {(() => {
                     const BadgeIcon = badges[teamBadge as keyof typeof badges].icon;
                     return <BadgeIcon size={32} weight="fill" className="text-white" />;
@@ -1172,23 +1163,23 @@ export default function LeagueUltra() {
                 <div>
                   <h2 className={`text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r ${colorSchemes[teamColor as keyof typeof colorSchemes].gradient}`}>{team.team_name}</h2>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded-full font-bold border border-purple-400/50">
+                    <span className="badge-primary text-xs px-2 py-0.5 rounded-full font-bold">
                       {getQuarterFromDate(selectedContest?.start_date || '')}
                     </span>
-                    <p className="text-purple-300 font-bold">5 CT Kings Selected</p>
+                    <p className="text-brand-300 font-bold">5 CT Kings Selected</p>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-6">
                 <button
                   onClick={() => setShowPersonalization(!showPersonalization)}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 rounded-xl font-bold text-white transition-all flex items-center gap-2 shadow-lg"
+                  className="btn-primary px-6 py-3 rounded-lg font-bold text-white transition-all flex items-center gap-2 shadow-soft"
                 >
                   <Sparkle size={20} weight="fill" />
                   Customize Team
                 </button>
                 <div className="text-right">
-                  <p className="text-sm text-purple-300 font-bold mb-1">Contest Rank</p>
+                  <p className="text-sm text-brand-300 font-bold mb-1">Contest Rank</p>
                   <p className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">
                     #{team.rank || '–'}
                   </p>
@@ -1198,15 +1189,15 @@ export default function LeagueUltra() {
 
             {/* Personalization Panel */}
             {showPersonalization && (
-              <div className="mb-8 bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="mb-8 card bg-brand-500/10 border-2 border-brand-500/50 p-6 backdrop-blur-sm">
                 <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Sparkle size={24} weight="fill" className="text-purple-400" />
+                  <Sparkle size={24} weight="fill" className="text-brand-400" />
                   Personalize Your Squad
                 </h3>
 
                 {/* Badge Selector */}
                 <div className="mb-6">
-                  <p className="text-sm font-bold text-purple-300 mb-3">Team Badge</p>
+                  <p className="text-sm font-bold text-brand-300 mb-3">Team Badge</p>
                   <div className="grid grid-cols-4 gap-3">
                     {Object.entries(badges).map(([key, badge]) => {
                       const BadgeIcon = badge.icon;
@@ -1214,15 +1205,14 @@ export default function LeagueUltra() {
                         <button
                           key={key}
                           onClick={() => setTeamBadge(key)}
-                          className={`p-4 rounded-xl border-2 transition-all hover:scale-105 ${
+                          className={`card-hover p-4 rounded-lg border-2 transition-all hover:scale-105 ${
                             teamBadge === key
-                              ? 'bg-gradient-to-br from-purple-500 to-pink-500 border-purple-400 shadow-xl'
+                              ? 'bg-brand-600 border-brand-400 shadow-soft'
                               : 'bg-gray-800 border-gray-700 hover:border-gray-600'
                           }`}
                         >
                           <div className="text-center">
-                            <div className="text-3xl mb-2">{badge.emoji}</div>
-                            <BadgeIcon size={20} weight="fill" className="text-white mx-auto mb-1" />
+                            <BadgeIcon size={32} weight="fill" className="text-white mx-auto mb-2" />
                             <p className="text-xs font-bold text-white">{badge.label}</p>
                           </div>
                         </button>
@@ -1233,15 +1223,15 @@ export default function LeagueUltra() {
 
                 {/* Color Picker */}
                 <div>
-                  <p className="text-sm font-bold text-purple-300 mb-3">Team Colors</p>
-                  <div className="grid grid-cols-3 gap-3">
+                  <p className="text-sm font-bold text-brand-300 mb-3">Team Colors</p>
+                  <div className="grid grid-cols-4 gap-3">
                     {Object.entries(colorSchemes).map(([key, scheme]) => (
                       <button
                         key={key}
                         onClick={() => setTeamColor(key)}
-                        className={`p-4 rounded-xl border-2 transition-all hover:scale-105 ${
+                        className={`card-hover p-4 rounded-lg border-2 transition-all hover:scale-105 ${
                           teamColor === key
-                            ? `bg-gradient-to-br ${scheme.gradient} border-white shadow-xl`
+                            ? `bg-gradient-to-br ${scheme.gradient} border-white shadow-soft`
                             : `bg-gradient-to-br ${scheme.gradient} opacity-60 border-gray-700 hover:opacity-100`
                         }`}
                       >
@@ -1260,12 +1250,12 @@ export default function LeagueUltra() {
 
                 {/* Apply Button */}
                 <div className="mt-6 flex items-center justify-between">
-                  <p className="text-sm text-purple-300">
+                  <p className="text-sm text-brand-300">
                     Changes apply instantly to your squad view
                   </p>
                   <button
                     onClick={() => setShowPersonalization(false)}
-                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-xl font-bold text-white transition-all flex items-center gap-2"
+                    className="btn-primary px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-lg font-bold text-white transition-all flex items-center gap-2"
                   >
                     <CheckCircle size={20} weight="fill" />
                     Done
@@ -1274,26 +1264,26 @@ export default function LeagueUltra() {
               </div>
             )}
 
-            {/* Team Stats Cards - Enhanced */}
+            {/* Team Stats Cards */}
             <div className="grid grid-cols-4 gap-4 mb-8">
-              <div className={`bg-gradient-to-br ${colorSchemes[teamColor as keyof typeof colorSchemes].gradient} bg-opacity-20 border-2 ${colorSchemes[teamColor as keyof typeof colorSchemes].border} border-opacity-50 rounded-2xl p-6`}>
+              <div className={`card bg-gradient-to-br ${colorSchemes[teamColor as keyof typeof colorSchemes].gradient} bg-opacity-20 border-2 ${colorSchemes[teamColor as keyof typeof colorSchemes].border} border-opacity-50 p-6`}>
                 <p className={`text-sm ${colorSchemes[teamColor as keyof typeof colorSchemes].text} opacity-80 font-bold mb-2`}>Total Foresight</p>
                 <p className={`text-5xl font-black ${colorSchemes[teamColor as keyof typeof colorSchemes].text}`}>{team.total_score}</p>
                 <p className={`text-xs ${colorSchemes[teamColor as keyof typeof colorSchemes].text} opacity-80 mt-2`}>Points Scored</p>
               </div>
-              <div className="bg-gradient-to-br from-yellow-600/20 to-amber-600/20 border-2 border-yellow-500/50 rounded-2xl p-6">
+              <div className="card bg-gradient-to-br from-yellow-600/20 to-amber-600/20 border-2 border-yellow-500/50 p-6">
                 <p className="text-sm text-yellow-300 font-bold mb-2">Budget Spent</p>
                 <p className="text-5xl font-black text-yellow-400">{budgetUsed.toFixed(0)}<span className="text-2xl">/{TOTAL_BUDGET}</span></p>
                 <p className="text-xs text-yellow-300 mt-2">{(TOTAL_BUDGET - budgetUsed).toFixed(0)} pts left</p>
               </div>
-              <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 rounded-2xl p-6">
-                <p className="text-sm text-purple-300 font-bold mb-2">Top Performer</p>
-                <p className="text-3xl font-black text-purple-400">
+              <div className="card bg-brand-500/10 border-2 border-brand-500/50 p-6">
+                <p className="text-sm text-brand-300 font-bold mb-2">Top Performer</p>
+                <p className="text-3xl font-black text-brand-400">
                   {team.picks.reduce((max: any, p: any) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.influencer_name?.split(' ')[0] || 'N/A'}
                 </p>
-                <p className="text-xs text-purple-300 mt-2">{team.picks.reduce((max: any, p: any) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.total_points || 0} pts</p>
+                <p className="text-xs text-brand-300 mt-2">{team.picks.reduce((max: any, p: any) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.total_points || 0} pts</p>
               </div>
-              <div className="bg-gradient-to-br from-orange-600/20 to-red-600/20 border-2 border-orange-500/50 rounded-2xl p-6">
+              <div className="card bg-gradient-to-br from-orange-600/20 to-red-600/20 border-2 border-orange-500/50 p-6">
                 <p className="text-sm text-orange-300 font-bold mb-2">Contest Ends In</p>
                 {(() => {
                   if (!selectedContest) return <p className="text-3xl font-bold text-orange-400">N/A</p>;
@@ -1319,7 +1309,7 @@ export default function LeagueUltra() {
                         {days}d {hours}h
                       </p>
                       <p className="text-xs text-orange-300 mt-2">
-                        {team.is_locked ? '🔒 Team locked' : '⚠️ Lock before deadline'}
+                        {team.is_locked ? 'Team locked' : 'Lock before deadline'}
                       </p>
                     </>
                   );
@@ -1331,23 +1321,23 @@ export default function LeagueUltra() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Users size={24} weight="bold" className="text-cyan-400" />
+                  <Users size={24} weight="bold" className="text-brand-500" />
                   Squad Members
                 </h3>
                 {/* View Toggle */}
-                <div className="flex bg-gray-800 rounded-xl border-2 border-gray-700">
+                <div className="flex bg-gray-800 rounded-lg border-2 border-gray-700">
                   <button
                     onClick={() => setSquadViewMode('formation')}
-                    className={`px-4 py-2 rounded-l-xl font-bold text-sm transition-all ${
-                      squadViewMode === 'formation' ? 'bg-purple-500 text-white' : 'text-gray-400'
+                    className={`px-4 py-2 rounded-l-lg font-bold text-sm transition-all ${
+                      squadViewMode === 'formation' ? 'bg-brand-500 text-white' : 'text-gray-400'
                     }`}
                   >
                     Formation
                   </button>
                   <button
                     onClick={() => setSquadViewMode('list')}
-                    className={`px-4 py-2 rounded-r-xl font-bold text-sm transition-all ${
-                      squadViewMode === 'list' ? 'bg-purple-500 text-white' : 'text-gray-400'
+                    className={`px-4 py-2 rounded-r-lg font-bold text-sm transition-all ${
+                      squadViewMode === 'list' ? 'bg-brand-500 text-white' : 'text-gray-400'
                     }`}
                   >
                     List
@@ -1357,8 +1347,8 @@ export default function LeagueUltra() {
 
               {/* Formation View - 5-a-Side Pitch */}
               {squadViewMode === 'formation' && (
-                <div className="relative rounded-3xl border-2 border-gray-700 overflow-hidden min-h-[700px]">
-                  {/* Pitch Background - Radial Gradient */}
+                <div className="relative rounded-xl border-2 border-gray-700 overflow-hidden min-h-[700px]">
+                  {/* Pitch Background */}
                   <div className="absolute inset-0 bg-gradient-to-b from-green-900/20 via-gray-900/80 to-gray-900/90"></div>
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]"></div>
 
@@ -1385,10 +1375,10 @@ export default function LeagueUltra() {
 
                             return (
                               <div key={pick.id} className="relative group">
-                                {/* Captain Armband Badge */}
+                                {/* Captain Badge */}
                                 {isCaptain && (
                                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
-                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xl border-2 border-yellow-300 animate-pulse">
+                                    <div className="badge-warning bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-soft border-2 border-yellow-300">
                                       <Crown size={14} weight="fill" className="text-white" />
                                       <span className="text-xs font-black text-white">CAPTAIN</span>
                                     </div>
@@ -1396,20 +1386,22 @@ export default function LeagueUltra() {
                                 )}
 
                                 {/* Player Card */}
-                                <div className={`relative ${isCaptain ? 'animate-pulse-slow' : ''}`}>
-                                  <div className={`relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-2xl shadow-2xl transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
-                                    <div className="bg-gray-900 rounded-xl p-4 w-40">
+                                <div className={`relative`}>
+                                  <div className={`card-hover relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-lg shadow-soft-lg transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                                    <div className="bg-gray-900 rounded-lg p-4 w-40">
                                       {/* Avatar */}
                                       <div className="relative w-20 h-20 mx-auto mb-2">
-                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-xl`}>
+                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-soft`}>
                                           {pick.profile_image_url ? (
                                             <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
                                           ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                                            <div className="w-full h-full flex items-center justify-center text-3xl text-gray-500">
+                                              <Users size={32} weight="bold" />
+                                            </div>
                                           )}
                                         </div>
                                         {/* Tier Badge */}
-                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-lg text-xs font-black text-white`}>
+                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-soft text-xs font-black text-white`}>
                                           {pick.tier || pick.influencer_tier || 'C'}
                                         </div>
                                       </div>
@@ -1421,7 +1413,7 @@ export default function LeagueUltra() {
                                       {/* Stats */}
                                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-700">
                                         <div className="text-center flex-1">
-                                          <p className="text-xs text-cyan-400 font-bold">{pick.total_points || 0}</p>
+                                          <p className="text-xs text-brand-400 font-bold">{pick.total_points || 0}</p>
                                           <p className="text-[9px] text-gray-500">PTS</p>
                                         </div>
                                         <div className="w-px h-6 bg-gray-700"></div>
@@ -1435,7 +1427,7 @@ export default function LeagueUltra() {
 
                                   {/* Captain 2x Multiplier Indicator */}
                                   {isCaptain && (
-                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-lg">
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-soft">
                                       <span className="text-xs font-black text-gray-900">2X</span>
                                     </div>
                                   )}
@@ -1455,25 +1447,27 @@ export default function LeagueUltra() {
                               <div key={pick.id} className="relative group">
                                 {isCaptain && (
                                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
-                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xl border-2 border-yellow-300 animate-pulse">
+                                    <div className="badge-warning bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-soft border-2 border-yellow-300">
                                       <Crown size={14} weight="fill" className="text-white" />
                                       <span className="text-xs font-black text-white">CAPTAIN</span>
                                     </div>
                                   </div>
                                 )}
 
-                                <div className={`relative ${isCaptain ? 'animate-pulse-slow' : ''}`}>
-                                  <div className={`relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-2xl shadow-2xl transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
-                                    <div className="bg-gray-900 rounded-xl p-4 w-40">
+                                <div className={`relative`}>
+                                  <div className={`card-hover relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-lg shadow-soft-lg transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                                    <div className="bg-gray-900 rounded-lg p-4 w-40">
                                       <div className="relative w-20 h-20 mx-auto mb-2">
-                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-xl`}>
+                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-soft`}>
                                           {pick.profile_image_url ? (
                                             <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
                                           ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                                            <div className="w-full h-full flex items-center justify-center text-3xl text-gray-500">
+                                              <Users size={32} weight="bold" />
+                                            </div>
                                           )}
                                         </div>
-                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-lg text-xs font-black text-white`}>
+                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-soft text-xs font-black text-white`}>
                                           {pick.tier || pick.influencer_tier || 'C'}
                                         </div>
                                       </div>
@@ -1483,7 +1477,7 @@ export default function LeagueUltra() {
 
                                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-700">
                                         <div className="text-center flex-1">
-                                          <p className="text-xs text-cyan-400 font-bold">{pick.total_points || 0}</p>
+                                          <p className="text-xs text-brand-400 font-bold">{pick.total_points || 0}</p>
                                           <p className="text-[9px] text-gray-500">PTS</p>
                                         </div>
                                         <div className="w-px h-6 bg-gray-700"></div>
@@ -1496,7 +1490,7 @@ export default function LeagueUltra() {
                                   </div>
 
                                   {isCaptain && (
-                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-lg">
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-soft">
                                       <span className="text-xs font-black text-gray-900">2X</span>
                                     </div>
                                   )}
@@ -1516,25 +1510,27 @@ export default function LeagueUltra() {
                               <div key={pick.id} className="relative group">
                                 {isCaptain && (
                                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
-                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xl border-2 border-yellow-300 animate-pulse">
+                                    <div className="badge-warning bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-soft border-2 border-yellow-300">
                                       <Crown size={14} weight="fill" className="text-white" />
                                       <span className="text-xs font-black text-white">CAPTAIN</span>
                                     </div>
                                   </div>
                                 )}
 
-                                <div className={`relative ${isCaptain ? 'animate-pulse-slow' : ''}`}>
-                                  <div className={`relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-2xl shadow-2xl transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
-                                    <div className="bg-gray-900 rounded-xl p-4 w-40">
+                                <div className={`relative`}>
+                                  <div className={`card-hover relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-lg shadow-soft-lg transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                                    <div className="bg-gray-900 rounded-lg p-4 w-40">
                                       <div className="relative w-20 h-20 mx-auto mb-2">
-                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-xl`}>
+                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-soft`}>
                                           {pick.profile_image_url ? (
                                             <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
                                           ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                                            <div className="w-full h-full flex items-center justify-center text-3xl text-gray-500">
+                                              <Users size={32} weight="bold" />
+                                            </div>
                                           )}
                                         </div>
-                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-lg text-xs font-black text-white`}>
+                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-soft text-xs font-black text-white`}>
                                           {pick.tier || pick.influencer_tier || 'C'}
                                         </div>
                                       </div>
@@ -1544,7 +1540,7 @@ export default function LeagueUltra() {
 
                                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-700">
                                         <div className="text-center flex-1">
-                                          <p className="text-xs text-cyan-400 font-bold">{pick.total_points || 0}</p>
+                                          <p className="text-xs text-brand-400 font-bold">{pick.total_points || 0}</p>
                                           <p className="text-[9px] text-gray-500">PTS</p>
                                         </div>
                                         <div className="w-px h-6 bg-gray-700"></div>
@@ -1557,7 +1553,7 @@ export default function LeagueUltra() {
                                   </div>
 
                                   {isCaptain && (
-                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-lg">
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-soft">
                                       <span className="text-xs font-black text-gray-900">2X</span>
                                     </div>
                                   )}
@@ -1587,7 +1583,7 @@ export default function LeagueUltra() {
                   return (
                     <div
                       key={pick.id}
-                      className="bg-gradient-to-r from-gray-800 to-gray-800/50 rounded-2xl p-6 border-2 border-gray-700 hover:border-cyan-500/50 transition-all"
+                      className="card-hover bg-gradient-to-r from-gray-800 to-gray-800/50 p-6 border-2 border-gray-700 hover:border-brand-500/50 transition-all"
                     >
                       <div className="flex items-center gap-6">
                         {/* Pick Number */}
@@ -1601,10 +1597,12 @@ export default function LeagueUltra() {
                             {pick.profile_image_url ? (
                               <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-4xl">👤</div>
+                              <div className="w-full h-full flex items-center justify-center text-4xl text-gray-500">
+                                <Users size={40} weight="bold" />
+                              </div>
                             )}
                           </div>
-                          <div className={`absolute -bottom-2 -right-2 ${rarity.badge} px-3 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
+                          <div className={`absolute -bottom-2 -right-2 ${rarity.badge} px-3 py-1 rounded-full flex items-center gap-1 shadow-soft`}>
                             <RarityIcon size={16} weight="fill" className="text-white" />
                             <span className="text-xs font-bold text-white">{pick.tier || pick.influencer_tier}</span>
                           </div>
@@ -1627,7 +1625,7 @@ export default function LeagueUltra() {
                           </div>
                           <div className="text-center">
                             <p className="text-xs text-gray-400 mb-1">Score</p>
-                            <p className="text-2xl font-black text-cyan-400">{pick.total_points || 0}</p>
+                            <p className="text-2xl font-black text-brand-400">{pick.total_points || 0}</p>
                           </div>
                         </div>
                       </div>
@@ -1642,7 +1640,7 @@ export default function LeagueUltra() {
             <div className="mt-8 flex gap-4">
               <button
                 onClick={() => setCurrentView('draft')}
-                className={`flex-1 py-4 bg-gradient-to-r ${colorSchemes[teamColor as keyof typeof colorSchemes].gradient} hover:opacity-90 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-2xl`}
+                className={`btn-primary flex-1 py-4 bg-gradient-to-r ${colorSchemes[teamColor as keyof typeof colorSchemes].gradient} hover:opacity-90 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-soft-lg`}
               >
                 <span className="flex items-center gap-2 justify-center">
                   <TrendUp size={24} weight="bold" />
@@ -1651,7 +1649,7 @@ export default function LeagueUltra() {
               </button>
               <button
                 onClick={() => setCurrentView('leaderboard')}
-                className="flex-1 py-4 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-2xl shadow-yellow-500/30"
+                className="btn-primary flex-1 py-4 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-soft-lg"
               >
                 <span className="flex items-center gap-2 justify-center">
                   <Trophy size={24} weight="bold" />
@@ -1666,15 +1664,15 @@ export default function LeagueUltra() {
       {/* Leaderboard View */}
       {currentView === 'leaderboard' && (
         <div className="max-w-[1400px] mx-auto px-6 pb-6">
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
+          <div className="card bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl p-8 shadow-soft-lg">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
-                <div className="p-4 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-2xl">
+                <div className="p-4 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-lg">
                   <Trophy size={32} weight="bold" className="text-gray-900" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded-full font-bold border border-purple-400/50">
+                    <span className="badge-primary text-xs px-2 py-0.5 rounded-full font-bold">
                       {getQuarterFromDate(selectedContest?.start_date || '')}
                     </span>
                     <h2 className="text-3xl font-black text-white">Contest Leaderboard</h2>
@@ -1685,7 +1683,7 @@ export default function LeagueUltra() {
               {team && (
                 <div className="text-right">
                   <p className="text-sm text-gray-400">Your Team</p>
-                  <p className="text-2xl font-black text-cyan-400">#{team.rank || '–'}</p>
+                  <p className="text-2xl font-black text-brand-400">#{team.rank || '–'}</p>
                 </div>
               )}
             </div>
@@ -1693,7 +1691,9 @@ export default function LeagueUltra() {
             {/* Leaderboard Content */}
             {leaderboard.length === 0 ? (
               <div className="text-center py-20">
-                <div className="text-6xl mb-4">🏆</div>
+                <div className="mb-4">
+                  <Trophy size={64} weight="bold" className="text-gray-600 mx-auto" />
+                </div>
                 <h3 className="text-2xl font-bold text-white mb-2">No teams yet</h3>
                 <p className="text-gray-400">Be the first to create a team!</p>
               </div>
@@ -1709,14 +1709,16 @@ export default function LeagueUltra() {
                     <div className="flex items-end justify-center gap-6 mb-8">
                       {/* 2nd Place */}
                       <div className="flex flex-col items-center flex-1 max-w-xs">
-                        <div className={`w-full bg-gradient-to-br from-gray-400 to-gray-600 rounded-t-2xl border-2 border-gray-400 p-6 shadow-2xl ${team?.id === leaderboard[1]?.id ? 'ring-4 ring-cyan-400' : ''}`} style={{ height: '220px' }}>
+                        <div className={`card w-full bg-gradient-to-br from-gray-400 to-gray-600 border-2 border-gray-400 p-6 shadow-soft-lg ${team?.id === leaderboard[1]?.id ? 'ring-4 ring-brand-400' : ''}`} style={{ height: '220px' }}>
                           <div className="flex flex-col items-center h-full justify-between">
-                            <div className="text-6xl mb-3">🥈</div>
+                            <div className="text-6xl mb-3">
+                              <Medal size={64} weight="fill" className="text-white" />
+                            </div>
                             <div className="text-center flex-1">
                               <div className="text-sm text-gray-200 font-bold mb-2">#2</div>
                               <h4 className="font-black text-white text-lg mb-2 line-clamp-1">{leaderboard[1]?.team_name}</h4>
                               {team?.id === leaderboard[1]?.id && (
-                                <span className="inline-block bg-cyan-400 text-gray-900 px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
+                                <span className="badge-primary inline-block px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
                               )}
                             </div>
                             <div className="text-center mt-auto">
@@ -1725,21 +1727,23 @@ export default function LeagueUltra() {
                             </div>
                           </div>
                         </div>
-                        <div className="w-full h-20 bg-gray-400/20 border-2 border-gray-400/30 border-t-0 rounded-b-2xl flex items-center justify-center">
+                        <div className="w-full h-20 bg-gray-400/20 border-2 border-gray-400/30 border-t-0 rounded-b-lg flex items-center justify-center">
                           <span className="text-gray-400 font-bold">SILVER</span>
                         </div>
                       </div>
 
                       {/* 1st Place */}
                       <div className="flex flex-col items-center flex-1 max-w-xs">
-                        <div className={`w-full bg-gradient-to-br from-yellow-400 to-amber-600 rounded-t-2xl border-2 border-yellow-400 p-6 shadow-2xl ${team?.id === leaderboard[0]?.id ? 'ring-4 ring-cyan-400' : ''}`} style={{ height: '280px' }}>
+                        <div className={`card w-full bg-gradient-to-br from-yellow-400 to-amber-600 border-2 border-yellow-400 p-6 shadow-soft-lg ${team?.id === leaderboard[0]?.id ? 'ring-4 ring-brand-400' : ''}`} style={{ height: '280px' }}>
                           <div className="flex flex-col items-center h-full justify-between">
-                            <div className="text-7xl mb-3">🥇</div>
+                            <div className="text-7xl mb-3">
+                              <Trophy size={72} weight="fill" className="text-gray-900" />
+                            </div>
                             <div className="text-center flex-1">
                               <div className="text-sm text-amber-900 font-bold mb-2">#1</div>
                               <h4 className="font-black text-gray-900 text-xl mb-2 line-clamp-1">{leaderboard[0]?.team_name}</h4>
                               {team?.id === leaderboard[0]?.id && (
-                                <span className="inline-block bg-cyan-400 text-gray-900 px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
+                                <span className="badge-primary inline-block px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
                               )}
                               <div className="flex items-center justify-center gap-1 mt-2">
                                 <Crown size={20} weight="fill" className="text-amber-900" />
@@ -1752,21 +1756,23 @@ export default function LeagueUltra() {
                             </div>
                           </div>
                         </div>
-                        <div className="w-full h-24 bg-yellow-400/20 border-2 border-yellow-400/30 border-t-0 rounded-b-2xl flex items-center justify-center">
+                        <div className="w-full h-24 bg-yellow-400/20 border-2 border-yellow-400/30 border-t-0 rounded-b-lg flex items-center justify-center">
                           <span className="text-yellow-400 font-bold">GOLD</span>
                         </div>
                       </div>
 
                       {/* 3rd Place */}
                       <div className="flex flex-col items-center flex-1 max-w-xs">
-                        <div className={`w-full bg-gradient-to-br from-orange-600 to-amber-800 rounded-t-2xl border-2 border-orange-600 p-6 shadow-2xl ${team?.id === leaderboard[2]?.id ? 'ring-4 ring-cyan-400' : ''}`} style={{ height: '180px' }}>
+                        <div className={`card w-full bg-gradient-to-br from-orange-600 to-amber-800 border-2 border-orange-600 p-6 shadow-soft-lg ${team?.id === leaderboard[2]?.id ? 'ring-4 ring-brand-400' : ''}`} style={{ height: '180px' }}>
                           <div className="flex flex-col items-center h-full justify-between">
-                            <div className="text-5xl mb-3">🥉</div>
+                            <div className="text-5xl mb-3">
+                              <Medal size={56} weight="fill" className="text-white" />
+                            </div>
                             <div className="text-center flex-1">
                               <div className="text-sm text-orange-200 font-bold mb-2">#3</div>
                               <h4 className="font-black text-white text-base mb-2 line-clamp-1">{leaderboard[2]?.team_name}</h4>
                               {team?.id === leaderboard[2]?.id && (
-                                <span className="inline-block bg-cyan-400 text-gray-900 px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
+                                <span className="badge-primary inline-block px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
                               )}
                             </div>
                             <div className="text-center mt-auto">
@@ -1775,7 +1781,7 @@ export default function LeagueUltra() {
                             </div>
                           </div>
                         </div>
-                        <div className="w-full h-16 bg-orange-600/20 border-2 border-orange-600/30 border-t-0 rounded-b-2xl flex items-center justify-center">
+                        <div className="w-full h-16 bg-orange-600/20 border-2 border-orange-600/30 border-t-0 rounded-b-lg flex items-center justify-center">
                           <span className="text-orange-400 font-bold">BRONZE</span>
                         </div>
                       </div>
@@ -1798,9 +1804,9 @@ export default function LeagueUltra() {
                         return (
                           <div
                             key={entry.id}
-                            className={`flex items-center gap-6 p-5 rounded-2xl border-2 transition-all ${
+                            className={`card-hover flex items-center gap-6 p-5 border-2 transition-all ${
                               isMyTeam
-                                ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-400 shadow-xl shadow-cyan-500/20'
+                                ? 'bg-brand-500/10 border-brand-400 shadow-soft'
                                 : 'bg-gradient-to-r from-gray-800 to-gray-800/50 border-gray-700 hover:border-gray-600'
                             }`}
                           >
@@ -1814,7 +1820,7 @@ export default function LeagueUltra() {
                               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 {entry.team_name}
                                 {isMyTeam && (
-                                  <span className="bg-cyan-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
+                                  <span className="badge-primary px-3 py-1 rounded-full text-xs font-bold">
                                     YOU
                                   </span>
                                 )}
@@ -1824,7 +1830,7 @@ export default function LeagueUltra() {
                             {/* Score */}
                             <div className="text-right">
                               <p className="text-xs text-gray-400 mb-1">Total Score</p>
-                              <p className="text-2xl font-black text-cyan-400">{entry.total_score}</p>
+                              <p className="text-2xl font-black text-brand-400">{entry.total_score}</p>
                             </div>
                           </div>
                         );
@@ -1838,35 +1844,30 @@ export default function LeagueUltra() {
                   <div className="space-y-3">
                     {leaderboard.map((entry, index) => {
                       const isMyTeam = team?.id === entry.id;
-                      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : null;
 
                       return (
                         <div
                           key={entry.id}
-                          className={`flex items-center gap-6 p-6 rounded-2xl border-2 transition-all ${
+                          className={`card-hover flex items-center gap-6 p-6 border-2 transition-all ${
                             isMyTeam
-                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-400 shadow-xl shadow-cyan-500/20'
+                              ? 'bg-brand-500/10 border-brand-400 shadow-soft'
                               : 'bg-gradient-to-r from-gray-800 to-gray-800/50 border-gray-700 hover:border-gray-600'
                           }`}
                         >
                           <div className="w-16 text-center">
-                            {medal ? (
-                              <div className="text-4xl">{medal}</div>
-                            ) : (
-                              <div className="text-3xl font-black text-gray-400">#{entry.rank}</div>
-                            )}
+                            <div className="text-3xl font-black text-gray-400">#{entry.rank}</div>
                           </div>
                           <div className="flex-1">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                               {entry.team_name}
                               {isMyTeam && (
-                                <span className="bg-cyan-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">YOU</span>
+                                <span className="badge-primary px-3 py-1 rounded-full text-xs font-bold">YOU</span>
                               )}
                             </h3>
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-gray-400 mb-1">Total Score</p>
-                            <p className="text-3xl font-black text-cyan-400">{entry.total_score}</p>
+                            <p className="text-3xl font-black text-brand-400">{entry.total_score}</p>
                           </div>
                         </div>
                       );
@@ -1881,7 +1882,7 @@ export default function LeagueUltra() {
               <div className="mt-8 text-center">
                 <button
                   onClick={() => setCurrentView('draft')}
-                  className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-2xl shadow-cyan-500/30"
+                  className="btn-primary px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-soft-lg"
                 >
                   <span className="flex items-center gap-2">
                     <Users size={24} weight="bold" />

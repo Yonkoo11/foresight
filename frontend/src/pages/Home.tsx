@@ -1,262 +1,284 @@
 /**
- * Home Page - Ultra Premium Edition
- * Showcases CT Draft as the killer feature with premium design
+ * Home Page
+ * Landing page for CT Fantasy League
  */
 
 import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import {
-  Trophy, Crown, Target, TrendUp, Fire, Sparkle,
-  Users, CheckCircle, Lightning, Star
+  Trophy, Target, TrendUp, CheckCircle, ArrowRight
 } from '@phosphor-icons/react';
 
 export default function Home() {
   const { isConnected } = useAccount();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-gray-950">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-mesh pointer-events-none" />
 
+      <div className="relative">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="mb-6">
-            <div className="inline-block">
-              <div className="text-8xl mb-6 animate-bounce-slow">🏆</div>
+        <div className="container-narrow py-20 md:py-28">
+          <div className="text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-sm text-brand-400 font-medium mb-8">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+              </span>
+              Live on Base
             </div>
-          </div>
 
-          <h1 className="text-6xl md:text-7xl font-black mb-6 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent leading-tight">
-            CT Fantasy League
-          </h1>
+            {/* Main headline */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold text-white mb-6 leading-tight">
+              Fantasy league for
+              <br />
+              <span className="text-gradient-brand">Crypto Twitter</span>
+            </h1>
 
-          <p className="text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Draft crypto influencers, earn points from daily votes, and compete for glory in the ultimate CT competition
-          </p>
+            {/* Subheading */}
+            <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+              Draft top CT influencers, earn points from community votes, and compete for rankings
+            </p>
 
-          {/* Main CTA */}
-          <Link
-            to="/draft"
-            className="inline-block group"
-          >
-            <div className="relative">
-              {/* Glow effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-all duration-300 animate-pulse" />
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/draft" className="btn-primary btn-lg group">
+                Start drafting
+                <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
 
-              {/* Button */}
-              <button className="relative px-12 py-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-2xl font-bold text-2xl transition-all transform hover:scale-105 shadow-2xl shadow-cyan-500/30 flex items-center gap-3">
-                <Crown size={32} weight="bold" />
-                Start Drafting
-                <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm">+50 XP</span>
-              </button>
+              <Link to="/vote" className="btn-secondary btn-lg">
+                View leaderboard
+              </Link>
             </div>
-          </Link>
-        </div>
 
-        {/* Stats Showcase */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-cyan-500/30 p-8 text-center transform hover:scale-105 transition-all shadow-2xl">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
-              <Users size={40} weight="bold" className="text-white" />
+            {/* Social proof */}
+            <div className="mt-12 flex items-center justify-center gap-8 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  <div className="w-7 h-7 rounded-full bg-gray-800 border-2 border-gray-950" />
+                  <div className="w-7 h-7 rounded-full bg-gray-800 border-2 border-gray-950" />
+                  <div className="w-7 h-7 rounded-full bg-gray-800 border-2 border-gray-950" />
+                </div>
+                <span>50 influencers</span>
+              </div>
+              <div className="h-4 w-px bg-gray-800" />
+              <div>Active contests</div>
+              <div className="h-4 w-px bg-gray-800" />
+              <div>150 point budget</div>
             </div>
-            <div className="text-5xl font-black text-cyan-400 mb-2">50</div>
-            <div className="text-lg text-gray-300 font-semibold">CT Influencers</div>
-            <div className="text-sm text-gray-500 mt-2">From all tiers</div>
-          </div>
-
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-orange-500/30 p-8 text-center transform hover:scale-105 transition-all shadow-2xl">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl mb-4 shadow-lg">
-              <Target size={40} weight="bold" className="text-white" />
-            </div>
-            <div className="text-5xl font-black text-orange-400 mb-2">5</div>
-            <div className="text-lg text-gray-300 font-semibold">Team Picks</div>
-            <div className="text-sm text-gray-500 mt-2">Build your squad</div>
-          </div>
-
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-yellow-500/30 p-8 text-center transform hover:scale-105 transition-all shadow-2xl">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl mb-4 shadow-lg">
-              <Trophy size={40} weight="bold" className="text-white" />
-            </div>
-            <div className="text-5xl font-black text-yellow-400 mb-2">150</div>
-            <div className="text-lg text-gray-300 font-semibold">Point Budget</div>
-            <div className="text-sm text-gray-500 mt-2">Spend wisely</div>
           </div>
         </div>
 
-        {/* How It Works */}
-        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-10 mb-16 shadow-2xl">
-          <h2 className="text-4xl font-black text-white mb-8 text-center flex items-center justify-center gap-3">
-            <Lightning size={40} weight="fill" className="text-yellow-400" />
-            How It Works
-          </h2>
+        {/* Stats Section */}
+        <div className="container-app py-16 border-t border-gray-900">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Stat 1 */}
+            <div className="card p-8">
+              <div className="stat-card">
+                <div className="stat-label">Influencers</div>
+                <div className="stat-value">50</div>
+                <p className="text-sm text-gray-400 mt-2">
+                  Across all tier levels
+                </p>
+              </div>
+            </div>
+
+            {/* Stat 2 */}
+            <div className="card p-8">
+              <div className="stat-card">
+                <div className="stat-label">Team size</div>
+                <div className="stat-value">5</div>
+                <p className="text-sm text-gray-400 mt-2">
+                  Build your perfect squad
+                </p>
+              </div>
+            </div>
+
+            {/* Stat 3 */}
+            <div className="card p-8">
+              <div className="stat-card">
+                <div className="stat-label">Budget</div>
+                <div className="stat-value">150</div>
+                <p className="text-sm text-gray-400 mt-2">
+                  Points to spend wisely
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* How it works */}
+        <div className="container-narrow py-20">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-semibold text-white mb-4">
+              How it works
+            </h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              Three simple steps to start competing
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Step 1 */}
             <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-6">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full blur-xl opacity-50" />
-                  <div className="relative w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-2xl">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500/10 border border-brand-500/20 text-brand-400 font-semibold">
                     1
                   </div>
+                  <h3 className="text-xl font-semibold text-white">Draft your team</h3>
                 </div>
-                <div className="mb-4">
-                  <Crown size={48} weight="fill" className="text-cyan-400 mx-auto" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-white">Draft Your Team</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Pick 5 CT influencers within your 150-point budget. Choose from Legendary, Epic, Rare, and Common tiers.
+                  Select 5 influencers within your 150-point budget. Balance tier levels for optimal performance.
                 </p>
               </div>
             </div>
 
             {/* Step 2 */}
             <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-6">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full blur-xl opacity-50" />
-                  <div className="relative w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-2xl">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500/10 border border-brand-500/20 text-brand-400 font-semibold">
                     2
                   </div>
+                  <h3 className="text-xl font-semibold text-white">Vote daily</h3>
                 </div>
-                <div className="mb-4">
-                  <Target size={48} weight="fill" className="text-orange-400 mx-auto" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-white">Vote Daily</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Vote for the best CT take of the day. Your influencers earn points when others vote for them.
+                  Cast votes for top CT content. Your picks earn points when the community votes for them.
                 </p>
               </div>
             </div>
 
             {/* Step 3 */}
             <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-6">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full blur-xl opacity-50" />
-                  <div className="relative w-20 h-20 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-full flex items-center justify-center text-3xl font-black text-white shadow-2xl">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-500/10 border border-brand-500/20 text-brand-400 font-semibold">
                     3
                   </div>
+                  <h3 className="text-xl font-semibold text-white">Climb rankings</h3>
                 </div>
-                <div className="mb-4">
-                  <Trophy size={48} weight="fill" className="text-yellow-400 mx-auto" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 text-white">Climb the Ranks</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Compete against other managers. Build the best team and dominate the leaderboard.
+                  Compete against other managers. Track your position on the leaderboard each week.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-          {/* Rarity System */}
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <Sparkle size={32} weight="fill" className="text-purple-400" />
-              <h3 className="text-2xl font-bold text-white">Rarity Tiers</h3>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-400/20 via-yellow-500/20 to-amber-600/20 rounded-xl border border-yellow-500/30">
-                <Crown size={24} weight="fill" className="text-yellow-400" />
-                <div className="flex-1">
-                  <div className="font-bold text-yellow-400">Legendary (S-Tier)</div>
-                  <div className="text-sm text-gray-400">Top CT influencers</div>
+        {/* Features */}
+        <div className="container-app py-20 border-t border-gray-900">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Tier System */}
+            <div className="card p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-accent-purple/10 border border-accent-purple/20 flex items-center justify-center">
+                  <Target size={20} className="text-accent-purple" />
                 </div>
+                <h3 className="text-xl font-semibold text-white">Tier system</h3>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-400/20 via-fuchsia-500/20 to-purple-600/20 rounded-xl border border-purple-500/30">
-                <Sparkle size={24} weight="fill" className="text-purple-400" />
-                <div className="flex-1">
-                  <div className="font-bold text-purple-400">Epic (A-Tier)</div>
-                  <div className="text-sm text-gray-400">High-tier performers</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-400/20 via-cyan-500/20 to-blue-600/20 rounded-xl border border-cyan-500/30">
-                <Star size={24} weight="fill" className="text-cyan-400" />
-                <div className="flex-1">
-                  <div className="font-bold text-cyan-400">Rare (B-Tier)</div>
-                  <div className="text-sm text-gray-400">Solid picks</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-gray-400/20 via-gray-500/20 to-gray-600/20 rounded-xl border border-gray-500/30">
-                <Fire size={24} weight="fill" className="text-gray-400" />
-                <div className="flex-1">
-                  <div className="font-bold text-gray-300">Common (C-Tier)</div>
-                  <div className="text-sm text-gray-400">Budget-friendly</div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Key Features */}
-          <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <CheckCircle size={32} weight="fill" className="text-green-400" />
-              <h3 className="text-2xl font-bold text-white">Key Features</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-800">
+                  <span className="text-sm font-medium text-gray-300">S-Tier</span>
+                  <span className="badge-warning">Legendary</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-800">
+                  <span className="text-sm font-medium text-gray-300">A-Tier</span>
+                  <span className="badge-primary">Epic</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-800">
+                  <span className="text-sm font-medium text-gray-300">B-Tier</span>
+                  <span className="badge-success">Rare</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-800">
+                  <span className="text-sm font-medium text-gray-300">C-Tier</span>
+                  <span className="badge-neutral">Common</span>
+                </div>
+              </div>
             </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle size={24} weight="fill" className="text-cyan-400 flex-shrink-0 mt-1" />
-                <div>
-                  <div className="font-semibold text-white mb-1">150-Point Budget System</div>
-                  <div className="text-sm text-gray-400">Strategic team building with balanced costs</div>
+
+            {/* Features List */}
+            <div className="card p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-accent-green/10 border border-accent-green/20 flex items-center justify-center">
+                  <CheckCircle size={20} className="text-accent-green" />
                 </div>
+                <h3 className="text-xl font-semibold text-white">Features</h3>
               </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle size={24} weight="fill" className="text-cyan-400 flex-shrink-0 mt-1" />
-                <div>
-                  <div className="font-semibold text-white mb-1">Live Scoring</div>
-                  <div className="text-sm text-gray-400">Real-time updates as votes come in</div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle size={20} className="text-brand-500 flex-shrink-0 mt-0.5" weight="fill" />
+                  <div>
+                    <div className="font-medium text-white text-sm mb-1">Budget strategy</div>
+                    <div className="text-sm text-gray-400">150-point allocation system</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle size={24} weight="fill" className="text-cyan-400 flex-shrink-0 mt-1" />
-                <div>
-                  <div className="font-semibold text-white mb-1">XP & Progression</div>
-                  <div className="text-sm text-gray-400">Earn rewards for team creation and daily votes</div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle size={20} className="text-brand-500 flex-shrink-0 mt-0.5" weight="fill" />
+                  <div>
+                    <div className="font-medium text-white text-sm mb-1">Real-time scoring</div>
+                    <div className="text-sm text-gray-400">Live updates as votes roll in</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle size={24} weight="fill" className="text-cyan-400 flex-shrink-0 mt-1" />
-                <div>
-                  <div className="font-semibold text-white mb-1">Flexible Team Management</div>
-                  <div className="text-sm text-gray-400">Update your squad anytime before contests lock</div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle size={20} className="text-brand-500 flex-shrink-0 mt-0.5" weight="fill" />
+                  <div>
+                    <div className="font-medium text-white text-sm mb-1">XP progression</div>
+                    <div className="text-sm text-gray-400">Earn rewards for participation</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle size={20} className="text-brand-500 flex-shrink-0 mt-0.5" weight="fill" />
+                  <div>
+                    <div className="font-medium text-white text-sm mb-1">Team management</div>
+                    <div className="text-sm text-gray-400">Update roster before lock</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom CTA */}
-        {!isConnected && (
-          <div className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border-2 border-cyan-500/30 rounded-3xl p-12 text-center shadow-2xl">
-            <Fire size={64} weight="fill" className="text-cyan-400 mx-auto mb-6" />
-            <h2 className="text-4xl font-black text-white mb-4">Ready to Dominate?</h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Connect your wallet to start building your championship team
-            </p>
-            <div className="text-sm text-gray-400">
-              👆 Click "Connect Wallet" in the top right to begin
+        {/* CTA Section */}
+        <div className="container-narrow py-20 border-t border-gray-900">
+          {!isConnected ? (
+            <div className="card-highlight p-12 text-center">
+              <div className="w-14 h-14 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-6">
+                <Trophy size={28} className="text-brand-400" weight="fill" />
+              </div>
+              <h2 className="text-3xl font-semibold text-white mb-4">
+                Ready to start?
+              </h2>
+              <p className="text-lg text-gray-400 mb-8 max-w-md mx-auto">
+                Connect your wallet to begin drafting your team
+              </p>
+              <p className="text-sm text-gray-500">
+                Click "Connect Wallet" in the navigation to continue
+              </p>
             </div>
-          </div>
-        )}
-
-        {isConnected && (
-          <div className="bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-green-600/10 border-2 border-green-500/30 rounded-3xl p-12 text-center shadow-2xl">
-            <TrendUp size={64} weight="fill" className="text-green-400 mx-auto mb-6" />
-            <h2 className="text-4xl font-black text-white mb-4">You're All Set!</h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Your wallet is connected. Time to draft your winning team.
-            </p>
-            <Link
-              to="/draft"
-              className="inline-block px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-2xl font-bold text-xl transition-all transform hover:scale-105 shadow-2xl shadow-green-500/30"
-            >
-              Go to Draft →
-            </Link>
-          </div>
-        )}
+          ) : (
+            <div className="card p-12 text-center">
+              <div className="w-14 h-14 rounded-xl bg-accent-green/10 border border-accent-green/20 flex items-center justify-center mx-auto mb-6">
+                <TrendUp size={28} className="text-accent-green" weight="fill" />
+              </div>
+              <h2 className="text-3xl font-semibold text-white mb-4">
+                You're all set
+              </h2>
+              <p className="text-lg text-gray-400 mb-8 max-w-md mx-auto">
+                Your wallet is connected. Start building your team.
+              </p>
+              <Link to="/draft" className="btn-primary btn-lg inline-flex">
+                Go to draft
+                <ArrowRight size={20} weight="bold" />
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

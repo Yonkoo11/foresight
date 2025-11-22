@@ -65,26 +65,26 @@ export default function Vote() {
     const rarities: Record<string, { label: string; gradient: string; badge: string; icon: any }> = {
       S: {
         label: 'Legendary',
-        gradient: 'from-amber-400 via-yellow-500 to-amber-600',
-        badge: 'bg-gradient-to-r from-yellow-400 to-amber-500',
+        gradient: 'from-yellow-500/20 to-amber-500/20',
+        badge: 'bg-yellow-500',
         icon: Crown
       },
       A: {
         label: 'Epic',
-        gradient: 'from-purple-400 via-fuchsia-500 to-purple-600',
-        badge: 'bg-gradient-to-r from-purple-400 to-fuchsia-500',
+        gradient: 'from-brand-500/20 to-brand-600/20',
+        badge: 'bg-brand-500',
         icon: Sparkle
       },
       B: {
         label: 'Rare',
-        gradient: 'from-blue-400 via-cyan-500 to-blue-600',
-        badge: 'bg-gradient-to-r from-cyan-400 to-blue-500',
+        gradient: 'from-green-500/20 to-green-600/20',
+        badge: 'bg-green-500',
         icon: Star
       },
       C: {
         label: 'Common',
-        gradient: 'from-gray-400 via-gray-500 to-gray-600',
-        badge: 'bg-gradient-to-r from-gray-400 to-gray-500',
+        gradient: 'from-gray-500/20 to-gray-600/20',
+        badge: 'bg-gray-500',
         icon: Fire
       }
     };
@@ -242,7 +242,7 @@ export default function Vote() {
           message += `)`;
         }
         if (response.data.streak > 1) {
-          message += ` 🔥 ${response.data.streak} day streak!`;
+          message += ` ${response.data.streak} day streak!`;
         }
       }
 
@@ -267,11 +267,11 @@ export default function Vote() {
 
   // Main Interface
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gray-950">
       {/* Notification Toast */}
       {notification && (
         <div className="fixed top-6 right-6 z-50 animate-slide-in-right">
-          <div className={`px-6 py-4 rounded-2xl shadow-2xl border-2 backdrop-blur-xl flex items-center gap-3 ${
+          <div className={`px-6 py-4 rounded-lg shadow-soft-lg border backdrop-blur-xl flex items-center gap-3 ${
             notification.type === 'success'
               ? 'bg-green-900/90 border-green-500/50 text-green-100'
               : 'bg-red-900/90 border-red-500/50 text-red-100'
@@ -295,9 +295,9 @@ export default function Vote() {
       {/* Auth Modal */}
       {showAuthModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowAuthModal(false)}>
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl border-2 border-cyan-500/30 p-8 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="card p-8 max-w-md w-full shadow-soft-lg" onClick={(e) => e.stopPropagation()}>
             <div className="text-center">
-              <Lock size={64} weight="bold" className="mx-auto mb-4 text-cyan-400" />
+              <Lock size={64} weight="bold" className="mx-auto mb-4 text-brand-400" />
               <h3 className="text-3xl font-black text-white mb-3">Sign In Required</h3>
               <p className="text-gray-300 mb-6">
                 {!isConnected
@@ -314,7 +314,7 @@ export default function Vote() {
               {!isConnected ? (
                 <button
                   onClick={() => setShowAuthModal(false)}
-                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-xl font-bold transition-all transform hover:scale-105"
+                  className="btn-primary w-full py-4"
                 >
                   Close & Connect Wallet
                 </button>
@@ -326,7 +326,7 @@ export default function Vote() {
                       setShowAuthModal(false);
                     }}
                     disabled={loading}
-                    className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-xl font-bold transition-all transform hover:scale-105 disabled:opacity-50"
+                    className="btn-primary w-full py-4"
                   >
                     {loading ? 'Signing In...' : 'Sign In with Ethereum'}
                   </button>
@@ -347,8 +347,8 @@ export default function Vote() {
 
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl mb-6 shadow-2xl">
-            <Fire size={56} weight="bold" className="text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-brand-600 rounded-xl mb-6 shadow-soft-lg">
+            <Fire size={48} weight="bold" className="text-white" />
           </div>
           <h1 className="text-5xl md:text-6xl font-black text-white mb-4">CT Spotlight</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
@@ -358,8 +358,8 @@ export default function Vote() {
           {/* Week Info & XP Level */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             {voteStatus?.contest && (
-              <div className="inline-flex items-center gap-3 bg-gray-900/50 px-6 py-3 rounded-xl border-2 border-gray-700">
-                <CalendarBlank size={20} weight="bold" className="text-cyan-400" />
+              <div className="inline-flex items-center gap-3 bg-gray-900/50 px-6 py-3 rounded-lg border border-gray-700">
+                <CalendarBlank size={20} weight="bold" className="text-brand-400" />
                 <span className="text-gray-300">
                   Week of {formatDateRange(voteStatus.contest.start_date, voteStatus.contest.end_date)}
                 </span>
@@ -403,15 +403,15 @@ export default function Vote() {
 
         {/* Current Vote Status */}
         {voteStatus?.has_voted && voteStatus.vote ? (
-          <div className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border-2 border-cyan-500/30 rounded-3xl p-8 mb-10 shadow-2xl">
+          <div className="card-highlight p-8 mb-10">
             <div className="flex items-center gap-4">
-              <CheckCircle size={56} weight="fill" className="text-cyan-400 flex-shrink-0" />
+              <CheckCircle size={56} weight="fill" className="text-brand-400 flex-shrink-0" />
               <div className="flex-1">
                 <div className="font-black text-2xl mb-2 text-white">Current Vote: {voteStatus.vote.influencer_name}</div>
                 <div className="text-lg text-gray-300 mb-3">
                   @{voteStatus.vote.influencer_handle} • You can change your vote anytime before Sunday
                 </div>
-                <div className="flex items-center gap-2 text-sm text-cyan-400">
+                <div className="flex items-center gap-2 text-sm text-brand-400">
                   <Lightning size={16} weight="fill" />
                   <span>Select a different influencer below to update your vote</span>
                 </div>
@@ -419,7 +419,7 @@ export default function Vote() {
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-orange-500/10 via-red-500/10 to-orange-600/10 border-2 border-orange-500/30 rounded-3xl p-8 mb-10 shadow-2xl">
+          <div className="card p-8 mb-10 border-amber-500/30">
             <div className="flex items-center gap-4">
               <Fire size={56} weight="fill" className="text-orange-400 flex-shrink-0" />
               <div className="flex-1">
@@ -431,24 +431,24 @@ export default function Vote() {
         )}
 
         {/* Spotlight Bonus Info */}
-        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-yellow-500/30 p-8 mb-10 shadow-2xl">
+        <div className="card p-8 mb-10 border-yellow-500/30">
           <h2 className="text-2xl font-black text-white mb-4 flex items-center gap-3">
             <Trophy size={28} weight="fill" className="text-yellow-400" />
             CT Spotlight Bonus
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-900/50 rounded-xl p-4 text-center border-2 border-yellow-500/30">
-              <div className="text-3xl mb-2">🥇</div>
+            <div className="bg-gray-900/50 rounded-lg p-4 text-center border border-yellow-500/30">
+              <div className="text-2xl font-bold text-yellow-400 mb-2">1st</div>
               <div className="font-bold text-yellow-400 text-xl mb-1">+10%</div>
               <div className="text-sm text-gray-300">#1 Most Voted</div>
             </div>
-            <div className="bg-gray-900/50 rounded-xl p-4 text-center border-2 border-gray-500/30">
-              <div className="text-3xl mb-2">🥈</div>
+            <div className="bg-gray-900/50 rounded-lg p-4 text-center border border-gray-500/30">
+              <div className="text-2xl font-bold text-gray-400 mb-2">2nd</div>
               <div className="font-bold text-gray-400 text-xl mb-1">+5%</div>
               <div className="text-sm text-gray-300">#2 Most Voted</div>
             </div>
-            <div className="bg-gray-900/50 rounded-xl p-4 text-center border-2 border-orange-500/30">
-              <div className="text-3xl mb-2">🥉</div>
+            <div className="bg-gray-900/50 rounded-lg p-4 text-center border border-orange-500/30">
+              <div className="text-2xl font-bold text-orange-400 mb-2">3rd</div>
               <div className="font-bold text-orange-400 text-xl mb-1">+3%</div>
               <div className="text-sm text-gray-300">#3 Most Voted</div>
             </div>
@@ -461,8 +461,8 @@ export default function Vote() {
         {/* Voting Section */}
         {influencers.length > 0 && (
           <div className="mb-12">
-            <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
-              <h2 className="text-3xl font-black text-white mb-6 flex items-center gap-3">
+            <div className="card p-8">
+              <h2 className="text-3xl font-semibold text-white mb-6 flex items-center gap-3">
                 <Lightning size={32} weight="fill" className="text-yellow-400" />
                 {voteStatus?.has_voted ? 'Change Your Vote' : 'Cast Your Vote'}
               </h2>
@@ -477,27 +477,29 @@ export default function Vote() {
                     <button
                       key={influencer.id}
                       onClick={() => setSelectedInfluencer(influencer.id)}
-                      className={`relative p-6 rounded-2xl border-2 transition-all duration-300 text-left group ${
+                      className={`relative p-6 rounded-lg border transition-all duration-200 text-left group ${
                         isSelected
-                          ? `border-cyan-400 bg-gradient-to-br ${rarity.gradient} shadow-2xl shadow-cyan-500/30 scale-105`
-                          : 'border-gray-700 bg-gradient-to-br from-gray-800/80 to-gray-900/80 hover:border-gray-600 hover:scale-105 hover:shadow-xl'
+                          ? `border-brand-500 bg-gradient-to-br ${rarity.gradient} shadow-soft-lg`
+                          : 'border-gray-700 bg-gray-800/80 hover:border-gray-600 hover:shadow-soft'
                       }`}
                     >
                       {/* Rarity Badge */}
                       <div className="absolute top-2 right-2 z-10">
-                        <div className={`${rarity.badge} px-2 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
+                        <div className={`${rarity.badge} px-2 py-1 rounded-md flex items-center gap-1`}>
                           <RarityIcon size={12} weight="fill" className="text-white" />
-                          <span className="text-xs font-bold text-white">{influencer.tier}</span>
+                          <span className="text-xs font-medium text-white">{influencer.tier}</span>
                         </div>
                       </div>
 
                       {/* Profile Picture */}
                       <div className="mb-3">
-                        <div className={`w-20 h-20 mx-auto rounded-full border-4 ${isSelected ? 'border-white' : 'border-gray-600'} shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800`}>
+                        <div className={`w-16 h-16 mx-auto rounded-full border-2 ${isSelected ? 'border-white' : 'border-gray-600'} shadow-soft overflow-hidden bg-gray-700`}>
                           {influencer.profile_image_url ? (
                             <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <Fire size={24} weight="bold" />
+                            </div>
                           )}
                         </div>
                       </div>
@@ -523,7 +525,7 @@ export default function Vote() {
                 <button
                   onClick={handleVote}
                   disabled={loading || !selectedInfluencer}
-                  className="px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 rounded-2xl font-bold text-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-orange-500/30 flex items-center gap-3 mx-auto"
+                  className="btn-primary px-10 py-4 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-soft-lg flex items-center gap-3 mx-auto"
                 >
                   <Fire size={28} weight="fill" />
                   {!isConnected
@@ -546,7 +548,7 @@ export default function Vote() {
         )}
 
         {/* Weekly Leaderboard */}
-        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
+        <div className="card p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-black text-white flex items-center gap-3">
               <Trophy size={32} weight="fill" className="text-yellow-400" />
@@ -565,7 +567,7 @@ export default function Vote() {
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
             return (
-              <div className="mb-8 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-500/50 rounded-2xl p-6">
+              <div className="mb-8 bg-amber-500/10 border border-amber-500/50 rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Lightning size={32} weight="fill" className="text-orange-400" />
@@ -615,13 +617,13 @@ export default function Vote() {
                   return (
                     <div
                       key={influencer.id}
-                      className={`relative bg-gradient-to-r from-gray-800/80 to-gray-900/80 rounded-2xl p-6 border-2 transition-all hover:scale-102 ${
+                      className={`relative bg-gray-800/80 rounded-lg p-6 border transition-all ${
                         index === 0
-                          ? 'border-yellow-500/50 shadow-xl shadow-yellow-500/20'
+                          ? 'border-yellow-500/50 shadow-soft-lg'
                           : index === 1
-                          ? 'border-gray-400/50 shadow-lg shadow-gray-400/10'
+                          ? 'border-gray-400/50 shadow-soft'
                           : index === 2
-                          ? 'border-orange-400/50 shadow-lg shadow-orange-400/10'
+                          ? 'border-orange-400/50 shadow-soft'
                           : 'border-gray-700'
                       }`}
                     >
@@ -641,7 +643,7 @@ export default function Vote() {
                       <div className="flex items-center gap-6 mb-3">
                         {/* Rank */}
                         <div
-                          className={`text-3xl font-black w-16 h-16 flex items-center justify-center rounded-2xl ${
+                          className={`text-2xl font-bold w-14 h-14 flex items-center justify-center rounded-lg ${
                             index === 0
                               ? 'bg-yellow-500/20 text-yellow-400'
                               : index === 1
@@ -651,19 +653,21 @@ export default function Vote() {
                               : 'bg-gray-700/20 text-gray-500'
                           }`}
                         >
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                          #{index + 1}
                         </div>
 
                         {/* Profile Picture */}
                         <div className="relative">
-                          <div className="w-16 h-16 rounded-full border-4 border-gray-600 shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
+                          <div className="w-14 h-14 rounded-full border-2 border-gray-600 shadow-soft overflow-hidden bg-gray-700">
                             {influencer.profile_image_url ? (
                               <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <Fire size={20} weight="bold" />
+                              </div>
                             )}
                           </div>
-                          <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full ${rarity.badge} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
+                          <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${rarity.badge} flex items-center justify-center text-white text-[10px] font-medium`}>
                             {influencer.tier}
                           </div>
                         </div>
@@ -682,7 +686,7 @@ export default function Vote() {
                           </div>
                           <div className="text-center">
                             <div className="text-xs text-gray-400 mb-1">Score</div>
-                            <div className="text-3xl font-black text-cyan-400">{influencer.weighted_score || 0}</div>
+                            <div className="text-3xl font-bold text-brand-400">{influencer.weighted_score || 0}</div>
                           </div>
                         </div>
                       </div>
@@ -702,7 +706,7 @@ export default function Vote() {
                                 ? 'bg-gradient-to-r from-gray-400 to-gray-500'
                                 : index === 2
                                 ? 'bg-gradient-to-r from-orange-400 to-amber-600'
-                                : 'bg-gradient-to-r from-cyan-400 to-blue-500'
+                                : 'bg-brand-500'
                             }`}
                             style={{ width: `${votePercentage}%` }}
                           ></div>
