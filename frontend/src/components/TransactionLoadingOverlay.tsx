@@ -30,17 +30,17 @@ export function TransactionLoadingOverlay({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+      <div className="bg-gray-900 border border-gray-700 rounded-xl p-8 max-w-md w-full mx-4 shadow-soft-lg">
         <div className="flex flex-col items-center text-center">
           {/* Icon */}
           <div className="mb-4">
             {loadingState.type === 'pending' && (
-              <div className="animate-spin text-cyan-500">
+              <div className="animate-spin text-brand-500">
                 <CircleNotch size={64} weight="bold" />
               </div>
             )}
             {loadingState.type === 'confirming' && (
-              <div className="animate-pulse text-blue-500">
+              <div className="text-brand-400">
                 <CircleNotch size={64} weight="bold" className="animate-spin" />
               </div>
             )}
@@ -74,7 +74,7 @@ export function TransactionLoadingOverlay({
               href={`https://sepolia.basescan.org/tx/${state.hash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-cyan-400 hover:text-cyan-300 underline mb-4"
+              className="text-xs text-brand-400 hover:text-brand-300 underline mb-4"
             >
               View on Basescan
             </a>
@@ -85,13 +85,13 @@ export function TransactionLoadingOverlay({
             <div
               className={`h-2 w-2 rounded-full ${
                 loadingState.type === 'pending' || loadingState.type === 'confirming' || loadingState.type === 'success'
-                  ? 'bg-cyan-500'
+                  ? 'bg-brand-500'
                   : 'bg-gray-600'
               }`}
             />
             <div className="h-0.5 w-12 bg-gray-700">
               <div
-                className={`h-full bg-cyan-500 transition-all duration-500 ${
+                className={`h-full bg-brand-500 transition-all duration-500 ${
                   loadingState.type === 'confirming' || loadingState.type === 'success'
                     ? 'w-full'
                     : 'w-0'
@@ -101,13 +101,13 @@ export function TransactionLoadingOverlay({
             <div
               className={`h-2 w-2 rounded-full ${
                 loadingState.type === 'confirming' || loadingState.type === 'success'
-                  ? 'bg-cyan-500'
+                  ? 'bg-brand-500'
                   : 'bg-gray-600'
               }`}
             />
             <div className="h-0.5 w-12 bg-gray-700">
               <div
-                className={`h-full bg-cyan-500 transition-all duration-500 ${
+                className={`h-full bg-brand-500 transition-all duration-500 ${
                   loadingState.type === 'success' ? 'w-full' : 'w-0'
                 }`}
               />
@@ -160,8 +160,8 @@ export function InlineTransactionStatus({
   }
 
   const colors = {
-    pending: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',
-    confirming: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
+    pending: 'text-brand-400 bg-brand-500/10 border-brand-500/30',
+    confirming: 'text-brand-400 bg-brand-500/10 border-brand-500/30',
     success: 'text-green-400 bg-green-500/10 border-green-500/30',
     error: 'text-red-400 bg-red-500/10 border-red-500/30',
   };
