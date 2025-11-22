@@ -26,25 +26,47 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="miniapp-container min-h-screen py-6">
-      {/* Header */}
+      {/* Header with Navigation */}
       <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-bold bg-gradient-to-r from-base-blue to-purple-500 bg-clip-text text-transparent">
-              CT LEAGUE
-            </div>
-          </Link>
-        </div>
+        {/* Navigation */}
+        <nav className="flex items-center space-x-2 overflow-x-auto scrollbar-hide">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
 
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
+                  isActive
+                    ? item.highlight
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25'
+                      : 'bg-brand-600 text-white shadow-soft-lg'
+                    : item.highlight
+                      ? 'bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                }`}
+              >
+                <Icon
+                  size={18}
+                  weight={isActive ? 'fill' : 'regular'}
+                  className="transition-all"
+                />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Right side: Profile + Wallet */}
         <div className="flex items-center gap-3">
-
-          {/* Profile Icon */}
           {address && (
             <Link
               to="/profile"
               className={`p-2.5 rounded-lg transition-all ${
                 location.pathname === '/profile'
-                  ? 'bg-base-blue text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
               }`}
               title="View Profile"
@@ -54,7 +76,6 @@ export default function Layout({ children }: LayoutProps) {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -72,42 +93,6 @@ export default function Layout({ children }: LayoutProps) {
           />
         </div>
       </header>
-
-      {/* Navigation */}
-      <nav className="flex space-x-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
-                isActive
-                  ? item.highlight
-                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25'
-                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
-                  : item.highlight
-                    ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border border-green-500/30 hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/50'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-              }`}
-            >
-              <Icon
-                size={18}
-                weight={isActive ? 'fill' : 'regular'}
-                className="transition-all"
-              />
-              <span>{item.label}</span>
-
-              {/* Active indicator bar */}
-              {isActive && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-white/50 rounded-full" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
 
       {/* Main Content */}
       <main>{children}</main>
