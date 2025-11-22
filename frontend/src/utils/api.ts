@@ -9,25 +9,20 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 // AUTH STATE MANAGEMENT
 // ============================================
 
-let accessToken: string | null = localStorage.getItem('accessToken');
-let refreshToken: string | null = localStorage.getItem('refreshToken');
+let authToken: string | null = localStorage.getItem('authToken');
 
-export function setTokens(access: string, refresh: string) {
-  accessToken = access;
-  refreshToken = refresh;
-  localStorage.setItem('accessToken', access);
-  localStorage.setItem('refreshToken', refresh);
+export function setAuthToken(token: string) {
+  authToken = token;
+  localStorage.setItem('authToken', token);
 }
 
-export function clearTokens() {
-  accessToken = null;
-  refreshToken = null;
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
+export function clearAuthToken() {
+  authToken = null;
+  localStorage.removeItem('authToken');
 }
 
-export function getAccessToken(): string | null {
-  return accessToken;
+export function getAuthToken(): string | null {
+  return authToken || localStorage.getItem('authToken');
 }
 
 // ============================================
@@ -59,8 +54,8 @@ async function request<T>(
     ...headers,
   };
 
-  if (requiresAuth && accessToken) {
-    requestHeaders['Authorization'] = `Bearer ${accessToken}`;
+  if (requiresAuth && authToken) {
+    requestHeaders['Authorization'] = `Bearer ${authToken}`;
   }
 
   try {
@@ -71,16 +66,10 @@ async function request<T>(
       credentials: 'include',
     });
 
-    // Handle 401 - try to refresh token
-    if (response.status === 401 && requiresAuth && refreshToken) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        // Retry the original request
-        return request<T>(endpoint, options);
-      } else {
-        clearTokens();
-        throw new Error('Authentication required');
-      }
+    // Handle 401 - unauthorized
+    if (response.status === 401 && requiresAuth) {
+      clearAuthToken();
+      throw new Error('Authentication required');
     }
 
     if (!response.ok) {
@@ -105,7 +94,7 @@ async function request<T>(
 
 export interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
+  token?: string; // Backend sometimes returns 'token' instead of 'accessToken'
   user: {
     id: string;
     walletAddress: string;
@@ -118,38 +107,21 @@ export async function getNonce(): Promise<{ nonce: string }> {
   return request('/api/auth/nonce');
 }
 
-export async function login(
+export async function verify(
   message: string,
   signature: string
 ): Promise<AuthResponse> {
-  const response = await request<AuthResponse>('/api/auth/login', {
+  const response = await request<AuthResponse>('/api/auth/verify', {
     method: 'POST',
     body: { message, signature },
   });
 
-  setTokens(response.accessToken, response.refreshToken);
-  return response;
-}
-
-export async function refreshAccessToken(): Promise<boolean> {
-  if (!refreshToken) return false;
-
-  try {
-    const response = await request<{ accessToken: string }>(
-      '/api/auth/refresh',
-      {
-        method: 'POST',
-        body: { refreshToken },
-      }
-    );
-
-    accessToken = response.accessToken;
-    localStorage.setItem('accessToken', response.accessToken);
-    return true;
-  } catch (error) {
-    clearTokens();
-    return false;
+  // Backend might return 'token' or 'accessToken'
+  const token = response.accessToken || response.token;
+  if (token) {
+    setAuthToken(token);
   }
+  return response;
 }
 
 export async function logout(): Promise<void> {
@@ -159,7 +131,7 @@ export async function logout(): Promise<void> {
       requiresAuth: true,
     });
   } finally {
-    clearTokens();
+    clearAuthToken();
   }
 }
 

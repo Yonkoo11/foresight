@@ -476,13 +476,53 @@ export default function Vote() {
 
         {/* Weekly Leaderboard */}
         <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border-2 border-gray-700/50 p-8 shadow-2xl">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-black text-white flex items-center gap-3">
               <Trophy size={32} weight="fill" className="text-yellow-400" />
               This Week's Rankings
             </h2>
             <div className="text-sm text-gray-400 bg-gray-900/50 px-4 py-2 rounded-xl">Updated live</div>
           </div>
+
+          {/* Countdown Timer */}
+          {voteStatus?.contest && (() => {
+            const endDate = new Date(voteStatus.contest.end_date);
+            const now = new Date();
+            const diff = endDate.getTime() - now.getTime();
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            return (
+              <div className="mb-8 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-500/50 rounded-2xl p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Lightning size={32} weight="fill" className="text-orange-400" />
+                    <div>
+                      <p className="text-sm text-gray-300 mb-1">Voting closes in:</p>
+                      <div className="flex items-center gap-2 text-3xl font-black">
+                        {diff > 0 ? (
+                          <>
+                            <span className="text-orange-400">{days}d</span>
+                            <span className="text-gray-500">:</span>
+                            <span className="text-orange-400">{hours}h</span>
+                            <span className="text-gray-500">:</span>
+                            <span className="text-orange-400">{minutes}m</span>
+                          </>
+                        ) : (
+                          <span className="text-red-400">Closed</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400 mb-1">Period</p>
+                    <p className="text-sm font-bold text-gray-300">{formatDateRange(voteStatus.contest.start_date, voteStatus.contest.end_date)}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {leaderboard.length === 0 ? (
             <div className="text-center py-20">
@@ -492,73 +532,115 @@ export default function Vote() {
             </div>
           ) : (
             <div className="space-y-4">
-              {leaderboard.map((influencer, index) => {
-                const rarity = getRarityInfo(influencer.tier);
+              {(() => {
+                // Calculate total votes for percentages
+                const totalVotes = leaderboard.reduce((sum, inf) => sum + (inf.vote_count || 0), 0);
 
-                return (
-                  <div
-                    key={influencer.id}
-                    className={`relative bg-gradient-to-r from-gray-800/80 to-gray-900/80 rounded-2xl p-6 border-2 transition-all hover:scale-102 ${
-                      index === 0
-                        ? 'border-yellow-500/50 shadow-xl shadow-yellow-500/20'
-                        : index === 1
-                        ? 'border-gray-400/50'
-                        : index === 2
-                        ? 'border-orange-400/50'
-                        : 'border-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-6">
-                      {/* Rank */}
-                      <div
-                        className={`text-3xl font-black w-16 h-16 flex items-center justify-center rounded-2xl ${
+                return leaderboard.map((influencer, index) => {
+                  const rarity = getRarityInfo(influencer.tier);
+                  const votePercentage = totalVotes > 0 ? ((influencer.vote_count || 0) / totalVotes * 100) : 0;
+                  const spotlightBonus = index === 0 ? '+10%' : index === 1 ? '+5%' : index === 2 ? '+3%' : null;
+
+                  return (
+                    <div
+                      key={influencer.id}
+                      className={`relative bg-gradient-to-r from-gray-800/80 to-gray-900/80 rounded-2xl p-6 border-2 transition-all hover:scale-102 ${
+                        index === 0
+                          ? 'border-yellow-500/50 shadow-xl shadow-yellow-500/20'
+                          : index === 1
+                          ? 'border-gray-400/50 shadow-lg shadow-gray-400/10'
+                          : index === 2
+                          ? 'border-orange-400/50 shadow-lg shadow-orange-400/10'
+                          : 'border-gray-700'
+                      }`}
+                    >
+                      {/* Spotlight Bonus Badge */}
+                      {spotlightBonus && (
+                        <div className={`absolute -top-3 right-6 px-3 py-1 rounded-full text-xs font-black shadow-lg ${
                           index === 0
-                            ? 'bg-yellow-500/20 text-yellow-400'
+                            ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900'
                             : index === 1
-                            ? 'bg-gray-400/20 text-gray-300'
-                            : index === 2
-                            ? 'bg-orange-400/20 text-orange-400'
-                            : 'bg-gray-700/20 text-gray-500'
-                        }`}
-                      >
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                            ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-gray-900'
+                            : 'bg-gradient-to-r from-orange-400 to-amber-600 text-gray-900'
+                        }`}>
+                          {spotlightBonus} SPOTLIGHT
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-6 mb-3">
+                        {/* Rank */}
+                        <div
+                          className={`text-3xl font-black w-16 h-16 flex items-center justify-center rounded-2xl ${
+                            index === 0
+                              ? 'bg-yellow-500/20 text-yellow-400'
+                              : index === 1
+                              ? 'bg-gray-400/20 text-gray-300'
+                              : index === 2
+                              ? 'bg-orange-400/20 text-orange-400'
+                              : 'bg-gray-700/20 text-gray-500'
+                          }`}
+                        >
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                        </div>
+
+                        {/* Profile Picture */}
+                        <div className="relative">
+                          <div className="w-16 h-16 rounded-full border-4 border-gray-600 shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
+                            {influencer.profile_image_url ? (
+                              <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
+                            )}
+                          </div>
+                          <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full ${rarity.badge} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
+                            {influencer.tier}
+                          </div>
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1">
+                          <div className="font-bold text-xl text-white">{influencer.name}</div>
+                          <div className="text-sm text-gray-400">@{influencer.handle}</div>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="flex items-center gap-6">
+                          <div className="text-center">
+                            <div className="text-xs text-gray-400 mb-1">Votes</div>
+                            <div className="text-xl font-bold text-white">{influencer.vote_count || 0}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-gray-400 mb-1">Score</div>
+                            <div className="text-3xl font-black text-cyan-400">{influencer.weighted_score || 0}</div>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Profile Picture */}
-                      <div className="relative">
-                        <div className="w-16 h-16 rounded-full border-4 border-gray-600 shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
-                          {influencer.profile_image_url ? (
-                            <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
-                          )}
+                      {/* Vote Percentage Bar */}
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-gray-400">Vote Share</span>
+                          <span className="text-xs font-bold text-gray-300">{votePercentage.toFixed(1)}%</span>
                         </div>
-                        <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full ${rarity.badge} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
-                          {influencer.tier}
-                        </div>
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1">
-                        <div className="font-bold text-xl text-white">{influencer.name}</div>
-                        <div className="text-sm text-gray-400">@{influencer.handle}</div>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-6">
-                        <div className="text-center">
-                          <div className="text-xs text-gray-400 mb-1">Votes</div>
-                          <div className="text-xl font-bold text-white">{influencer.vote_count || 0}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xs text-gray-400 mb-1">Score</div>
-                          <div className="text-3xl font-black text-cyan-400">{influencer.weighted_score || 0}</div>
+                        <div className="w-full bg-gray-700/30 rounded-full h-2 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              index === 0
+                                ? 'bg-gradient-to-r from-yellow-400 to-amber-500'
+                                : index === 1
+                                ? 'bg-gradient-to-r from-gray-400 to-gray-500'
+                                : index === 2
+                                ? 'bg-gradient-to-r from-orange-400 to-amber-600'
+                                : 'bg-gradient-to-r from-cyan-400 to-blue-500'
+                            }`}
+                            style={{ width: `${votePercentage}%` }}
+                          ></div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           )}
         </div>

@@ -8,6 +8,7 @@ import { config } from './config/wagmi';
 import { RealtimeProvider } from './contexts/RealtimeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import Layout from './components/Layout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Pages
 import Home from './pages/Home';
@@ -36,23 +37,25 @@ function AppContent() {
 function App() {
   console.log('App component rendering');
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: '#0052FF',
-            accentColorForeground: 'white',
-            borderRadius: 'large',
-          })}
-        >
-          <RealtimeProvider>
-            <NotificationProvider>
-              <AppContent />
-            </NotificationProvider>
-          </RealtimeProvider>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ErrorBoundary>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider
+            theme={darkTheme({
+              accentColor: '#0052FF',
+              accentColorForeground: 'white',
+              borderRadius: 'large',
+            })}
+          >
+            <RealtimeProvider>
+              <NotificationProvider>
+                <AppContent />
+              </NotificationProvider>
+            </RealtimeProvider>
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </ErrorBoundary>
   );
 }
 

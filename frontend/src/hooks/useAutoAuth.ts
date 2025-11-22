@@ -67,22 +67,25 @@ export function useAutoAuth() {
       // Step 3: Sign message
       const signature = await signMessageAsync({ message: messageToSign });
 
-      // Step 4: Verify and get tokens
+      // Step 4: Verify and get token
       const verifyResponse = await axios.post(`${API_URL}/api/auth/verify`, {
         message: messageToSign,
         signature,
       });
 
-      const { accessToken, refreshToken } = verifyResponse.data;
+      // Backend might return 'token' or 'accessToken'
+      const token = verifyResponse.data.accessToken || verifyResponse.data.token;
 
-      // Step 5: Store tokens
-      localStorage.setItem('authToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      // Step 5: Store token
+      if (token) {
+        localStorage.setItem('authToken', token);
+        console.log('✅ Auto-authentication successful!');
 
-      console.log('✅ Auto-authentication successful!');
-
-      // Reload page to fetch data with new auth
-      window.location.reload();
+        // Reload page to fetch data with new auth
+        window.location.reload();
+      } else {
+        throw new Error('No token received from server');
+      }
     } catch (error: any) {
       console.error('❌ Auto-authentication failed:', error);
       // Don't throw - just log the error

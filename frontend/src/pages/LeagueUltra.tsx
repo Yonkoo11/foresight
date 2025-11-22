@@ -1035,6 +1035,15 @@ export default function LeagueUltra() {
               const rarity = getRarityInfo(influencer.tier);
               const RarityIcon = rarity.icon;
 
+              // Form indicator based on form_score (0-100 scale, with 50 being average)
+              const formScore = influencer.form_score || 50;
+              const getFormInfo = () => {
+                if (formScore >= 70) return { emoji: '🔥', text: 'Hot', color: 'text-orange-400', bg: 'bg-orange-500/20 border-orange-500/50' };
+                if (formScore >= 40) return { emoji: '➡️', text: 'Steady', color: 'text-blue-400', bg: 'bg-blue-500/20 border-blue-500/50' };
+                return { emoji: '📉', text: 'Cold', color: 'text-gray-400', bg: 'bg-gray-500/20 border-gray-500/50' };
+              };
+              const form = getFormInfo();
+
               return (
                 <button
                   key={influencer.id}
@@ -1046,8 +1055,15 @@ export default function LeagueUltra() {
                       : 'border-gray-700 bg-gradient-to-br from-gray-800/80 to-gray-900/80 hover:border-gray-600 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                   }`}
                 >
-                  {/* Rarity Badge */}
-                  <div className="absolute top-3 right-3 z-10">
+                  {/* Top Badges Row */}
+                  <div className="absolute top-3 left-3 right-3 z-10 flex items-start justify-between gap-2">
+                    {/* Form Badge */}
+                    <div className={`${form.bg} border-2 px-2 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
+                      <span className="text-xs">{form.emoji}</span>
+                      <span className={`text-xs font-bold ${form.color}`}>{form.text}</span>
+                    </div>
+
+                    {/* Rarity Badge */}
                     <div className={`${rarity.badge} px-3 py-1 rounded-full flex items-center gap-1 shadow-lg`}>
                       <RarityIcon size={14} weight="fill" className="text-white" />
                       <span className="text-xs font-bold text-white">{rarity.label}</span>
@@ -1055,8 +1071,8 @@ export default function LeagueUltra() {
                   </div>
 
                   {/* Profile Picture */}
-                  <div className="mb-4">
-                    <div className={`w-24 h-24 mx-auto rounded-full border-4 ${isSelected ? 'border-white' : 'border-gray-600'} shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800`}>
+                  <div className="mb-4 mt-6">
+                    <div className={`w-24 h-24 mx-auto rounded-full border-4 ${isSelected ? 'border-white' : 'border-gray-600'} shadow-xl overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 ${formScore >= 70 ? 'ring-2 ring-orange-500/50 ring-offset-2 ring-offset-gray-900' : ''}`}>
                       {influencer.profile_image_url ? (
                         <img src={influencer.profile_image_url} alt={influencer.name} className="w-full h-full object-cover" />
                       ) : (
@@ -1075,28 +1091,36 @@ export default function LeagueUltra() {
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     {/* Weekly Score */}
                     {influencer.total_points !== undefined && (
-                      <div className="bg-gray-900/60 backdrop-blur rounded-lg p-2 text-center">
+                      <div className="bg-gray-900/60 backdrop-blur rounded-lg p-2 text-center border border-gray-700/50">
                         <p className="text-xs text-gray-400 mb-1">Score</p>
                         <p className="font-bold text-white text-sm">{influencer.total_points}</p>
                       </div>
                     )}
 
                     {/* Cost */}
-                    <div className="bg-gray-900/60 backdrop-blur rounded-lg p-2 text-center">
+                    <div className="bg-gray-900/60 backdrop-blur rounded-lg p-2 text-center border border-gray-700/50">
                       <p className="text-xs text-gray-400 mb-1">Cost</p>
                       <p className="font-bold text-yellow-400 text-sm">{parseFloat(influencer.price.toString()).toFixed(0)} pts</p>
                     </div>
 
-                    {/* Followers */}
-                    {influencer.follower_count && (
-                      <div className="bg-gray-900/60 backdrop-blur rounded-lg p-2 text-center">
-                        <p className="text-xs text-gray-400 mb-1">Followers</p>
-                        <p className="font-bold text-cyan-400 text-sm">
-                          {formatFollowerCount(influencer.follower_count)}
-                        </p>
-                      </div>
-                    )}
+                    {/* Form Score */}
+                    <div className="bg-gray-900/60 backdrop-blur rounded-lg p-2 text-center border border-gray-700/50">
+                      <p className="text-xs text-gray-400 mb-1">Form</p>
+                      <p className={`font-bold text-sm ${form.color}`}>{formScore}</p>
+                    </div>
                   </div>
+
+                  {/* Followers Badge */}
+                  {influencer.follower_count && (
+                    <div className="mb-4 text-center">
+                      <div className="inline-flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-3 py-1">
+                        <Users size={14} weight="bold" className="text-cyan-400" />
+                        <span className="text-xs font-bold text-cyan-400">
+                          {formatFollowerCount(influencer.follower_count)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Draft Button */}
                   <div className={`py-3 rounded-xl text-center font-bold transition-all ${
@@ -1269,12 +1293,37 @@ export default function LeagueUltra() {
                 </p>
                 <p className="text-xs text-purple-300 mt-2">{team.picks.reduce((max: any, p: any) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.total_points || 0} pts</p>
               </div>
-              <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 border-2 border-green-500/50 rounded-2xl p-6">
-                <p className="text-sm text-green-300 font-bold mb-2">Squad Status</p>
-                <p className="text-3xl font-bold text-green-400">
-                  {team.is_locked ? '🔒 Locked' : '🔥 WAGMI'}
-                </p>
-                <p className="text-xs text-green-300 mt-2">{team.is_locked ? 'No edits' : 'Degen mode on'}</p>
+              <div className="bg-gradient-to-br from-orange-600/20 to-red-600/20 border-2 border-orange-500/50 rounded-2xl p-6">
+                <p className="text-sm text-orange-300 font-bold mb-2">Contest Ends In</p>
+                {(() => {
+                  if (!selectedContest) return <p className="text-3xl font-bold text-orange-400">N/A</p>;
+
+                  const endDate = new Date(selectedContest.end_date);
+                  const now = new Date();
+                  const diff = endDate.getTime() - now.getTime();
+                  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+                  if (diff <= 0) {
+                    return (
+                      <>
+                        <p className="text-3xl font-bold text-red-400">CLOSED</p>
+                        <p className="text-xs text-red-300 mt-2">Contest ended</p>
+                      </>
+                    );
+                  }
+
+                  return (
+                    <>
+                      <p className="text-3xl font-black text-orange-400">
+                        {days}d {hours}h
+                      </p>
+                      <p className="text-xs text-orange-300 mt-2">
+                        {team.is_locked ? '🔒 Team locked' : '⚠️ Lock before deadline'}
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -1306,75 +1355,224 @@ export default function LeagueUltra() {
                 </div>
               </div>
 
-              {/* Formation View */}
+              {/* Formation View - 5-a-Side Pitch */}
               {squadViewMode === 'formation' && (
-                <div className="relative bg-gradient-to-b from-gray-900/50 to-gray-800/50 rounded-3xl border-2 border-gray-700 p-8 min-h-[600px]">
-                  {/* Tier-based Formation Display */}
-                  <div className="space-y-8">
-                    {/* Group by tier */}
-                    {['S', 'A', 'B', 'C'].map((tier) => {
-                      const tierPicks = team.picks.filter((p: any) => (p.tier || p.influencer_tier) === tier);
-                      if (tierPicks.length === 0) return null;
+                <div className="relative rounded-3xl border-2 border-gray-700 overflow-hidden min-h-[700px]">
+                  {/* Pitch Background - Radial Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-green-900/20 via-gray-900/80 to-gray-900/90"></div>
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]"></div>
 
-                      const rarity = getRarityInfo(tier);
-                      const RarityIcon = rarity.icon;
+                  {/* Center Circle */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-white/10 rounded-full"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white/20 rounded-full"></div>
 
-                      return (
-                        <div key={tier} className="space-y-4">
-                          {/* Tier Label */}
-                          <div className="flex items-center gap-2 justify-center">
-                            <div className={`${rarity.badge} px-4 py-2 rounded-full flex items-center gap-2`}>
-                              <RarityIcon size={20} weight="fill" className="text-white" />
-                              <span className="text-sm font-black text-white">{tier}-TIER • {rarity.label.toUpperCase()}</span>
-                            </div>
-                          </div>
+                  {/* Grid Lines */}
+                  <div className="absolute inset-0">
+                    <div className="absolute top-1/2 left-0 right-0 h-px bg-white/5"></div>
+                    <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/5"></div>
+                  </div>
 
-                          {/* Players in this tier */}
-                          <div className={`grid gap-4 ${tierPicks.length === 1 ? 'grid-cols-1 max-w-md mx-auto' : tierPicks.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' : 'grid-cols-3'}`}>
-                            {tierPicks.map((pick: any) => (
-                              <div
-                                key={pick.id}
-                                className={`relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-2xl shadow-2xl hover:scale-105 transition-all`}
-                              >
-                                <div className="bg-gray-900 rounded-xl p-4">
-                                  {/* Avatar */}
-                                  <div className="relative w-24 h-24 mx-auto mb-3">
-                                    <div className="w-full h-full rounded-full border-4 border-white/20 overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-xl">
-                                      {pick.profile_image_url ? (
-                                        <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-4xl">👤</div>
-                                      )}
+                  {/* Formation: 5-a-Side Layout */}
+                  <div className="relative z-10 p-12 h-[700px] flex items-center justify-center">
+                    <div className="relative w-full max-w-4xl mx-auto">
+                      {/* Position players in a 2-1-2 formation */}
+                      <div className="space-y-16">
+                        {/* Top Row - 2 Forwards */}
+                        <div className="flex justify-center gap-24">
+                          {team.picks.slice(0, 2).map((pick: any, index: number) => {
+                            const rarity = getRarityInfo(pick.tier || pick.influencer_tier || 'C');
+                            const isCaptain = pick.is_captain;
+
+                            return (
+                              <div key={pick.id} className="relative group">
+                                {/* Captain Armband Badge */}
+                                {isCaptain && (
+                                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
+                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xl border-2 border-yellow-300 animate-pulse">
+                                      <Crown size={14} weight="fill" className="text-white" />
+                                      <span className="text-xs font-black text-white">CAPTAIN</span>
                                     </div>
-                                    {/* Tier badge on avatar */}
-                                    <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-lg`}>
-                                      <span className="text-xs font-black text-white">{tier}</span>
+                                  </div>
+                                )}
+
+                                {/* Player Card */}
+                                <div className={`relative ${isCaptain ? 'animate-pulse-slow' : ''}`}>
+                                  <div className={`relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-2xl shadow-2xl transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                                    <div className="bg-gray-900 rounded-xl p-4 w-40">
+                                      {/* Avatar */}
+                                      <div className="relative w-20 h-20 mx-auto mb-2">
+                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-xl`}>
+                                          {pick.profile_image_url ? (
+                                            <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
+                                          ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                                          )}
+                                        </div>
+                                        {/* Tier Badge */}
+                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-lg text-xs font-black text-white`}>
+                                          {pick.tier || pick.influencer_tier || 'C'}
+                                        </div>
+                                      </div>
+
+                                      {/* Name */}
+                                      <h4 className="text-center text-sm font-black text-white mb-0.5 line-clamp-1">{pick.influencer_name?.split(' ')[0]}</h4>
+                                      <p className="text-center text-[10px] text-gray-400 mb-2 line-clamp-1">@{pick.influencer_handle}</p>
+
+                                      {/* Stats */}
+                                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-700">
+                                        <div className="text-center flex-1">
+                                          <p className="text-xs text-cyan-400 font-bold">{pick.total_points || 0}</p>
+                                          <p className="text-[9px] text-gray-500">PTS</p>
+                                        </div>
+                                        <div className="w-px h-6 bg-gray-700"></div>
+                                        <div className="text-center flex-1">
+                                          <p className="text-xs text-yellow-400 font-bold">{parseFloat(pick.price || 15).toFixed(0)}</p>
+                                          <p className="text-[9px] text-gray-500">COST</p>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
 
-                                  {/* Name */}
-                                  <h4 className="text-center text-lg font-black text-white mb-1">{pick.influencer_name}</h4>
-                                  <p className="text-center text-xs text-gray-400 mb-3">@{pick.influencer_handle}</p>
-
-                                  {/* Stats Row */}
-                                  <div className="flex items-center justify-center gap-4 pt-3 border-t border-gray-700">
-                                    <div className="text-center">
-                                      <p className="text-xs text-yellow-400 font-bold">{parseFloat(pick.price || 15).toFixed(0)} pts</p>
-                                      <p className="text-[10px] text-gray-500">Cost</p>
+                                  {/* Captain 2x Multiplier Indicator */}
+                                  {isCaptain && (
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-lg">
+                                      <span className="text-xs font-black text-gray-900">2X</span>
                                     </div>
-                                    <div className="w-px h-8 bg-gray-700"></div>
-                                    <div className="text-center">
-                                      <p className="text-xs text-cyan-400 font-bold">{pick.total_points || 0}</p>
-                                      <p className="text-[10px] text-gray-500">Score</p>
-                                    </div>
-                                  </div>
+                                  )}
                                 </div>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+
+                        {/* Middle Row - 1 Midfielder */}
+                        <div className="flex justify-center">
+                          {team.picks.slice(2, 3).map((pick: any) => {
+                            const rarity = getRarityInfo(pick.tier || pick.influencer_tier || 'C');
+                            const isCaptain = pick.is_captain;
+
+                            return (
+                              <div key={pick.id} className="relative group">
+                                {isCaptain && (
+                                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
+                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xl border-2 border-yellow-300 animate-pulse">
+                                      <Crown size={14} weight="fill" className="text-white" />
+                                      <span className="text-xs font-black text-white">CAPTAIN</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className={`relative ${isCaptain ? 'animate-pulse-slow' : ''}`}>
+                                  <div className={`relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-2xl shadow-2xl transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                                    <div className="bg-gray-900 rounded-xl p-4 w-40">
+                                      <div className="relative w-20 h-20 mx-auto mb-2">
+                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-xl`}>
+                                          {pick.profile_image_url ? (
+                                            <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
+                                          ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                                          )}
+                                        </div>
+                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-lg text-xs font-black text-white`}>
+                                          {pick.tier || pick.influencer_tier || 'C'}
+                                        </div>
+                                      </div>
+
+                                      <h4 className="text-center text-sm font-black text-white mb-0.5 line-clamp-1">{pick.influencer_name?.split(' ')[0]}</h4>
+                                      <p className="text-center text-[10px] text-gray-400 mb-2 line-clamp-1">@{pick.influencer_handle}</p>
+
+                                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-700">
+                                        <div className="text-center flex-1">
+                                          <p className="text-xs text-cyan-400 font-bold">{pick.total_points || 0}</p>
+                                          <p className="text-[9px] text-gray-500">PTS</p>
+                                        </div>
+                                        <div className="w-px h-6 bg-gray-700"></div>
+                                        <div className="text-center flex-1">
+                                          <p className="text-xs text-yellow-400 font-bold">{parseFloat(pick.price || 15).toFixed(0)}</p>
+                                          <p className="text-[9px] text-gray-500">COST</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {isCaptain && (
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-lg">
+                                      <span className="text-xs font-black text-gray-900">2X</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Bottom Row - 2 Defenders */}
+                        <div className="flex justify-center gap-24">
+                          {team.picks.slice(3, 5).map((pick: any) => {
+                            const rarity = getRarityInfo(pick.tier || pick.influencer_tier || 'C');
+                            const isCaptain = pick.is_captain;
+
+                            return (
+                              <div key={pick.id} className="relative group">
+                                {isCaptain && (
+                                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20">
+                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xl border-2 border-yellow-300 animate-pulse">
+                                      <Crown size={14} weight="fill" className="text-white" />
+                                      <span className="text-xs font-black text-white">CAPTAIN</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className={`relative ${isCaptain ? 'animate-pulse-slow' : ''}`}>
+                                  <div className={`relative bg-gradient-to-br ${rarity.gradient} p-1 rounded-2xl shadow-2xl transition-all group-hover:scale-110 ${isCaptain ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                                    <div className="bg-gray-900 rounded-xl p-4 w-40">
+                                      <div className="relative w-20 h-20 mx-auto mb-2">
+                                        <div className={`w-full h-full rounded-full border-4 ${isCaptain ? 'border-yellow-400' : 'border-white/20'} overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 shadow-xl`}>
+                                          {pick.profile_image_url ? (
+                                            <img src={pick.profile_image_url} alt={pick.influencer_name} className="w-full h-full object-cover" />
+                                          ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-3xl">👤</div>
+                                          )}
+                                        </div>
+                                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${rarity.badge} px-2 py-1 rounded-full shadow-lg text-xs font-black text-white`}>
+                                          {pick.tier || pick.influencer_tier || 'C'}
+                                        </div>
+                                      </div>
+
+                                      <h4 className="text-center text-sm font-black text-white mb-0.5 line-clamp-1">{pick.influencer_name?.split(' ')[0]}</h4>
+                                      <p className="text-center text-[10px] text-gray-400 mb-2 line-clamp-1">@{pick.influencer_handle}</p>
+
+                                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-700">
+                                        <div className="text-center flex-1">
+                                          <p className="text-xs text-cyan-400 font-bold">{pick.total_points || 0}</p>
+                                          <p className="text-[9px] text-gray-500">PTS</p>
+                                        </div>
+                                        <div className="w-px h-6 bg-gray-700"></div>
+                                        <div className="text-center flex-1">
+                                          <p className="text-xs text-yellow-400 font-bold">{parseFloat(pick.price || 15).toFixed(0)}</p>
+                                          <p className="text-[9px] text-gray-500">COST</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {isCaptain && (
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 px-2 py-0.5 rounded-full shadow-lg">
+                                      <span className="text-xs font-black text-gray-900">2X</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Formation Label */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-900/80 backdrop-blur px-4 py-2 rounded-full border border-gray-700">
+                    <span className="text-xs font-bold text-gray-400">2-1-2 FORMATION</span>
                   </div>
                 </div>
               )}
@@ -1492,59 +1690,191 @@ export default function LeagueUltra() {
               )}
             </div>
 
-            {/* Leaderboard Table */}
-            <div className="space-y-3">
-              {leaderboard.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="text-6xl mb-4">🏆</div>
-                  <h3 className="text-2xl font-bold text-white mb-2">No teams yet</h3>
-                  <p className="text-gray-400">Be the first to create a team!</p>
-                </div>
-              ) : (
-                leaderboard.map((entry, index) => {
-                  const isMyTeam = team?.id === entry.id;
-                  const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : null;
-
-                  return (
-                    <div
-                      key={entry.id}
-                      className={`flex items-center gap-6 p-6 rounded-2xl border-2 transition-all ${
-                        isMyTeam
-                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-400 shadow-xl shadow-cyan-500/20'
-                          : 'bg-gradient-to-r from-gray-800 to-gray-800/50 border-gray-700 hover:border-gray-600'
-                      }`}
-                    >
-                      {/* Rank */}
-                      <div className="w-16 text-center">
-                        {medal ? (
-                          <div className="text-4xl">{medal}</div>
-                        ) : (
-                          <div className="text-3xl font-black text-gray-400">#{entry.rank}</div>
-                        )}
+            {/* Leaderboard Content */}
+            {leaderboard.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">🏆</div>
+                <h3 className="text-2xl font-bold text-white mb-2">No teams yet</h3>
+                <p className="text-gray-400">Be the first to create a team!</p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {/* Top 3 Podium */}
+                {leaderboard.length >= 3 && (
+                  <div className="mb-12">
+                    <h3 className="text-xl font-bold text-white text-center mb-8 flex items-center justify-center gap-2">
+                      <Trophy size={24} weight="fill" className="text-yellow-400" />
+                      Top 3 Champions
+                    </h3>
+                    <div className="flex items-end justify-center gap-6 mb-8">
+                      {/* 2nd Place */}
+                      <div className="flex flex-col items-center flex-1 max-w-xs">
+                        <div className={`w-full bg-gradient-to-br from-gray-400 to-gray-600 rounded-t-2xl border-2 border-gray-400 p-6 shadow-2xl ${team?.id === leaderboard[1]?.id ? 'ring-4 ring-cyan-400' : ''}`} style={{ height: '220px' }}>
+                          <div className="flex flex-col items-center h-full justify-between">
+                            <div className="text-6xl mb-3">🥈</div>
+                            <div className="text-center flex-1">
+                              <div className="text-sm text-gray-200 font-bold mb-2">#2</div>
+                              <h4 className="font-black text-white text-lg mb-2 line-clamp-1">{leaderboard[1]?.team_name}</h4>
+                              {team?.id === leaderboard[1]?.id && (
+                                <span className="inline-block bg-cyan-400 text-gray-900 px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
+                              )}
+                            </div>
+                            <div className="text-center mt-auto">
+                              <p className="text-sm text-gray-200 mb-1">Score</p>
+                              <p className="text-3xl font-black text-white">{leaderboard[1]?.total_score}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="w-full h-20 bg-gray-400/20 border-2 border-gray-400/30 border-t-0 rounded-b-2xl flex items-center justify-center">
+                          <span className="text-gray-400 font-bold">SILVER</span>
+                        </div>
                       </div>
 
-                      {/* Team Name */}
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                          {entry.team_name}
-                          {isMyTeam && (
-                            <span className="bg-cyan-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
-                              YOU
-                            </span>
-                          )}
-                        </h3>
+                      {/* 1st Place */}
+                      <div className="flex flex-col items-center flex-1 max-w-xs">
+                        <div className={`w-full bg-gradient-to-br from-yellow-400 to-amber-600 rounded-t-2xl border-2 border-yellow-400 p-6 shadow-2xl ${team?.id === leaderboard[0]?.id ? 'ring-4 ring-cyan-400' : ''}`} style={{ height: '280px' }}>
+                          <div className="flex flex-col items-center h-full justify-between">
+                            <div className="text-7xl mb-3">🥇</div>
+                            <div className="text-center flex-1">
+                              <div className="text-sm text-amber-900 font-bold mb-2">#1</div>
+                              <h4 className="font-black text-gray-900 text-xl mb-2 line-clamp-1">{leaderboard[0]?.team_name}</h4>
+                              {team?.id === leaderboard[0]?.id && (
+                                <span className="inline-block bg-cyan-400 text-gray-900 px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
+                              )}
+                              <div className="flex items-center justify-center gap-1 mt-2">
+                                <Crown size={20} weight="fill" className="text-amber-900" />
+                                <span className="text-xs font-black text-amber-900">CHAMPION</span>
+                              </div>
+                            </div>
+                            <div className="text-center mt-auto">
+                              <p className="text-sm text-amber-900 mb-1">Score</p>
+                              <p className="text-4xl font-black text-gray-900">{leaderboard[0]?.total_score}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="w-full h-24 bg-yellow-400/20 border-2 border-yellow-400/30 border-t-0 rounded-b-2xl flex items-center justify-center">
+                          <span className="text-yellow-400 font-bold">GOLD</span>
+                        </div>
                       </div>
 
-                      {/* Score */}
-                      <div className="text-right">
-                        <p className="text-sm text-gray-400 mb-1">Total Score</p>
-                        <p className="text-3xl font-black text-cyan-400">{entry.total_score}</p>
+                      {/* 3rd Place */}
+                      <div className="flex flex-col items-center flex-1 max-w-xs">
+                        <div className={`w-full bg-gradient-to-br from-orange-600 to-amber-800 rounded-t-2xl border-2 border-orange-600 p-6 shadow-2xl ${team?.id === leaderboard[2]?.id ? 'ring-4 ring-cyan-400' : ''}`} style={{ height: '180px' }}>
+                          <div className="flex flex-col items-center h-full justify-between">
+                            <div className="text-5xl mb-3">🥉</div>
+                            <div className="text-center flex-1">
+                              <div className="text-sm text-orange-200 font-bold mb-2">#3</div>
+                              <h4 className="font-black text-white text-base mb-2 line-clamp-1">{leaderboard[2]?.team_name}</h4>
+                              {team?.id === leaderboard[2]?.id && (
+                                <span className="inline-block bg-cyan-400 text-gray-900 px-2 py-1 rounded-full text-xs font-bold mb-2">YOU</span>
+                              )}
+                            </div>
+                            <div className="text-center mt-auto">
+                              <p className="text-sm text-orange-200 mb-1">Score</p>
+                              <p className="text-2xl font-black text-white">{leaderboard[2]?.total_score}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="w-full h-16 bg-orange-600/20 border-2 border-orange-600/30 border-t-0 rounded-b-2xl flex items-center justify-center">
+                          <span className="text-orange-400 font-bold">BRONZE</span>
+                        </div>
                       </div>
                     </div>
-                  );
-                })
-              )}
-            </div>
+                  </div>
+                )}
+
+                {/* Rest of Leaderboard */}
+                {leaderboard.length > 3 && (
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-400 mb-4 flex items-center gap-2">
+                      <TrendUp size={20} weight="bold" />
+                      All Rankings
+                    </h3>
+                    <div className="space-y-3">
+                      {leaderboard.slice(3).map((entry, index) => {
+                        const isMyTeam = team?.id === entry.id;
+                        const actualRank = index + 4;
+
+                        return (
+                          <div
+                            key={entry.id}
+                            className={`flex items-center gap-6 p-5 rounded-2xl border-2 transition-all ${
+                              isMyTeam
+                                ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-400 shadow-xl shadow-cyan-500/20'
+                                : 'bg-gradient-to-r from-gray-800 to-gray-800/50 border-gray-700 hover:border-gray-600'
+                            }`}
+                          >
+                            {/* Rank */}
+                            <div className="w-12 text-center">
+                              <div className="text-2xl font-black text-gray-400">#{actualRank}</div>
+                            </div>
+
+                            {/* Team Name */}
+                            <div className="flex-1">
+                              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                {entry.team_name}
+                                {isMyTeam && (
+                                  <span className="bg-cyan-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
+                                    YOU
+                                  </span>
+                                )}
+                              </h3>
+                            </div>
+
+                            {/* Score */}
+                            <div className="text-right">
+                              <p className="text-xs text-gray-400 mb-1">Total Score</p>
+                              <p className="text-2xl font-black text-cyan-400">{entry.total_score}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show first 3 normally if less than 3 entries */}
+                {leaderboard.length < 3 && leaderboard.length > 0 && (
+                  <div className="space-y-3">
+                    {leaderboard.map((entry, index) => {
+                      const isMyTeam = team?.id === entry.id;
+                      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : null;
+
+                      return (
+                        <div
+                          key={entry.id}
+                          className={`flex items-center gap-6 p-6 rounded-2xl border-2 transition-all ${
+                            isMyTeam
+                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-400 shadow-xl shadow-cyan-500/20'
+                              : 'bg-gradient-to-r from-gray-800 to-gray-800/50 border-gray-700 hover:border-gray-600'
+                          }`}
+                        >
+                          <div className="w-16 text-center">
+                            {medal ? (
+                              <div className="text-4xl">{medal}</div>
+                            ) : (
+                              <div className="text-3xl font-black text-gray-400">#{entry.rank}</div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                              {entry.team_name}
+                              {isMyTeam && (
+                                <span className="bg-cyan-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">YOU</span>
+                              )}
+                            </h3>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-400 mb-1">Total Score</p>
+                            <p className="text-3xl font-black text-cyan-400">{entry.total_score}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Back to Draft Button */}
             {!team && (
