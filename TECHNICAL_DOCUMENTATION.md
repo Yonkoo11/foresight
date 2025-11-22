@@ -217,17 +217,19 @@ Main game logic:
 
 ```typescript
 // Contest Management
-GET  /api/league/contest/current   // Active contest (PUBLIC)
+GET  /api/league/contests/active   // All active contests (FREE & PRIZE) (PUBLIC)
+GET  /api/league/contest/current   // Single active contest (DEPRECATED) (PUBLIC)
 GET  /api/league/leaderboard/:id?  // Rankings (PUBLIC)
 
 // Team Management
-GET  /api/league/team/me           // My current team (AUTH)
+GET  /api/league/team/me?contest_id=X  // My team for specific contest (AUTH)
 POST /api/league/team/create       // Draft team (AUTH, +50 XP)
+                                   // Body: { team_name, influencer_ids, captain_id, contest_id }
 PUT  /api/league/team/update       // Update picks (AUTH)
 POST /api/league/team/lock         // Lock team (AUTH, +25 XP)
 
 // Influencers
-GET  /api/league/influencers       // 20 available players (PUBLIC)
+GET  /api/league/influencers       // 50 available players (PUBLIC)
 
 // Voting
 POST /api/league/vote              // Submit daily vote (AUTH, +10 XP)
@@ -236,9 +238,10 @@ GET  /api/league/vote/leaderboard  // Today's vote rankings (PUBLIC)
 ```
 
 **Budget Rules**:
-- Total team cost: Max 25M
+- Total team cost: Max 150 points
 - 5 influencers required
-- Tier pricing: S (10M-12M), A (6M-8M), B (4M-5.5M)
+- Tier pricing: S (~40pts), A (~30pts), B (~20pts), C (~12pts)
+- Captain selection required (2x points multiplier)
 
 #### 4. Private Leagues (`src/api/privateLeagues.ts`)
 
@@ -615,10 +618,11 @@ CREATE TABLE influencers (
 );
 ```
 
-**Current Influencers** (20 total):
-- S-Tier (4): Cobie, Ansem, Ico Beast, GCR
-- A-Tier (5): Wales, Hsaka, Degen Spartan, Light, Ape
-- B-Tier (11): Miles Deutscher, Adam Cochran, Wolf, Lark Davis, Pentoshi, Kaleo, Crypto Cobain, NotThreadGuy, Altcoin Sherpa, Rekt Capital, Altcoin Psycho
+**Current Influencers** (50 total):
+- S-Tier (10): Premium CT influencers (~40pts each)
+- A-Tier (15): High-tier CT voices (~30pts each)
+- B-Tier (15): Mid-tier CT personalities (~20pts each)
+- C-Tier (10): Emerging CT influencers (~12pts each)
 
 #### fantasy_contests
 ```sql
