@@ -37,9 +37,9 @@ router.get('/stats', authenticate, async (req: Request, res: Response) => {
 
 /**
  * @route POST /api/admin/trigger-scoring
- * @desc Manually trigger fantasy league scoring
+ * @desc Manually trigger fantasy league scoring (ADMIN ONLY)
  */
-router.post('/trigger-scoring', async (req: Request, res: Response) => {
+router.post('/trigger-scoring', authenticate, async (req: Request, res: Response) => {
   try {
     await triggerFantasyScoring();
     res.json({
@@ -57,9 +57,9 @@ router.post('/trigger-scoring', async (req: Request, res: Response) => {
 
 /**
  * @route GET /api/admin/cron-status
- * @desc Get cron job status
+ * @desc Get cron job status (ADMIN ONLY)
  */
-router.get('/cron-status', async (req: Request, res: Response) => {
+router.get('/cron-status', authenticate, async (req: Request, res: Response) => {
   try {
     const jobs = getCronJobsStatus();
     res.json({
