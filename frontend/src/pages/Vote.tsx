@@ -55,6 +55,7 @@ export default function Vote() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Rarity mapping
   const getRarityInfo = (tier: string) => {
@@ -210,11 +211,19 @@ export default function Vote() {
         }
       );
 
-      alert(`${response.data.message}! Vote weight: ${response.data.vote_weight}x (+10 XP)`);
+      setNotification({
+        type: 'success',
+        message: `${response.data.message}! Vote weight: ${response.data.vote_weight}x (+10 XP)`,
+      });
+      setTimeout(() => setNotification(null), 5000); // Auto-dismiss after 5 seconds
       await fetchVoteStatus();
       await fetchLeaderboard();
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error submitting vote');
+      setNotification({
+        type: 'error',
+        message: error.response?.data?.error || 'Error submitting vote',
+      });
+      setTimeout(() => setNotification(null), 5000);
     } finally {
       setLoading(false);
     }
@@ -223,6 +232,30 @@ export default function Vote() {
   // Main Interface
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed top-6 right-6 z-50 animate-slide-in-right">
+          <div className={`px-6 py-4 rounded-2xl shadow-2xl border-2 backdrop-blur-xl flex items-center gap-3 ${
+            notification.type === 'success'
+              ? 'bg-green-900/90 border-green-500/50 text-green-100'
+              : 'bg-red-900/90 border-red-500/50 text-red-100'
+          }`}>
+            {notification.type === 'success' ? (
+              <CheckCircle size={24} weight="fill" className="text-green-400 flex-shrink-0" />
+            ) : (
+              <Warning size={24} weight="fill" className="text-red-400 flex-shrink-0" />
+            )}
+            <p className="font-semibold">{notification.message}</p>
+            <button
+              onClick={() => setNotification(null)}
+              className="ml-2 text-gray-400 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Auth Modal */}
       {showAuthModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6" onClick={() => setShowAuthModal(false)}>
@@ -345,7 +378,7 @@ export default function Vote() {
             </div>
             <div className="bg-gray-900/50 rounded-xl p-4 text-center border-2 border-orange-500/30">
               <div className="text-3xl mb-2">🥉</div>
-              <div className="font-bold text-orange-400 text-xl mb-1">+5%</div>
+              <div className="font-bold text-orange-400 text-xl mb-1">+3%</div>
               <div className="text-sm text-gray-300">#3 Most Voted</div>
             </div>
           </div>

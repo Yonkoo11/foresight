@@ -76,7 +76,7 @@ export default function Home() {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl mb-4 shadow-lg">
               <Trophy size={40} weight="bold" className="text-white" />
             </div>
-            <div className="text-5xl font-black text-yellow-400 mb-2">100</div>
+            <div className="text-5xl font-black text-yellow-400 mb-2">150</div>
             <div className="text-lg text-gray-300 font-semibold">Point Budget</div>
             <div className="text-sm text-gray-500 mt-2">Spend wisely</div>
           </div>
@@ -104,7 +104,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-white">Draft Your Team</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Pick 5 CT influencers within your 100-point budget. Choose from Legendary, Epic, Rare, and Common tiers.
+                  Pick 5 CT influencers within your 150-point budget. Choose from Legendary, Epic, Rare, and Common tiers.
                 </p>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function Home() {
               <div className="flex items-start gap-3">
                 <CheckCircle size={24} weight="fill" className="text-cyan-400 flex-shrink-0 mt-1" />
                 <div>
-                  <div className="font-semibold text-white mb-1">100-Point Budget System</div>
+                  <div className="font-semibold text-white mb-1">150-Point Budget System</div>
                   <div className="text-sm text-gray-400">Strategic team building with balanced costs</div>
                 </div>
               </div>

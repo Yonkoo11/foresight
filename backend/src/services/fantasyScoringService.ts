@@ -21,6 +21,7 @@ interface Influencer {
   base_price: number;
   follower_count: number;
   engagement_rate?: number;
+  is_captain?: boolean;
 }
 
 interface Team {
@@ -84,7 +85,8 @@ async function getTeamsWithInfluencers(contestId: number): Promise<TeamWithInflu
         'influencers.tier',
         'influencers.base_price',
         'influencers.follower_count',
-        'influencers.engagement_rate'
+        'influencers.engagement_rate',
+        'team_picks.is_captain'
       );
 
     teamsWithInfluencers.push({
@@ -124,7 +126,7 @@ export async function calculateContestScores(contestId: number): Promise<void> {
         spotlightBonuses[topVotedInfluencers[1].influencer_id] = 0.05; // #2 gets 5% bonus
       }
       if (topVotedInfluencers.length > 2) {
-        spotlightBonuses[topVotedInfluencers[2].influencer_id] = 0.05; // #3 gets 5% bonus
+        spotlightBonuses[topVotedInfluencers[2].influencer_id] = 0.03; // #3 gets 3% bonus
       }
 
       console.log('\n🔥 CT Spotlight Bonuses:');
@@ -139,7 +141,9 @@ export async function calculateContestScores(contestId: number): Promise<void> {
       // Calculate base score for this team
       let totalScore = team.influencers.reduce((sum, influencer) => {
         const influencerScore = calculateInfluencerScore(influencer);
-        return sum + influencerScore;
+        // Apply 2x multiplier for captain (FPL-style)
+        const multiplier = influencer.is_captain ? 2 : 1;
+        return sum + (influencerScore * multiplier);
       }, 0);
 
       // Apply weekly spotlight bonus if any team members are in top 3

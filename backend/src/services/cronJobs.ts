@@ -17,6 +17,8 @@ export function initializeCronJobs(): void {
   // 1. Fantasy Scoring - Every 5 minutes (TESTING MODE)
   // Production: '0 0 * * *' (daily at midnight UTC)
   // Alternative: '0 */6 * * *' (every 6 hours)
+  // Gameweek: Monday 00:00 UTC to Sunday 23:59 UTC
+  // Final scores locked Monday 00:01 UTC (1 minute after gameweek ends)
   cron.schedule('*/5 * * * *', async () => {
     console.log('\n[CRON] Running Fantasy Scoring Cycle...');
     try {
@@ -27,6 +29,7 @@ export function initializeCronJobs(): void {
   });
   console.log('✅ Fantasy Scoring: Every 5 minutes (TESTING MODE)');
   console.log('   Production schedule: Daily at 00:00 UTC');
+  console.log('   Gameweek runs Monday-Sunday, scores finalized Monday 00:01 UTC');
 
   // 2. Database Cleanup - Daily at 3 AM UTC
   cron.schedule('0 3 * * *', async () => {
@@ -96,6 +99,7 @@ async function cleanupOldScoreHistory(): Promise<void> {
 
 /**
  * Check and update contest statuses based on end dates
+ * Also manages team locking/unlocking
  */
 async function checkContestEndDates(): Promise<void> {
   const db = (await import('../utils/db')).default;
@@ -104,29 +108,55 @@ async function checkContestEndDates(): Promise<void> {
     const today = new Date().toISOString().split('T')[0];
 
     // End active contests that have passed their end date
-    const endedCount = await db('fantasy_contests')
+    const endedContests = await db('fantasy_contests')
       .where('status', 'active')
       .where('end_date', '<', today)
-      .update({
-        status: 'completed',
-        updated_at: db.fn.now(),
-      });
+      .select('id');
 
-    if (endedCount > 0) {
-      console.log(`🏁 Ended ${endedCount} completed contest(s)`);
+    if (endedContests.length > 0) {
+      // Mark contests as completed
+      await db('fantasy_contests')
+        .whereIn('id', endedContests.map(c => c.id))
+        .update({
+          status: 'completed',
+          updated_at: db.fn.now(),
+        });
+
+      // Unlock all teams from completed contests (allow changes for next gameweek)
+      const unlockedCount = await db('user_teams')
+        .whereIn('contest_id', endedContests.map(c => c.id))
+        .update({
+          is_locked: false,
+          updated_at: db.fn.now(),
+        });
+
+      console.log(`🏁 Ended ${endedContests.length} contest(s), unlocked ${unlockedCount} team(s)`);
     }
 
     // Activate upcoming contests that have reached their start date
-    const startedCount = await db('fantasy_contests')
+    const startingContests = await db('fantasy_contests')
       .where('status', 'upcoming')
       .where('start_date', '<=', today)
-      .update({
-        status: 'active',
-        updated_at: db.fn.now(),
-      });
+      .select('id');
 
-    if (startedCount > 0) {
-      console.log(`🚀 Activated ${startedCount} new contest(s)`);
+    if (startingContests.length > 0) {
+      // Activate contests
+      await db('fantasy_contests')
+        .whereIn('id', startingContests.map(c => c.id))
+        .update({
+          status: 'active',
+          updated_at: db.fn.now(),
+        });
+
+      // Lock all teams in starting contests (FPL-style: no changes during gameweek)
+      const lockedCount = await db('user_teams')
+        .whereIn('contest_id', startingContests.map(c => c.id))
+        .update({
+          is_locked: true,
+          updated_at: db.fn.now(),
+        });
+
+      console.log(`🚀 Activated ${startingContests.length} contest(s), locked ${lockedCount} team(s) for gameweek`);
     }
   } catch (error) {
     console.error('Failed to check contest end dates:', error);
@@ -134,37 +164,40 @@ async function checkContestEndDates(): Promise<void> {
 }
 
 /**
- * Create upcoming weekly contests
+ * Create upcoming weekly contests (Monday to Sunday)
  */
 async function createUpcomingContests(): Promise<void> {
   const db = (await import('../utils/db')).default;
 
   try {
-    // Check if we need to create a new contest for next week
-    const nextWeekStart = new Date();
-    nextWeekStart.setDate(nextWeekStart.getDate() + 7);
-    nextWeekStart.setHours(0, 0, 0, 0);
+    // Find next Monday
+    const today = new Date();
+    const nextMonday = new Date(today);
+    const daysUntilMonday = (8 - today.getDay()) % 7 || 7; // Days until next Monday
+    nextMonday.setDate(today.getDate() + daysUntilMonday + 7); // Next week's Monday
+    nextMonday.setHours(0, 0, 0, 0);
 
-    const nextWeekEnd = new Date(nextWeekStart);
-    nextWeekEnd.setDate(nextWeekEnd.getDate() + 6);
-    nextWeekEnd.setHours(23, 59, 59, 999);
+    // Sunday is 6 days after Monday
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextMonday.getDate() + 6);
+    nextSunday.setHours(23, 59, 59, 999);
 
     // Check if contest already exists for this period
     const existing = await db('fantasy_contests')
-      .where('start_date', nextWeekStart.toISOString().split('T')[0])
+      .where('start_date', nextMonday.toISOString().split('T')[0])
       .first();
 
     if (!existing) {
       // Calculate week number
       const weekNumber = Math.ceil(
-        (nextWeekStart.getTime() - new Date(nextWeekStart.getFullYear(), 0, 1).getTime()) /
+        (nextMonday.getTime() - new Date(nextMonday.getFullYear(), 0, 1).getTime()) /
           (7 * 24 * 60 * 60 * 1000)
       );
 
       await db('fantasy_contests').insert({
-        contest_key: `week_${weekNumber}_${nextWeekStart.getFullYear()}`,
-        start_date: nextWeekStart.toISOString().split('T')[0],
-        end_date: nextWeekEnd.toISOString().split('T')[0],
+        contest_key: `week_${weekNumber}_${nextMonday.getFullYear()}`,
+        start_date: nextMonday.toISOString().split('T')[0],
+        end_date: nextSunday.toISOString().split('T')[0],
         status: 'upcoming',
         total_participants: 0,
         max_participants: 1000,
@@ -183,7 +216,7 @@ async function createUpcomingContests(): Promise<void> {
         updated_at: db.fn.now(),
       });
 
-      console.log(`📅 Created new upcoming contest for Week ${weekNumber}`);
+      console.log(`📅 Created new upcoming contest for Week ${weekNumber} (Mon ${nextMonday.toISOString().split('T')[0]} - Sun ${nextSunday.toISOString().split('T')[0]})`);
     }
   } catch (error) {
     console.error('Failed to create upcoming contests:', error);

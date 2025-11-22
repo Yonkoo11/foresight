@@ -10,7 +10,29 @@ import db from '../utils/db';
 const router = express.Router();
 
 /**
- * Get current active contest
+ * Get current active contests (both free and prize leagues)
+ * GET /api/league/contests/active (PUBLIC - no auth required)
+ */
+router.get('/contests/active', async (req: Request, res: Response) => {
+  try {
+    const contests = await db('fantasy_contests')
+      .where({ status: 'active' })
+      .orderBy('is_prize_league', 'asc') // Free leagues first
+      .orderBy('start_date', 'desc');
+
+    if (contests.length === 0) {
+      return res.status(404).json({ error: 'No active contests found' });
+    }
+
+    res.json({ contests });
+  } catch (error: any) {
+    console.error('Error fetching active contests:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get current active contest (DEPRECATED - use /contests/active)
  * GET /api/league/contest/current (PUBLIC - no auth required)
  */
 router.get('/contest/current', async (req: Request, res: Response) => {
@@ -32,20 +54,31 @@ router.get('/contest/current', async (req: Request, res: Response) => {
 });
 
 /**
- * Get user's team for current contest
- * GET /api/league/team/me
+ * Get user's team for specific or current contest
+ * GET /api/league/team/me?contest_id=123 (optional contest_id)
  */
 router.get('/team/me', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
+    const contestIdParam = req.query.contest_id;
 
-    // Get active contest
-    const contest = await db('fantasy_contests')
-      .where({ status: 'active' })
-      .first();
-
-    if (!contest) {
-      return res.status(404).json({ error: 'No active contest' });
+    // Get contest - use provided contest_id or default to active contest
+    let contest;
+    if (contestIdParam) {
+      const contestId = parseInt(contestIdParam as string);
+      contest = await db('fantasy_contests')
+        .where({ id: contestId, status: 'active' })
+        .first();
+      if (!contest) {
+        return res.status(404).json({ error: 'Contest not found or not active' });
+      }
+    } else {
+      contest = await db('fantasy_contests')
+        .where({ status: 'active' })
+        .first();
+      if (!contest) {
+        return res.status(404).json({ error: 'No active contest' });
+      }
     }
 
     // Get user's team
@@ -78,7 +111,7 @@ router.get('/team/me', authenticateToken, async (req: Request, res: Response) =>
         ...team,
         picks,
         total_budget_used: totalBudget,
-        max_budget: 100,
+        max_budget: 150,
       },
       contest,
     });
@@ -96,7 +129,7 @@ router.get('/team/me', authenticateToken, async (req: Request, res: Response) =>
 router.post('/team/create', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
-    const { team_name, influencer_ids } = req.body;
+    const { team_name, influencer_ids, captain_id, contest_id } = req.body;
 
     if (!team_name || !influencer_ids || !Array.isArray(influencer_ids)) {
       return res.status(400).json({ error: 'team_name and influencer_ids array required' });
@@ -106,13 +139,30 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
       return res.status(400).json({ error: 'Must select exactly 5 influencers' });
     }
 
-    // Get active contest
-    const contest = await db('fantasy_contests')
-      .where({ status: 'active' })
-      .first();
+    if (!captain_id) {
+      return res.status(400).json({ error: 'Must select a captain' });
+    }
 
-    if (!contest) {
-      return res.status(404).json({ error: 'No active contest' });
+    if (!influencer_ids.includes(captain_id)) {
+      return res.status(400).json({ error: 'Captain must be one of your selected influencers' });
+    }
+
+    // Get contest - use provided contest_id or default to active contest
+    let contest;
+    if (contest_id) {
+      contest = await db('fantasy_contests')
+        .where({ id: contest_id, status: 'active' })
+        .first();
+      if (!contest) {
+        return res.status(404).json({ error: 'Contest not found or not active' });
+      }
+    } else {
+      contest = await db('fantasy_contests')
+        .where({ status: 'active' })
+        .first();
+      if (!contest) {
+        return res.status(404).json({ error: 'No active contest' });
+      }
     }
 
     // Check if user already has team
@@ -133,9 +183,9 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
       return res.status(400).json({ error: 'One or more influencers not found or inactive' });
     }
 
-    // Validate budget: max 100 points
+    // Validate budget: max 150 points
     const totalPrice = influencers.reduce((sum, inf) => sum + parseFloat(inf.price || 0), 0);
-    const MAX_BUDGET = 100;
+    const MAX_BUDGET = 150;
 
     if (totalPrice > MAX_BUDGET) {
       return res.status(400).json({
@@ -165,6 +215,7 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
         pick_order: index + 1,
         daily_points: 0,
         total_points: 0,
+        is_captain: influencer_id === captain_id,
       }));
 
       await trx('team_picks').insert(picks);
@@ -201,7 +252,7 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
         ...team,
         picks,
         total_budget_used: totalBudget,
-        max_budget: 100,
+        max_budget: 150,
       },
     });
   } catch (error: any) {
@@ -218,10 +269,18 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
 router.put('/team/update', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.userId;
-    const { influencer_ids } = req.body;
+    const { influencer_ids, captain_id } = req.body;
 
     if (!influencer_ids || !Array.isArray(influencer_ids) || influencer_ids.length !== 5) {
       return res.status(400).json({ error: 'Must provide exactly 5 influencer IDs' });
+    }
+
+    if (!captain_id) {
+      return res.status(400).json({ error: 'Must select a captain' });
+    }
+
+    if (!influencer_ids.includes(captain_id)) {
+      return res.status(400).json({ error: 'Captain must be one of your selected influencers' });
     }
 
     // Get active contest
@@ -255,9 +314,9 @@ router.put('/team/update', authenticateToken, async (req: Request, res: Response
       return res.status(400).json({ error: 'One or more influencers not found or inactive' });
     }
 
-    // Validate budget: max 100 points
+    // Validate budget: max 150 points
     const totalPrice = influencers.reduce((sum, inf) => sum + parseFloat(inf.price || 0), 0);
-    const MAX_BUDGET = 100;
+    const MAX_BUDGET = 150;
 
     if (totalPrice > MAX_BUDGET) {
       return res.status(400).json({
@@ -279,6 +338,7 @@ router.put('/team/update', authenticateToken, async (req: Request, res: Response
         pick_order: index + 1,
         daily_points: 0,
         total_points: 0,
+        is_captain: influencer_id === captain_id,
       }));
 
       await trx('team_picks').insert(picks);
@@ -306,7 +366,7 @@ router.put('/team/update', authenticateToken, async (req: Request, res: Response
         ...team,
         picks,
         total_budget_used: totalBudget,
-        max_budget: 100,
+        max_budget: 150,
       },
     });
   } catch (error: any) {
@@ -399,7 +459,7 @@ router.get('/influencers', async (req: Request, res: Response) => {
     res.json({
       influencers,
       budget_info: {
-        max_budget: 100,
+        max_budget: 150,
         team_size: 5,
         currency: 'points',
       },

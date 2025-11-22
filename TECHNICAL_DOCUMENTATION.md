@@ -809,7 +809,7 @@ Content-Type: application/json
 }
 ```
 
-**Validation**:
+**Validation**:continue
 - Total price ≤ 25M
 - Exactly 5 unique influencers
 - Team name required
