@@ -7,6 +7,7 @@ import express, { Request, Response } from 'express';
 import { authenticate as authenticateToken } from '../middleware/auth';
 import db from '../utils/db';
 import { getVoteWeight } from '../utils/xp';
+import { checkVotingAchievements, checkMilestoneAchievements, tryUnlockAchievement } from '../services/fantasyScoringService';
 
 const router = express.Router();
 
@@ -246,6 +247,9 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
       .orderBy('team_picks.pick_order');
 
     const totalBudget = picks.reduce((sum, pick) => sum + parseFloat(pick.price || 0), 0);
+
+    // Check for first team achievement
+    tryUnlockAchievement(userId, 'FIRST_TEAM').catch(console.error);
 
     res.json({
       success: true,
@@ -686,6 +690,23 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
           last_xp_at: db.fn.now(),
           updated_at: db.fn.now(),
         });
+    }
+
+    // Check for voting achievements (async, don't block response)
+    if (!isUpdate) {
+      // Get total vote count for this user
+      const voteCount = await db('weekly_spotlight_votes')
+        .where({ user_id: userId })
+        .count('* as count')
+        .first();
+
+      const totalVotes = parseInt(voteCount?.count as string) || 0;
+
+      // Check voting achievements
+      checkVotingAchievements(userId, totalVotes, currentStreak).catch(console.error);
+
+      // Check milestone achievements
+      checkMilestoneAchievements(userId).catch(console.error);
     }
 
     res.json({

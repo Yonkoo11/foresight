@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { runFantasyScoringCycle } from './fantasyScoringService';
+import twitterApiService from './twitterApiService';
 
 /**
  * Cron Job Manager for Fantasy League
@@ -54,6 +55,23 @@ export function initializeCronJobs(): void {
     }
   });
   console.log('✅ Contest Management: Daily at 00:00 UTC');
+
+  // 4. Influencer Metrics Update - Daily at 4 AM UTC
+  cron.schedule('0 4 * * *', async () => {
+    console.log('\n[CRON] Running Influencer Metrics Update...');
+    try {
+      if (twitterApiService.isConfigured()) {
+        await twitterApiService.batchUpdateInfluencers(50);
+        console.log('✅ Metrics update complete via Twitter API');
+      } else {
+        console.log('⚠️  Twitter API not configured. Skipping metrics update.');
+        console.log('   Set TWITTER_BEARER_TOKEN in .env to enable automatic updates.');
+      }
+    } catch (error) {
+      console.error('[CRON] Influencer metrics update failed:', error);
+    }
+  });
+  console.log('✅ Influencer Metrics: Daily at 04:00 UTC');
 
   console.log('\n========================================');
   console.log('All Cron Jobs Initialized');

@@ -5,10 +5,14 @@ import { Knex } from 'knex';
  * Adds vote_streak and last_vote_date columns for daily streak mechanics
  */
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('users', (table) => {
-    table.integer('vote_streak').defaultTo(0).notNullable();
-    table.date('last_vote_date').nullable();
-  });
+  const hasVoteStreak = await knex.schema.hasColumn('users', 'vote_streak');
+
+  if (!hasVoteStreak) {
+    await knex.schema.alterTable('users', (table) => {
+      table.integer('vote_streak').defaultTo(0).notNullable();
+      table.date('last_vote_date').nullable();
+    });
+  }
 }
 
 export async function down(knex: Knex): Promise<void> {

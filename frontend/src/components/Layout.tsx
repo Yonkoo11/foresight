@@ -6,6 +6,7 @@ import {
   Users,
   Target,
   Trophy,
+  Medal,
 } from '@phosphor-icons/react';
 
 interface LayoutProps {
@@ -19,6 +20,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/', label: 'Home', icon: House },
     { path: '/draft', label: 'CT Draft', icon: Trophy, highlight: true },
     { path: '/vote', label: 'CT Spotlight', icon: Target },
+    { path: '/leaderboard', label: 'XP Ranks', icon: Medal },
     { path: '/profile', label: 'Profile', icon: Users },
   ];
 

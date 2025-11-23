@@ -16,6 +16,7 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import LeagueUltra from './pages/LeagueUltra';
 import Vote from './pages/Vote';
+import XPLeaderboard from './pages/XPLeaderboard';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function AppContent() {
           <Route path="/draft" element={<LeagueUltra />} />
           <Route path="/league" element={<LeagueUltra />} />
           <Route path="/vote" element={<Vote />} />
+          <Route path="/leaderboard" element={<XPLeaderboard />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </Layout>

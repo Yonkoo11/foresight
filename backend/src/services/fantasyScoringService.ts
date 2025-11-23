@@ -261,6 +261,141 @@ export async function updateLeaderboardCache(contestId: number): Promise<void> {
 }
 
 /**
+ * Award performance XP to all teams at end of contest
+ */
+export async function awardPerformanceXP(contestId: number): Promise<void> {
+  try {
+    console.log('Awarding performance XP...');
+
+    // Get all teams with their ranks
+    const teams = await db('user_teams')
+      .where('contest_id', contestId)
+      .select('id', 'user_id', 'rank', 'total_score', 'team_name');
+
+    for (const team of teams) {
+      const xpReward = calculateXPReward(team.rank);
+
+      // Award XP to user
+      await db('user_xp_totals')
+        .where({ user_id: team.user_id })
+        .update({
+          total_xp: db.raw('total_xp + ?', [xpReward]),
+          lifetime_xp: db.raw('lifetime_xp + ?', [xpReward]),
+          performance_xp: db.raw('performance_xp + ?', [xpReward]),
+          last_xp_at: db.fn.now(),
+          updated_at: db.fn.now(),
+        });
+
+      console.log(`  ${team.team_name} (Rank #${team.rank}): +${xpReward} XP`);
+
+      // Check and award achievements based on rank
+      await checkPerformanceAchievements(team.user_id, team.rank, team.total_score);
+    }
+
+    console.log('✅ Performance XP awarded');
+  } catch (error) {
+    console.error('❌ Failed to award performance XP:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check and award performance-based achievements
+ */
+async function checkPerformanceAchievements(userId: number, rank: number, score: number): Promise<void> {
+  const achievementsToCheck: string[] = [];
+
+  if (rank === 1) achievementsToCheck.push('WIN_CONTEST');
+  if (rank <= 3) achievementsToCheck.push('TOP_3_FINISH');
+  if (rank <= 10) achievementsToCheck.push('TOP_10_FINISH');
+  if (score >= 100) achievementsToCheck.push('TEAM_100_POINTS');
+
+  for (const key of achievementsToCheck) {
+    await tryUnlockAchievement(userId, key);
+  }
+}
+
+/**
+ * Try to unlock an achievement for a user (if not already unlocked)
+ */
+export async function tryUnlockAchievement(userId: number, achievementKey: string): Promise<boolean> {
+  try {
+    // Get achievement
+    const achievement = await db('achievements').where({ key: achievementKey }).first();
+    if (!achievement) return false;
+
+    // Check if already unlocked
+    const existing = await db('user_achievements')
+      .where({ user_id: userId, achievement_id: achievement.id })
+      .first();
+
+    if (existing) return false;
+
+    // Unlock achievement
+    await db('user_achievements').insert({
+      user_id: userId,
+      achievement_id: achievement.id,
+      unlocked_at: db.fn.now(),
+    });
+
+    // Award XP reward
+    if (achievement.xp_reward > 0) {
+      await db('user_xp_totals')
+        .where({ user_id: userId })
+        .update({
+          total_xp: db.raw('total_xp + ?', [achievement.xp_reward]),
+          lifetime_xp: db.raw('lifetime_xp + ?', [achievement.xp_reward]),
+          engagement_xp: db.raw('engagement_xp + ?', [achievement.xp_reward]),
+          last_xp_at: db.fn.now(),
+          updated_at: db.fn.now(),
+        });
+    }
+
+    console.log(`🏆 Achievement unlocked: ${achievement.name} (+${achievement.xp_reward} XP)`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to unlock achievement ${achievementKey}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Check milestone achievements (XP thresholds)
+ */
+export async function checkMilestoneAchievements(userId: number): Promise<void> {
+  const userXP = await db('user_xp_totals')
+    .where({ user_id: userId })
+    .select('lifetime_xp')
+    .first();
+
+  if (!userXP) return;
+
+  const xp = userXP.lifetime_xp || 0;
+
+  if (xp >= 100) await tryUnlockAchievement(userId, 'XP_100');
+  if (xp >= 500) await tryUnlockAchievement(userId, 'XP_500');
+  if (xp >= 1000) await tryUnlockAchievement(userId, 'XP_1000');
+  if (xp >= 2500) await tryUnlockAchievement(userId, 'XP_2500');
+}
+
+/**
+ * Check voting achievements
+ */
+export async function checkVotingAchievements(userId: number, totalVotes: number, streak: number): Promise<void> {
+  // First vote
+  if (totalVotes === 1) await tryUnlockAchievement(userId, 'FIRST_VOTE');
+
+  // Vote count achievements
+  if (totalVotes >= 10) await tryUnlockAchievement(userId, 'VOTES_10');
+  if (totalVotes >= 50) await tryUnlockAchievement(userId, 'VOTES_50');
+  if (totalVotes >= 100) await tryUnlockAchievement(userId, 'VOTES_100');
+
+  // Streak achievements
+  if (streak >= 7) await tryUnlockAchievement(userId, 'STREAK_7');
+  if (streak >= 30) await tryUnlockAchievement(userId, 'STREAK_30');
+}
+
+/**
  * Calculate XP reward based on rank
  */
 function calculateXPReward(rank: number): number {

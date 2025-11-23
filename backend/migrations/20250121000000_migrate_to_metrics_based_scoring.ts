@@ -1,10 +1,17 @@
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
+  // Helper to check if column exists
+  const hasColumn = async (tableName: string, columnName: string) => {
+    return knex.schema.hasColumn(tableName, columnName);
+  };
+
   // 1. Add base_price column to influencers (for scoring formula)
-  await knex.schema.alterTable('influencers', (table) => {
-    table.decimal('base_price', 10, 2).defaultTo(20);
-  });
+  if (!(await hasColumn('influencers', 'base_price'))) {
+    await knex.schema.alterTable('influencers', (table) => {
+      table.decimal('base_price', 10, 2).defaultTo(20);
+    });
+  }
 
   // 2. Update influencer pricing for metrics-based system
   // Budget: 100 points for 5 influencers
@@ -43,37 +50,52 @@ export async function up(knex: Knex): Promise<void> {
     });
 
   // 3. Modify user_teams for metrics-based scoring
-  await knex.schema.alterTable('user_teams', (table) => {
-    // Add columns for metrics-based system
-    table.decimal('budget_used', 10, 2).defaultTo(0);
-    table.integer('current_score').defaultTo(0);
-    table.integer('previous_score').defaultTo(0);
-    table.integer('score_change').defaultTo(0);
-    table.timestamp('last_score_update').nullable();
-  });
+  if (!(await hasColumn('user_teams', 'budget_used'))) {
+    await knex.schema.alterTable('user_teams', (table) => {
+      table.decimal('budget_used', 10, 2).defaultTo(0);
+      table.integer('current_score').defaultTo(0);
+      table.integer('previous_score').defaultTo(0);
+      table.integer('score_change').defaultTo(0);
+      table.timestamp('last_score_update').nullable();
+    });
+  }
 
   // 4. Add prize league columns to fantasy_contests
-  await knex.schema.alterTable('fantasy_contests', (table) => {
-    table.decimal('entry_fee', 10, 4).defaultTo(0.000); // ETH
-    table.decimal('prize_pool', 10, 4).defaultTo(0.000); // ETH
-    table.boolean('is_prize_league').defaultTo(false);
-    table.jsonb('prize_distribution').nullable(); // Store distribution percentages
-  });
+  if (!(await hasColumn('fantasy_contests', 'entry_fee'))) {
+    await knex.schema.alterTable('fantasy_contests', (table) => {
+      table.decimal('entry_fee', 10, 4).defaultTo(0.000); // ETH
+      table.decimal('prize_pool', 10, 4).defaultTo(0.000); // ETH
+      table.boolean('is_prize_league').defaultTo(false);
+      table.jsonb('prize_distribution').nullable(); // Store distribution percentages
+    });
+  }
 
   // 5. Add payment tracking to user_teams
-  await knex.schema.alterTable('user_teams', (table) => {
-    table.boolean('entry_fee_paid').defaultTo(false);
-    table.string('payment_tx_hash', 66).nullable();
-    table.timestamp('payment_confirmed_at').nullable();
-    table.decimal('prize_won', 10, 4).nullable();
-    table.boolean('prize_claimed').defaultTo(false);
-    table.string('prize_claim_tx_hash', 66).nullable();
-  });
+  if (!(await hasColumn('user_teams', 'entry_fee_paid'))) {
+    await knex.schema.alterTable('user_teams', (table) => {
+      table.boolean('entry_fee_paid').defaultTo(false);
+      table.string('payment_tx_hash', 66).nullable();
+      table.timestamp('payment_confirmed_at').nullable();
+      table.decimal('prize_won', 10, 4).nullable();
+      table.boolean('prize_claimed').defaultTo(false);
+      table.string('prize_claim_tx_hash', 66).nullable();
+    });
+  }
 
-  // 6. Create index on base_price
-  await knex.schema.alterTable('influencers', (table) => {
-    table.index('base_price');
-  });
+  // 6. Create index on base_price (skip if exists)
+  const indexExists = await knex.raw(`
+    SELECT EXISTS (
+      SELECT 1 FROM pg_indexes
+      WHERE tablename = 'influencers'
+      AND indexname = 'influencers_base_price_index'
+    )
+  `);
+
+  if (!indexExists.rows[0].exists) {
+    await knex.schema.alterTable('influencers', (table) => {
+      table.index('base_price');
+    });
+  }
 
   // 7. Update existing contest to be prize league
   const activeContest = await knex('fantasy_contests')

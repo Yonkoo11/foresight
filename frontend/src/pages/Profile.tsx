@@ -114,7 +114,7 @@ export default function Profile() {
 
       // Fetch user's team
       try {
-        const teamResponse = await axios.get(`${API_URL}/api/league/team`, {
+        const teamResponse = await axios.get(`${API_URL}/api/league/team/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (teamResponse.data.team) {

@@ -10,7 +10,7 @@ import axios from 'axios';
 import {
   Trophy, Users, Lock, CheckCircle, TrendUp, Warning,
   MagnifyingGlass, Sparkle, Crown, Star, Fire,
-  CaretDown, X, Medal, ChartBar, Circle
+ X, Medal, Circle
 } from '@phosphor-icons/react';
 import WelcomeModal from '../components/WelcomeModal';
 import { formatFollowerCount } from '../utils/formatFollowers';
@@ -55,7 +55,7 @@ interface Contest {
   status: string;
   total_participants: number;
   is_prize_league: boolean;
-  entry_fee: number;
+  entry_fee: string;
   prize_pool: number;
   max_participants: number;
   prize_distribution?: Record<string, number>;
@@ -219,6 +219,7 @@ export default function LeagueUltra() {
     if (isConnected && token) {
       fetchTeam();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address]);
 
   // Refetch team when user switches contests
@@ -227,6 +228,7 @@ export default function LeagueUltra() {
     if (isConnected && token && selectedContestId) {
       fetchTeam();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedContestId]);
 
   const fetchContest = async () => {
@@ -266,9 +268,9 @@ export default function LeagueUltra() {
         setTeam(response.data.team);
         setTeamName(response.data.team.team_name);
         // Map influencer_id from picks (not p.id which is the pick ID)
-        setSelectedInfluencers(response.data.team.picks.map((p: any) => p.influencer_id));
+        setSelectedInfluencers(response.data.team.picks.map((p: Pick) => p.influencer_id));
         // Set captain from picks
-        const captain = response.data.team.picks.find((p: any) => p.is_captain);
+        const captain = response.data.team.picks.find((p: Pick) => p.is_captain);
         if (captain) {
           setCaptainId(captain.influencer_id);
         }
@@ -279,8 +281,8 @@ export default function LeagueUltra() {
         setSelectedInfluencers([]);
         setCaptainId(null);
       }
-    } catch (error: any) {
-      if (error.response?.status !== 404) {
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status !== 404) {
         console.error('Error fetching team:', error);
       }
       // Reset state on error
@@ -330,20 +332,19 @@ export default function LeagueUltra() {
       try {
         message = new SiweMessage(siweConfig);
         console.log('SIWE message created successfully');
-      } catch (siweError) {
+      } catch (error) {
         console.error('=== SIWE ERROR ===');
-        console.error('Failed to create SiweMessage:', siweError);
-        console.error('Error type:', typeof siweError);
-        console.error('Error instanceof Error:', siweError instanceof Error);
+        console.error('Failed to create SiweMessage:', error);
+        console.error('Error type:', typeof error);
+        console.error('Error instanceof Error:', error instanceof Error);
         console.error('Error details:', {
-          name: (siweError as any)?.name,
-          message: (siweError as any)?.message,
-          stack: (siweError as any)?.stack,
-          constructor: (siweError as any)?.constructor?.name,
+          name: ( error instanceof Error) ? error.name : 'unknown',
+          message: (error instanceof Error) ? error.message : String(error),
         });
-        console.error('Full SIWE error:', JSON.stringify(siweError, Object.getOwnPropertyNames(siweError), 2));
 
-        const errorMsg = siweError instanceof Error ? siweError.message : JSON.stringify(siweError);
+        console.error('Full SIWE error:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+
+        const errorMsg = error instanceof Error ? error.message : JSON.stringify(error);
         throw new Error(`Failed to create SIWE message: ${errorMsg}`);
       }
 
@@ -378,22 +379,21 @@ export default function LeagueUltra() {
       // Step 6: Fetch team data
       await fetchTeam();
       alert('Successfully signed in!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('=== SIGN-IN ERROR ===');
-      console.error('Error object:', error);
-      console.error('Error name:', error?.name);
-      console.error('Error message:', error?.message);
-      console.error('Error code:', error?.code);
-      console.error('Error response:', error?.response?.data);
+      console.error('Error object:', error instanceof Error);
+      console.error('Error name:', (error instanceof Error) ? error.name : 'unknown');
+      console.error('Error message:', (error instanceof Error) ? error.message : String(error));
       console.error('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
 
       // Better error messages
       let errorMessage = 'Error signing in';
-      if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+      const errorCode = (error as {code?: string | number}).code;
+      if (errorCode === 'ACTION_REJECTED' || errorCode === 4001) {
         errorMessage = 'You rejected the signature request';
-      } else if (error.response?.data?.error) {
+      } else if (axios.isAxiosError(error) && error.response?.data?.error) {
         errorMessage = error.response.data.error;
-      } else if (error.message) {
+      } else if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
 
@@ -509,8 +509,9 @@ export default function LeagueUltra() {
 
       // Switch to My Squad view to show the new team
       setCurrentView('squad');
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'Error creating team');
+    } catch (error) {
+      const errorMsg = axios.isAxiosError(error) && error.response?.data?.error ? error.response.data.error : 'Error creating team'
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -545,8 +546,11 @@ export default function LeagueUltra() {
 
       // Switch to My Squad view to show the updated team
       setCurrentView('squad');
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'Error updating team');
+    } catch (error) {
+      const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
+      ? error.response.data.error
+      : 'Error updating team';
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -745,7 +749,6 @@ export default function LeagueUltra() {
                   </div>
                 </div>
               )}
-            </div>
             </div>
 
             {/* Budget Tracker - Fixed at bottom of sidebar */}
@@ -970,7 +973,7 @@ export default function LeagueUltra() {
                 <span className="text-sm text-gray-400 font-semibold">Sort:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as 'price' | 'followers' | 'name')}
                   className="px-4 py-2 bg-gray-800 border-2 border-gray-700 rounded-lg text-white font-semibold focus:outline-none focus:border-brand-500"
                 >
                   <option value="price">Price (Low to High)</option>
@@ -1282,9 +1285,9 @@ export default function LeagueUltra() {
               <div className="card bg-brand-500/10 border-2 border-brand-500/50 p-6">
                 <p className="text-sm text-brand-300 font-bold mb-2">Top Performer</p>
                 <p className="text-3xl font-black text-brand-400">
-                  {team.picks.reduce((max: any, p: any) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.influencer_name?.split(' ')[0] || 'N/A'}
+                  {team.picks.reduce((max: Pick, p: Pick) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.influencer_name?.split(' ')[0] || 'N/A'}
                 </p>
-                <p className="text-xs text-brand-300 mt-2">{team.picks.reduce((max: any, p: any) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.total_points || 0} pts</p>
+                <p className="text-xs text-brand-300 mt-2">{team.picks.reduce((max: Pick, p: Pick) => p.total_points > (max?.total_points || 0) ? p : max, team.picks[0])?.total_points || 0} pts</p>
               </div>
               <div className="card bg-gradient-to-br from-orange-600/20 to-red-600/20 border-2 border-orange-500/50 p-6">
                 <p className="text-sm text-orange-300 font-bold mb-2">Contest Ends In</p>
@@ -1372,7 +1375,7 @@ export default function LeagueUltra() {
                       <div className="space-y-16">
                         {/* Top Row - 2 Forwards */}
                         <div className="flex justify-center gap-24">
-                          {team.picks.slice(0, 2).map((pick: any, index: number) => {
+                          {team.picks.slice(0, 2).map((pick: Pick) => {
                             const rarity = getRarityInfo(pick.tier || pick.influencer_tier || 'C');
                             const isCaptain = pick.is_captain;
 
@@ -1442,7 +1445,7 @@ export default function LeagueUltra() {
 
                         {/* Middle Row - 1 Midfielder */}
                         <div className="flex justify-center">
-                          {team.picks.slice(2, 3).map((pick: any) => {
+                          {team.picks.slice(2, 3).map((pick: Pick) => {
                             const rarity = getRarityInfo(pick.tier || pick.influencer_tier || 'C');
                             const isCaptain = pick.is_captain;
 
@@ -1505,7 +1508,7 @@ export default function LeagueUltra() {
 
                         {/* Bottom Row - 2 Defenders */}
                         <div className="flex justify-center gap-24">
-                          {team.picks.slice(3, 5).map((pick: any) => {
+                          {team.picks.slice(3, 5).map((pick: Pick) => {
                             const rarity = getRarityInfo(pick.tier || pick.influencer_tier || 'C');
                             const isCaptain = pick.is_captain;
 
@@ -1579,7 +1582,7 @@ export default function LeagueUltra() {
               {/* List View */}
               {squadViewMode === 'list' && (
                 <div className="grid grid-cols-1 gap-4">
-                {team.picks.map((pick: any, index: number) => {
+                {team.picks.map((pick: Pick) => {
                   const rarity = getRarityInfo(pick.tier || pick.influencer_tier || 'C');
                   const RarityIcon = rarity.icon;
 
@@ -1845,7 +1848,7 @@ export default function LeagueUltra() {
                 {/* Show first 3 normally if less than 3 entries */}
                 {leaderboard.length < 3 && leaderboard.length > 0 && (
                   <div className="space-y-3">
-                    {leaderboard.map((entry, index) => {
+                    {leaderboard.map((entry) => {
                       const isMyTeam = team?.id === entry.id;
 
                       return (
