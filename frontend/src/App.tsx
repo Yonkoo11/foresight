@@ -24,6 +24,9 @@ import Privacy from './pages/Privacy';
 import Cookies from './pages/Cookies';
 import Imprint from './pages/Imprint';
 
+// Demo Pages
+import ShareCardDemo from './pages/ShareCardDemo';
+
 const queryClient = new QueryClient();
 
 function AppContent() {
@@ -43,6 +46,9 @@ function AppContent() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/imprint" element={<Imprint />} />
+
+          {/* Demo Pages */}
+          <Route path="/demo/share-cards" element={<ShareCardDemo />} />
         </Routes>
       </Layout>
     </Router>

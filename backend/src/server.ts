@@ -14,6 +14,7 @@ import userRoutes from './api/users';
 import adminRoutes from './api/admin';
 import leagueRoutes from './api/league';
 import privateLeaguesRoutes from './api/privateLeagues';
+import achievementsRoutes from './api/achievements';
 
 // Create Express app and HTTP server
 const app: Application = express();
@@ -92,6 +93,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/league', leagueRoutes);
 app.use('/api/private-leagues', privateLeaguesRoutes);
+app.use('/api/achievements', achievementsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
