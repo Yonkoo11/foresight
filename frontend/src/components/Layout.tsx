@@ -8,6 +8,7 @@ import {
   Trophy,
   Medal,
 } from '@phosphor-icons/react';
+import Footer from './Footer';
 
 interface LayoutProps {
   children: ReactNode;
@@ -72,9 +73,7 @@ export default function Layout({ children }: LayoutProps) {
       <main>{children}</main>
 
       {/* Footer */}
-      <footer className="mt-12 text-center text-gray-500 text-sm">
-        <p>Built for Base • Powered by Foresight</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

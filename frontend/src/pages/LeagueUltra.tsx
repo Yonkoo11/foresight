@@ -246,7 +246,13 @@ export default function LeagueUltra() {
 
   const fetchInfluencers = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/league/influencers`);
+      const response = await axios.get(`${API_URL}/api/league/influencers`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      console.log('Fetched influencers:', response.data.influencers?.length || 0);
       setAvailableInfluencers(response.data.influencers || []);
     } catch (error) {
       console.error('Error fetching influencers:', error);

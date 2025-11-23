@@ -18,6 +18,12 @@ import LeagueUltra from './pages/LeagueUltra';
 import Vote from './pages/Vote';
 import XPLeaderboard from './pages/XPLeaderboard';
 
+// Legal Pages
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Cookies from './pages/Cookies';
+import Imprint from './pages/Imprint';
+
 const queryClient = new QueryClient();
 
 function AppContent() {
@@ -31,6 +37,12 @@ function AppContent() {
           <Route path="/vote" element={<Vote />} />
           <Route path="/leaderboard" element={<XPLeaderboard />} />
           <Route path="/profile" element={<Profile />} />
+
+          {/* Legal Pages */}
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/cookies" element={<Cookies />} />
+          <Route path="/imprint" element={<Imprint />} />
         </Routes>
       </Layout>
     </Router>
