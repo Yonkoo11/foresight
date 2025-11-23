@@ -1,4 +1,9 @@
 import db from '../utils/db';
+import {
+  checkTeamAchievements,
+  checkRankingAchievements,
+  checkXPAchievements,
+} from './achievementService';
 
 /**
  * Fantasy League Scoring Service
@@ -443,6 +448,9 @@ export async function runFantasyScoringCycle(): Promise<void> {
       // Step 3: Update leaderboard cache
       await updateLeaderboardCache(contest.id);
 
+      // Step 4: Check achievements for all teams
+      await checkAchievementsForContest(contest.id);
+
       console.log(`\n✅ Contest ${contest.contest_key} scoring complete\n`);
     }
 
@@ -452,6 +460,38 @@ export async function runFantasyScoringCycle(): Promise<void> {
   } catch (error) {
     console.error('\n❌ Fantasy scoring cycle failed:', error);
     throw error;
+  }
+}
+
+/**
+ * Check achievements for all teams in a contest
+ */
+async function checkAchievementsForContest(contestId: number): Promise<void> {
+  try {
+    // Get all teams with scores and ranks
+    const teams = await db('fantasy_teams')
+      .where('contest_id', contestId)
+      .select('*');
+
+    for (const team of teams) {
+      // Check team-based achievements
+      await checkTeamAchievements(team.user_id, team.id, contestId);
+
+      // Check ranking achievements
+      if (team.rank) {
+        await checkRankingAchievements(team.user_id, team.rank, contestId);
+      }
+
+      // Check XP milestones
+      const user = await db('users').where('id', team.user_id).first();
+      if (user) {
+        await checkXPAchievements(team.user_id, user.xp || 0);
+      }
+    }
+
+    console.log('✅ Achievement checks complete');
+  } catch (error) {
+    console.error('Error checking achievements:', error);
   }
 }
 

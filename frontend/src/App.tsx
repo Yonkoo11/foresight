@@ -8,6 +8,8 @@ import { config } from './config/wagmi';
 import { RealtimeProvider } from './contexts/RealtimeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { AchievementToastProvider } from './contexts/AchievementToastContext';
+import AchievementToastContainer from './components/AchievementToastContainer';
 import Layout from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -71,7 +73,10 @@ function App() {
             <RealtimeProvider>
               <NotificationProvider>
                 <ToastProvider>
-                  <AppContent />
+                  <AchievementToastProvider>
+                    <AppContent />
+                    <AchievementToastContainer />
+                  </AchievementToastProvider>
                 </ToastProvider>
               </NotificationProvider>
             </RealtimeProvider>

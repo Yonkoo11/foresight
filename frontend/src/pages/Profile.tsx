@@ -9,8 +9,9 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   Trophy, Crown, Sparkle, Star, Fire, Users, TrendUp,
-  CheckCircle, Lock, Lightning, Target, TrendDown
+  CheckCircle, Lock, Lightning, Target, TrendDown, Medal
 } from '@phosphor-icons/react';
+import AchievementBadge from '../components/AchievementBadge';
 import { getXPLevel, getLevelBadge, getLevelColors, formatXP } from '../utils/xp';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -52,6 +53,8 @@ export default function Profile() {
   const [myLeagues, setMyLeagues] = useState<League[]>([]);
   const [userXP, setUserXP] = useState<number>(0);
   const [userStreak, setUserStreak] = useState<number>(0);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [achievementsLoading, setAchievementsLoading] = useState(true);
 
   // Rarity mapping (same as LeagueUltra)
   const getRarityInfo = (tier: string) => {
@@ -87,8 +90,30 @@ export default function Profile() {
   useEffect(() => {
     if (isConnected && address) {
       fetchUserData();
+      fetchAchievements();
     }
   }, [isConnected, address]);
+
+  const fetchAchievements = async () => {
+    try {
+      setAchievementsLoading(true);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setAchievementsLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/api/achievements`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setAchievements(response.data.achievements || []);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+    } finally {
+      setAchievementsLoading(false);
+    }
+  };
 
   const fetchUserData = async () => {
     try {
@@ -499,6 +524,97 @@ export default function Profile() {
               >
                 Explore Leagues
               </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Achievements Section */}
+        <div className="mt-10">
+          <div className="flex items-center gap-3 mb-6">
+            <Medal size={36} weight="fill" className="text-cyan-400" />
+            <h2 className="text-4xl font-black text-white">Achievements</h2>
+          </div>
+
+          {achievementsLoading ? (
+            <div className="card-highlight p-8">
+              <div className="flex items-center justify-center py-8">
+                <div className="text-gray-400">Loading achievements...</div>
+              </div>
+            </div>
+          ) : achievements.length > 0 ? (
+            <div className="card-highlight p-8">
+              {/* Stats */}
+              <div className="mb-6 flex items-center gap-6 text-sm">
+                <div>
+                  <span className="text-gray-400">Unlocked: </span>
+                  <span className="text-white font-semibold">
+                    {achievements.filter(a => a.unlocked).length} / {achievements.length}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Progress: </span>
+                  <span className="text-cyan-400 font-semibold">
+                    {Math.round((achievements.filter(a => a.unlocked).length / achievements.length) * 100)}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Achievement Grid */}
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
+                {achievements.map((achievement) => (
+                  <AchievementBadge
+                    key={achievement.id}
+                    icon={achievement.icon}
+                    name={achievement.name}
+                    description={achievement.description}
+                    rarity={achievement.rarity}
+                    unlocked={achievement.unlocked}
+                    unlockedAt={achievement.unlocked_at}
+                    size="md"
+                  />
+                ))}
+              </div>
+
+              {/* Category breakdown */}
+              {(() => {
+                const categories = achievements.reduce((acc: any, ach: any) => {
+                  if (!acc[ach.category]) {
+                    acc[ach.category] = { total: 0, unlocked: 0 };
+                  }
+                  acc[ach.category].total++;
+                  if (ach.unlocked) acc[ach.category].unlocked++;
+                  return acc;
+                }, {});
+
+                return Object.keys(categories).length > 0 ? (
+                  <div className="mt-8 pt-6 border-t border-gray-800">
+                    <div className="text-sm text-gray-400 mb-4 font-semibold uppercase tracking-wider">
+                      By Category
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {Object.entries(categories).map(([category, stats]: [string, any]) => (
+                        <div key={category} className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
+                          <div className="text-gray-400 text-xs capitalize mb-2">{category}</div>
+                          <div className="text-white font-bold text-lg">
+                            {stats.unlocked} / {stats.total}
+                          </div>
+                          <div className="mt-2 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-cyan-500 rounded-full transition-all"
+                              style={{ width: `${(stats.unlocked / stats.total) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          ) : (
+            <div className="card-highlight p-8 text-center">
+              <Lock size={48} weight="duotone" className="mx-auto text-gray-600 mb-4" />
+              <p className="text-gray-400">Start playing to unlock achievements</p>
             </div>
           )}
         </div>
