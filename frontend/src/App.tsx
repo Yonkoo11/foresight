@@ -14,6 +14,7 @@ import AchievementToastContainer from './components/AchievementToastContainer';
 import Layout from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { setupGlobalErrorHandlers } from './utils/errorLogger';
+import { useMiniApp } from './hooks/useMiniApp';
 
 // Pages
 import Home from './pages/Home';
@@ -38,10 +39,25 @@ import ShareCardDemo from './pages/ShareCardDemo';
 const queryClient = new QueryClient();
 
 function AppContent() {
+  // Initialize Farcaster Mini App SDK
+  const { isReady, isInMiniApp } = useMiniApp();
+
   // Setup global error handlers on mount
   useEffect(() => {
     setupGlobalErrorHandlers();
   }, []);
+
+  // Show loading screen while Mini App initializes
+  if (!isReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading Foresight...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>

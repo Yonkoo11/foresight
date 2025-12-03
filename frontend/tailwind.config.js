@@ -8,8 +8,8 @@ export default {
     extend: {
       // Professional font stack
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Cal Sans', 'Inter', 'sans-serif'],
+        sans: ['Lexend', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Lexend', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Menlo', 'monospace'],
       },
 

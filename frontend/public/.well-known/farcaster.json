@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "name": "Foresight - CT Fantasy League",
+  "subtitle": "Draft CT influencers, compete for glory",
+  "description": "Fantasy sports game for Crypto Twitter. Draft teams of 5 CT influencers within a 25M budget, vote on the best crypto takes daily, and climb weekly leaderboards to earn rewards.",
+  "tagline": "Your CT Fantasy League",
+  "homeUrl": "https://foresight.app",
+  "iconUrl": "https://foresight.app/icon.png",
+  "splashImageUrl": "https://foresight.app/splash.png",
+  "splashBackgroundColor": "#0052FF",
+  "screenshotUrls": [
+    "https://foresight.app/screenshots/draft.png",
+    "https://foresight.app/screenshots/leaderboard.png",
+    "https://foresight.app/screenshots/profile.png"
+  ],
+  "heroImageUrl": "https://foresight.app/hero.png",
+  "primaryCategory": "games",
+  "tags": ["fantasy", "sports", "crypto", "competition", "social"],
+  "ogTitle": "Foresight - CT Fantasy League",
+  "ogDescription": "Draft CT influencers, earn points from their performance, compete for glory",
+  "ogImageUrl": "https://foresight.app/og-image.png",
+  "webhookUrl": "",
+  "noindex": false,
+  "baseBuilder": {
+    "ownerAddress": ""
+  },
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  }
+}
