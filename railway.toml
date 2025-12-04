@@ -6,5 +6,3 @@ buildCommand = "cd backend && pnpm install && pnpm build"
 startCommand = "cd backend && pnpm start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
-restartPolicyType = "on-failure"
-restartPolicyMaxRetries = 10
