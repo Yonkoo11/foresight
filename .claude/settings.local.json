@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(npx tsx:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(pnpm dev)",
+      "WebFetch(domain:docs.usetapestry.dev)",
+      "WebFetch(domain:assets.usetapestry.dev)",
+      "WebFetch(domain:www.sse.gg)",
+      "WebFetch(domain:solana.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:demo.solanastarterkit.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(tail:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "puppeteer"
+  ]
+}

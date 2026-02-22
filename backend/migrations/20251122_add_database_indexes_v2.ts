@@ -10,6 +10,13 @@ export async function up(knex: Knex): Promise<void> {
     const tableExists = await knex.schema.hasTable(tableName);
     if (!tableExists) return;
 
+    // Check if all columns exist
+    const colsArray = Array.isArray(columns) ? columns : [columns];
+    for (const col of colsArray) {
+      const hasCol = await knex.schema.hasColumn(tableName, col);
+      if (!hasCol) return;
+    }
+
     const indexExists = await knex.raw(`
       SELECT EXISTS (
         SELECT 1 FROM pg_indexes

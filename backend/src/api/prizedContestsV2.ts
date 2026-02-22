@@ -1,13 +1,14 @@
 import { Router, Request, Response } from 'express';
 import db from '../utils/db';
-import { ethers } from 'ethers';
-import { authenticate, optionalAuthenticate } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import foresightScoreService from '../services/foresightScoreService';
+import questService from '../services/questService';
+import tapestryService from '../services/tapestryService';
 import logger from '../utils/logger';
 
 const router = Router();
 
-// Contest type codes (matching database and smart contract)
+// Contest type codes
 export const ContestTypeCodes = {
   FREE_LEAGUE: 'FREE_LEAGUE',
   WEEKLY_STARTER: 'WEEKLY_STARTER',
@@ -15,33 +16,6 @@ export const ContestTypeCodes = {
   WEEKLY_PRO: 'WEEKLY_PRO',
   DAILY_FLASH: 'DAILY_FLASH',
 } as const;
-
-// V2 Contract ABI
-const PRIZED_V2_CONTRACT_ABI = [
-  'function getContest(uint256 contestId) view returns (tuple(uint256 id, uint8 contestType, uint256 entryFee, uint8 teamSize, uint8 rakePercent, bool hasCaptain, uint256 minPlayers, uint256 maxPlayers, uint256 lockTime, uint256 endTime, uint256 prizePool, uint256 playerCount, uint8 status, bool prizesClaimed))',
-  'function getEntry(uint256 contestId, address player) view returns (tuple(address player, uint256[] teamIds, uint256 captainId, uint256 paidAmount, uint256 rank, uint256 prizeAmount, bool claimed, bool exists))',
-  'function hasEntered(uint256 contestId, address player) view returns (bool)',
-  'function getDistributablePrizePool(uint256 contestId) view returns (uint256)',
-  'function getContestConfig(uint8 contestType) view returns (tuple(uint8 contestType, uint256 entryFee, uint8 teamSize, uint8 rakePercent, bool hasCaptain, uint256 durationHours))',
-  'function getEntryTeam(uint256 contestId, address player) view returns (uint256[])',
-  'event ContestCreated(uint256 indexed contestId, uint8 contestType, uint256 entryFee, uint8 teamSize, uint8 rakePercent, uint256 lockTime, uint256 endTime)',
-  'event ContestEntered(uint256 indexed contestId, address indexed player, uint256[] teamIds, uint256 captainId)',
-  'event ContestFinalized(uint256 indexed contestId, uint256 prizePool, uint256 winnersCount)',
-];
-
-const ContestStatus = ['open', 'locked', 'finalized', 'cancelled'] as const;
-
-function getV2Contract() {
-  const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
-  const contractAddress = process.env.PRIZED_V2_CONTRACT_ADDRESS;
-
-  if (!contractAddress) {
-    throw new Error('PRIZED_V2_CONTRACT_ADDRESS not configured');
-  }
-
-  const provider = new ethers.JsonRpcProvider(rpcUrl);
-  return new ethers.Contract(contractAddress, PRIZED_V2_CONTRACT_ABI, provider);
-}
 
 // ============ CONTEST TYPES ENDPOINTS ============
 
@@ -62,7 +36,7 @@ router.get('/contest-types', async (req: Request, res: Response) => {
         name: t.name,
         description: t.description,
         entryFee: parseFloat(t.entry_fee),
-        entryFeeFormatted: t.is_free ? 'Free' : `${parseFloat(t.entry_fee).toFixed(3)} ETH`,
+        entryFeeFormatted: t.is_free ? 'Free' : `${parseFloat(t.entry_fee).toFixed(3)} SOL`,
         teamSize: t.team_size,
         hasCaptain: t.has_captain,
         durationHours: t.duration_hours,
@@ -133,7 +107,7 @@ router.get('/contests', async (req: Request, res: Response) => {
         typeName: c.type_name,
         typeDescription: c.type_description,
         entryFee: parseFloat(c.entry_fee),
-        entryFeeFormatted: c.is_free ? 'Free' : `${parseFloat(c.entry_fee).toFixed(3)} ETH`,
+        entryFeeFormatted: c.is_free ? 'Free' : `${parseFloat(c.entry_fee).toFixed(3)} SOL`,
         teamSize: c.team_size,
         hasCaptain: c.has_captain,
         rakePercent: parseFloat(c.rake_percent),
@@ -142,7 +116,7 @@ router.get('/contests', async (req: Request, res: Response) => {
         lockTime: c.lock_time,
         endTime: c.end_time,
         prizePool: parseFloat(c.prize_pool || 0),
-        prizePoolFormatted: `${parseFloat(c.prize_pool || 0).toFixed(3)} ETH`,
+        prizePoolFormatted: `${parseFloat(c.prize_pool || 0).toFixed(3)} SOL`,
         playerCount: c.player_count,
         status: c.status,
         isFree: c.is_free,
@@ -207,7 +181,7 @@ router.get('/contests/:id', async (req: Request, res: Response) => {
         typeName: contest.type_name,
         typeDescription: contest.type_description,
         entryFee: parseFloat(contest.entry_fee),
-        entryFeeFormatted: contest.is_free ? 'Free' : `${parseFloat(contest.entry_fee).toFixed(3)} ETH`,
+        entryFeeFormatted: contest.is_free ? 'Free' : `${parseFloat(contest.entry_fee).toFixed(3)} SOL`,
         teamSize: contest.team_size,
         hasCaptain: contest.has_captain,
         rakePercent: parseFloat(contest.rake_percent),
@@ -216,7 +190,7 @@ router.get('/contests/:id', async (req: Request, res: Response) => {
         lockTime: contest.lock_time,
         endTime: contest.end_time,
         prizePool: parseFloat(contest.prize_pool || 0),
-        prizePoolFormatted: `${parseFloat(contest.prize_pool || 0).toFixed(3)} ETH`,
+        prizePoolFormatted: `${parseFloat(contest.prize_pool || 0).toFixed(3)} SOL`,
         distributablePool: parseFloat(contest.distributable_pool || 0),
         playerCount: contest.player_count,
         status: contest.status,
@@ -265,11 +239,12 @@ router.get('/contests/:id/entries', async (req: Request, res: Response) => {
         'users.username'
       );
 
-    // Sort by rank if finalized, otherwise by entry time
+    // Sort by rank/score when available, otherwise by entry time
     if (contest.status === 'finalized' || contest.status === 'scoring') {
       query = query.orderBy(`${entriesTable}.rank`, 'asc');
     } else {
-      query = query.orderBy(`${entriesTable}.created_at`, 'desc');
+      // For open/locked contests, order by score desc if scores exist
+      query = query.orderByRaw(`COALESCE(${entriesTable}.score, 0) DESC, ${entriesTable}.created_at ASC`);
     }
 
     const entries = await query.limit(Number(limit)).offset(Number(offset));
@@ -437,6 +412,32 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
       metadata: { contestName: contest.name, isFree: true }
     }).catch(err => console.error('[FS] Error awarding contest entry FS:', err));
 
+    // Trigger quest progress (async, non-blocking)
+    questService.triggerAction(userId, 'contest_entered').catch(err =>
+      console.error('[Quest] Error triggering contest_entered:', err));
+    questService.triggerAction(userId, 'team_created').catch(err =>
+      console.error('[Quest] Error triggering team_created:', err));
+
+    // Publish team to Tapestry (async, non-blocking)
+    let tapestryTeamId: string | null = null;
+    const user = await db('users').where({ id: userId }).first();
+    if (user?.tapestry_user_id) {
+      tapestryService.storeTeam(user.tapestry_user_id, userId, {
+        contestId: String(id),
+        picks: teamIds.map((tid: string) => ({
+          influencerId: tid,
+          tier: 'unknown',
+          isCaptain: tid === captainId,
+          price: 0,
+        })),
+        totalBudgetUsed: 0,
+        captainId: captainId || teamIds[0],
+      }).then((tId) => {
+        tapestryTeamId = tId;
+        logger.info(`Team published to Tapestry: ${tId}`, { context: 'ContestsV2' });
+      }).catch((err) => logger.error('Error publishing team to Tapestry:', err, { context: 'ContestsV2' }));
+    }
+
     res.json({
       success: true,
       message: 'Successfully entered the free league!',
@@ -444,6 +445,10 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
         id: entry.id,
         teamIds: entry.team_ids,
         captainId: entry.captain_id,
+      },
+      tapestry: {
+        published: !!user?.tapestry_user_id,
+        teamId: tapestryTeamId,
       },
     });
   } catch (error: any) {
@@ -691,90 +696,6 @@ router.get('/contests/:id/my-entry', authenticate, async (req: Request, res: Res
   } catch (error: any) {
     console.error('Error fetching my entry:', error);
     res.status(500).json({ error: 'Failed to fetch entry' });
-  }
-});
-
-/**
- * POST /api/v2/contests/:id/verify-entry
- * Verify on-chain entry (for paid contests)
- */
-router.post('/contests/:id/verify-entry', authenticate, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { txHash } = req.body;
-    const userId = (req as any).user.id;
-    const walletAddress = (req as any).user.walletAddress;
-
-    if (!walletAddress || !txHash) {
-      return res.status(400).json({ error: 'Wallet and transaction hash required' });
-    }
-
-    const contest = await db('prized_contests').where('id', id).first();
-    if (!contest) {
-      return res.status(404).json({ error: 'Contest not found' });
-    }
-
-    if (contest.is_free) {
-      return res.status(400).json({ error: 'Use enter-free endpoint for free contests' });
-    }
-
-    // Verify on-chain
-    const contract = getV2Contract();
-    const hasEntered = await contract.hasEntered(contest.contract_contest_id, walletAddress);
-
-    if (!hasEntered) {
-      return res.status(400).json({ error: 'Entry not found on-chain' });
-    }
-
-    const onChainEntry = await contract.getEntry(contest.contract_contest_id, walletAddress);
-
-    // Check existing entry
-    const existingEntry = await db('prized_entries')
-      .where('contest_id', id)
-      .where('wallet_address', walletAddress.toLowerCase())
-      .first();
-
-    if (existingEntry) {
-      if (!existingEntry.user_id) {
-        await db('prized_entries')
-          .where('id', existingEntry.id)
-          .update({ user_id: userId, updated_at: new Date() });
-      }
-      return res.json({ success: true, message: 'Entry verified', entryId: existingEntry.id });
-    }
-
-    // Create entry
-    const teamIds = onChainEntry.teamIds.map((id: bigint) => Number(id));
-    const captainId = Number(onChainEntry.captainId);
-    const paidAmount = ethers.formatEther(onChainEntry.paidAmount);
-
-    const [entryId] = await db('prized_entries').insert({
-      contest_id: id,
-      user_id: userId,
-      wallet_address: walletAddress.toLowerCase(),
-      team_ids: teamIds,
-      captain_id: captainId || null,
-      paid_amount: paidAmount,
-      entry_tx_hash: txHash,
-      created_at: new Date(),
-      updated_at: new Date(),
-    }).returning('id');
-
-    // Update contest
-    const rakeAmount = parseFloat(paidAmount) * (contest.rake_percent / 100);
-    await db('prized_contests')
-      .where('id', id)
-      .increment('player_count', 1)
-      .update({
-        prize_pool: db.raw('COALESCE(prize_pool, 0) + ?', [paidAmount]),
-        distributable_pool: db.raw('COALESCE(distributable_pool, 0) + ?', [parseFloat(paidAmount) - rakeAmount]),
-        updated_at: new Date(),
-      });
-
-    res.json({ success: true, message: 'Entry verified and recorded', entryId });
-  } catch (error: any) {
-    console.error('Error verifying entry:', error);
-    res.status(500).json({ error: 'Failed to verify entry' });
   }
 });
 

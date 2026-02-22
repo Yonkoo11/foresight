@@ -4,8 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount, useSignMessage } from 'wagmi';
-import { SiweMessage } from 'siwe';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -14,6 +12,7 @@ import {
   Chat, Medal, Crown, Eye, Diamond, Flame, CaretRight, Rocket, Lock,
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../hooks/useAuth';
 import FoundingMemberBadge from '../components/FoundingMemberBadge';
 import FoundingMembersWall from '../components/FoundingMembersWall';
 import TierGuide from '../components/TierGuide';
@@ -70,7 +69,7 @@ const TIER_CONFIG = {
   silver: { color: 'text-gray-300', bg: 'bg-gray-400/20', gradient: 'from-gray-400 to-gray-500' },
   gold: { color: 'text-yellow-400', bg: 'bg-yellow-500/20', gradient: 'from-yellow-500 to-amber-500' },
   platinum: { color: 'text-cyan-400', bg: 'bg-cyan-500/20', gradient: 'from-cyan-400 to-blue-500' },
-  diamond: { color: 'text-purple-400', bg: 'bg-purple-500/20', gradient: 'from-purple-500 to-pink-500' },
+  diamond: { color: 'text-gold-400', bg: 'bg-gold-500/20', gradient: 'from-gold-500 to-amber-600' },
 } as const;
 
 const QUEST_ICONS: Record<string, React.ElementType> = {
@@ -81,8 +80,7 @@ const QUEST_ICONS: Record<string, React.ElementType> = {
 };
 
 export default function Progress() {
-  const { address, isConnected, chainId } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const { isConnected, login } = useAuth();
   const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -95,61 +93,8 @@ export default function Progress() {
   const [needsAuth, setNeedsAuth] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
 
-  const handleSignIn = async () => {
-    if (!address || !chainId) return;
-
-    try {
-      setSigningIn(true);
-
-      // Step 1: Get nonce
-      const nonceRes = await axios.get(`${API_URL}/api/auth/nonce`);
-      const nonce = nonceRes.data.nonce;
-
-      // Step 2: Create SIWE message
-      const message = new SiweMessage({
-        domain: window.location.host,
-        address,
-        statement: 'Sign in to Foresight',
-        uri: window.location.origin,
-        version: '1',
-        chainId,
-        nonce,
-      });
-
-      const messageToSign = message.prepareMessage();
-
-      // Step 3: Sign message (this will prompt wallet)
-      const signature = await signMessageAsync({ message: messageToSign });
-
-      // Step 4: Verify with backend
-      const verifyRes = await axios.post(`${API_URL}/api/auth/verify`, {
-        message: messageToSign,
-        signature,
-      });
-
-      const token = verifyRes.data.accessToken || verifyRes.data.token;
-
-      if (token) {
-        localStorage.setItem('authToken', token);
-        showToast('Signed in successfully!', 'success');
-        // Reload page to fetch data with new auth
-        window.location.reload();
-      } else {
-        throw new Error('No token received');
-      }
-    } catch (error: any) {
-      console.error('Sign in failed:', error);
-      const errorMsg = error?.shortMessage || error?.message || 'Unknown error';
-      if (errorMsg.includes('User rejected') || errorMsg.includes('denied')) {
-        showToast('Sign in cancelled', 'error');
-      } else if (errorMsg.includes('Connector not connected')) {
-        showToast('Wallet disconnected. Please reconnect.', 'error');
-      } else {
-        showToast(`Sign in failed: ${errorMsg}`, 'error');
-      }
-    } finally {
-      setSigningIn(false);
-    }
+  const handleSignIn = () => {
+    login();
   };
 
   useEffect(() => {
@@ -290,8 +235,8 @@ export default function Progress() {
             <p className="text-sm text-gray-500">Complete challenges for bonus rewards</p>
           </div>
           <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-5 text-center">
-            <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mx-auto mb-3">
-              <Trophy size={24} weight="fill" className="text-purple-400" />
+            <div className="w-12 h-12 rounded-lg bg-gold-500/20 flex items-center justify-center mx-auto mb-3">
+              <Trophy size={24} weight="fill" className="text-gold-400" />
             </div>
             <h3 className="font-semibold text-white mb-1">Tier Rewards</h3>
             <p className="text-sm text-gray-500">Unlock perks as you level up</p>
@@ -301,8 +246,8 @@ export default function Progress() {
         {/* CTA */}
         <div className="bg-gradient-to-r from-gold-500/10 to-amber-500/10 border border-gold-500/30 rounded-xl p-6 text-center">
           <h3 className="text-lg font-bold text-white mb-2">Ready to start earning?</h3>
-          <p className="text-gray-400 mb-4">Connect your wallet to begin tracking your progress</p>
-          <div className="text-sm text-gray-500">Use the "Connect Wallet" button above</div>
+          <p className="text-gray-400 mb-4">Sign in to begin tracking your progress</p>
+          <div className="text-sm text-gray-500">Use the "Sign In" button above</div>
         </div>
       </div>
     );
@@ -385,7 +330,7 @@ export default function Progress() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-purple-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center">
             <TrendUp size={22} weight="fill" className="text-white" />
           </div>
           <div>
@@ -473,14 +418,14 @@ export default function Progress() {
           {!localStorage.getItem('authToken') ? (
             <>
               <p className="text-gray-400 mb-4">Sign in to track your progress and complete quests</p>
-              <Link to="/compete?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
+              <Link to="/play?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
                 <Lightning size={18} weight="fill" /> Sign In & Play <CaretRight size={16} />
               </Link>
             </>
           ) : (
             <>
               <p className="text-gray-400 mb-4">Complete quests and play games to build your score</p>
-              <Link to="/compete?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
+              <Link to="/play?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
                 <Trophy size={18} /> Browse Contests <CaretRight size={16} />
               </Link>
             </>
@@ -665,7 +610,7 @@ export default function Progress() {
 
       {/* Leaderboard Link */}
       <Link
-        to="/compete?tab=rankings&type=fs"
+        to="/play?tab=rankings&type=fs"
         className="flex items-center justify-between p-4 mt-8 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gray-700 transition-all group"
       >
         <div className="flex items-center gap-3">

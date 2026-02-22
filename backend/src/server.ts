@@ -26,6 +26,7 @@ import ctFeedRoutes from './api/ctFeed';
 import watchlistRoutes from './api/watchlist';
 import intelRoutes from './api/intel';
 import twitterRoutes from './api/twitter';
+import tapestryRoutes from './api/tapestry';
 
 // Create Express app and HTTP server
 const app: Application = express();
@@ -121,6 +122,7 @@ app.use('/api/ct-feed', ctFeedRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/intel', intelRoutes);
 app.use('/api/twitter', twitterRoutes);
+app.use('/api/tapestry', tapestryRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
@@ -129,10 +131,55 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 /**
+ * Validate critical API keys at startup — warn but don't crash
+ */
+function validateApiKeys(): void {
+  const keys = [
+    { name: 'PRIVY_APP_ID', required: true, desc: 'Privy auth (login will fail)' },
+    { name: 'PRIVY_APP_SECRET', required: true, desc: 'Privy auth (login will fail)' },
+    { name: 'JWT_SECRET', required: true, desc: 'Session tokens (already checked)' },
+    { name: 'TAPESTRY_API_KEY', required: false, desc: 'Tapestry social layer (scores won\'t store on-chain)' },
+    { name: 'TWITTER_API_IO_KEY', required: false, desc: 'Twitter data pipeline (CT Feed won\'t refresh)' },
+    { name: 'DATABASE_URL', required: true, desc: 'PostgreSQL (server won\'t start)' },
+  ];
+
+  const missing: string[] = [];
+  const warnings: string[] = [];
+
+  for (const key of keys) {
+    if (!process.env[key.name]) {
+      if (key.required) {
+        missing.push(`  ❌ ${key.name} — ${key.desc}`);
+      } else {
+        warnings.push(`  ⚠️  ${key.name} — ${key.desc}`);
+      }
+    }
+  }
+
+  if (missing.length > 0 || warnings.length > 0) {
+    logger.info('');
+    logger.info('┌─ API Key Validation ─────────────────────┐');
+    if (missing.length > 0) {
+      logger.error('│ MISSING (required):');
+      missing.forEach(m => logger.error(m));
+    }
+    if (warnings.length > 0) {
+      logger.warn('│ MISSING (optional):');
+      warnings.forEach(w => logger.warn(w));
+    }
+    logger.info('└──────────────────────────────────────────┘');
+    logger.info('');
+  }
+}
+
+/**
  * Start server
  */
 export async function startServer() {
   try {
+    // Validate API keys
+    validateApiKeys();
+
     // Test database connection
     const dbConnected = await testConnection();
     if (!dbConnected) {

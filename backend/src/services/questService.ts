@@ -6,6 +6,7 @@
  */
 
 import db from '../utils/db';
+import foresightScoreService from './foresightScoreService';
 
 // Action to quest ID mappings
 // IMPORTANT: Quest IDs must match quest_definitions_v2 table exactly
@@ -81,6 +82,18 @@ class QuestService {
           results.push(result);
           if (result.isCompleted && !result.alreadyCompleted) {
             anyCompleted = true;
+            // Award FS reward for quest completion
+            if (result.fsReward && result.fsReward > 0) {
+              foresightScoreService.earnFs({
+                userId,
+                reason: `quest_complete_${questId}`,
+                category: 'achievement',
+                baseAmount: result.fsReward,
+                sourceType: 'quest',
+                sourceId: questId,
+                metadata: { questName: result.questName },
+              }).catch(err => console.error(`[QuestService] Error awarding FS for quest ${questId}:`, err));
+            }
           }
         }
       } catch (error) {

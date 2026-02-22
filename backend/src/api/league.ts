@@ -12,6 +12,7 @@ import { checkDraftAchievements } from '../services/achievementService';
 import foresightScoreService from '../services/foresightScoreService';
 import activityFeedService from '../services/activityFeedService';
 import questService from '../services/questService';
+import tapestryService from '../services/tapestryService';
 import leagueService from '../services/leagueService';
 
 const router = express.Router();
@@ -144,10 +145,9 @@ router.get('/team/me', authenticateToken, async (req: Request, res: Response) =>
     }
 
     // Get team picks with influencer details using service
-    const picks = await leagueService.getTeamPicks(team.id)
-      .orderBy('team_picks.pick_order');
+    const picks = await leagueService.getTeamPicks(team.id);
 
-    const totalBudget = picks.reduce((sum, pick) => sum + parseFloat(pick.price || 0), 0);
+    const totalBudget = picks.reduce((sum: number, pick: any) => sum + parseFloat(pick.price || 0), 0);
 
     res.json({
       team: {
@@ -324,6 +324,22 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
     questService.triggerAction(userId, 'contest_entered', { contestId: contest.id })
       .catch(console.error);
 
+    // Publish team to Tapestry (async, non-blocking)
+    const userRecord = await db('users').where({ id: userId }).first();
+    if (userRecord?.tapestry_user_id) {
+      tapestryService.storeTeam(userRecord.tapestry_user_id, userId, {
+        contestId: String(contest.id),
+        picks: picks.map((p: any) => ({
+          influencerId: String(p.influencer_id),
+          tier: p.tier || 'unknown',
+          isCaptain: p.is_captain,
+          price: parseFloat(p.price || 0),
+        })),
+        totalBudgetUsed: totalBudget,
+        captainId: String(captain_id),
+      }).catch((err) => console.error('[Tapestry] Error publishing team:', err));
+    }
+
     res.json({
       success: true,
       team: {
@@ -331,6 +347,9 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
         picks,
         total_budget_used: totalBudget,
         max_budget: 150,
+      },
+      tapestry: {
+        published: !!userRecord?.tapestry_user_id,
       },
     });
   } catch (error: any) {

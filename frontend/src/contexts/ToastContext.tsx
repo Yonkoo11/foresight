@@ -66,7 +66,7 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
               ? 'bg-green-500/10 border-green-500/30 text-green-400'
               : toast.type === 'error'
               ? 'bg-red-500/10 border-red-500/30 text-red-400'
-              : 'bg-brand-500/10 border-brand-500/30 text-brand-400'
+              : 'bg-gold-500/10 border-gold-500/30 text-gold-400'
           }`}
         >
           {toast.type === 'success' && <CheckCircle size={20} weight="fill" />}

@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useAccount } from 'wagmi';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -27,7 +26,9 @@ import {
 } from '@phosphor-icons/react';
 import { getNumericLevel } from '../utils/xp';
 import FoundingMemberBadge from '../components/FoundingMemberBadge';
+import TapestryBadge from '../components/TapestryBadge';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../hooks/useAuth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -46,6 +47,7 @@ interface FsLeaderEntry {
   isFoundingMember: boolean;
   foundingMemberNumber?: number;
   earlyAdopterTier?: string;
+  tapestryUserId?: string;
 }
 
 interface FantasyLeaderTeam {
@@ -98,19 +100,19 @@ const TIER_CONFIG = {
   silver: { color: 'text-gray-300', bg: 'bg-gray-400/20' },
   gold: { color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
   platinum: { color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
-  diamond: { color: 'text-purple-400', bg: 'bg-purple-500/20' },
+  diamond: { color: 'text-gold-400', bg: 'bg-gold-500/20' },
 } as const;
 
 const CONTEST_CONFIG: Record<string, { icon: React.ElementType; color: string; gradient: string }> = {
   FREE_LEAGUE: { icon: Gift, color: 'text-emerald-400', gradient: 'from-emerald-500 to-teal-600' },
   WEEKLY_STARTER: { icon: Play, color: 'text-blue-400', gradient: 'from-blue-500 to-indigo-600' },
-  WEEKLY_STANDARD: { icon: Trophy, color: 'text-purple-400', gradient: 'from-purple-500 to-pink-600' },
+  WEEKLY_STANDARD: { icon: Trophy, color: 'text-gold-400', gradient: 'from-gold-500 to-amber-600' },
   WEEKLY_PRO: { icon: Crown, color: 'text-yellow-400', gradient: 'from-yellow-500 to-orange-600' },
   DAILY_FLASH: { icon: Lightning, color: 'text-cyan-400', gradient: 'from-cyan-500 to-blue-600' },
 };
 
 export default function Compete() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
@@ -262,7 +264,7 @@ export default function Compete() {
 
   const handleEnterContest = (contest: Contest) => {
     if (!isConnected) {
-      showToast('Please connect your wallet first', 'warning');
+      showToast('Please sign in first', 'warning');
       return;
     }
     navigate(`/draft?contestId=${contest.id}&type=${contest.typeCode}&teamSize=${contest.teamSize}&hasCaptain=${contest.hasCaptain}&isFree=${contest.isFree}`);
@@ -442,6 +444,7 @@ export default function Compete() {
                               earlyAdopterTier={entry.earlyAdopterTier}
                               variant="minimal"
                             />
+                            <TapestryBadge variant="inline" tapestryUserId={entry.tapestryUserId} />
                           </div>
                         </div>
                         <div className="text-right">

@@ -5,8 +5,8 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 import html2canvas from 'html2canvas';
 import {
   Sparkle, Trophy, Star, Crown, Diamond, Medal, Fire,
@@ -78,7 +78,7 @@ const TIER_CONFIG = {
 } as const;
 
 export default function ShareableProfileCard({ onClose, showModal = true }: Props) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ProfileCardData | null>(null);
   const [copied, setCopied] = useState(false);
@@ -236,7 +236,7 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
           <div className="bg-gray-900/90 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Sparkle size={20} weight="fill" className="text-brand-400" />
+                <Sparkle size={20} weight="fill" className="text-gold-400" />
                 <span className="text-sm text-gray-400 uppercase tracking-wider">Foresight Score</span>
               </div>
               <div className={`text-5xl font-black ${tierConfig.color}`}>
@@ -274,7 +274,7 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
           </div>
           <div className="bg-gray-800/50 rounded-lg p-3 text-center">
             <div className="text-xs text-gray-500 mb-1">This Week</div>
-            <div className="text-lg font-bold text-brand-400">
+            <div className="text-lg font-bold text-gold-400">
               +{data?.weekScore.toLocaleString() || 0}
             </div>
           </div>
@@ -306,7 +306,7 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
         <div className="px-6 pb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-brand-500 flex items-center justify-center">
+              <div className="w-6 h-6 rounded bg-gold-500 flex items-center justify-center">
                 <Sparkle size={14} weight="fill" className="text-white" />
               </div>
               <span className="text-sm font-bold text-white">Foresight</span>
@@ -366,7 +366,7 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-gray-900 rounded-xl p-8">
-          <div className="animate-spin w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full mx-auto" />
+          <div className="animate-spin w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full mx-auto" />
           <p className="text-gray-400 mt-4">Loading profile...</p>
         </div>
       </div>

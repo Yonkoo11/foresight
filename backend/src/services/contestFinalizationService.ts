@@ -9,6 +9,7 @@
 
 import db from '../utils/db';
 import questService from './questService';
+import tapestryService from './tapestryService';
 
 interface ContestResult {
   contestId: number;
@@ -121,6 +122,17 @@ class ContestFinalizationService {
 
         // Trigger quest achievements based on placement
         await this.triggerPlacementQuests(team.user_id, rank, percentile, totalParticipants);
+
+        // Store score on Tapestry (async, non-blocking)
+        const user = await db('users').where({ id: team.user_id }).first();
+        if (user?.tapestry_user_id) {
+          tapestryService.storeScore(user.tapestry_user_id, team.user_id, {
+            contestId: String(contestId),
+            totalScore: team.total_score,
+            rank,
+            breakdown: { activity: 0, engagement: 0, growth: 0, viral: 0 },
+          }).catch((err) => console.error(`[ContestFinalization] Tapestry storeScore error:`, err));
+        }
       }
 
       // Mark contest as finalized

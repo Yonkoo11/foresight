@@ -1,6 +1,4 @@
 import jwt, { Secret } from 'jsonwebtoken';
-import { SiweMessage } from 'siwe';
-import crypto from 'crypto';
 
 // Require JWT_SECRET - fail fast if not set
 if (!process.env.JWT_SECRET) {
@@ -21,43 +19,6 @@ export interface JWTPayload {
   role?: string;
   iat?: number;
   exp?: number;
-}
-
-/**
- * Verify SIWE message signature
- */
-export async function verifySiweMessage(
-  message: string,
-  signature: string
-): Promise<{ success: boolean; address?: string; error?: string }> {
-  try {
-    const siweMessage = new SiweMessage(message);
-    const { success, data } = await siweMessage.verify({ signature });
-
-    if (!success) {
-      return { success: false, error: 'Invalid signature' };
-    }
-
-    return {
-      success: true,
-      address: data.address,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Verification failed',
-    };
-  }
-}
-
-/**
- * Generate nonce for SIWE
- * Must be alphanumeric only (at least 8 characters, only A-Z, a-z, 0-9)
- */
-export function generateNonce(): string {
-  // SIWE requires ONLY alphanumeric characters (no _, -, +, /, =, etc.)
-  // Generate 16 random bytes and convert to hex (0-9, a-f only)
-  return crypto.randomBytes(16).toString('hex');
 }
 
 /**

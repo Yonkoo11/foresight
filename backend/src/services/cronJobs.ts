@@ -1,10 +1,12 @@
 import cron from 'node-cron';
-import { runFantasyScoringCycle, calculateWeeklyContestScores, calculateContestRankings, updateLeaderboardCache, awardPerformanceXP } from './fantasyScoringService';
+import { runFantasyScoringCycle, calculateWeeklyContestScores, calculateContestRankings, updateLeaderboardCache, awardPerformanceXP, calculateInfluencerWeeklyScore } from './fantasyScoringService';
 import twitterApiService from './twitterApiService';
 import twitterApiIoService from './twitterApiIoService';
 import weeklySnapshotService from './weeklySnapshotService';
 import contestFinalizationService from './contestFinalizationService';
 import questService from './questService';
+import tapestryService from './tapestryService';
+import ctFeedService from './ctFeedService';
 import db from '../utils/db';
 
 /**
@@ -234,6 +236,21 @@ export function initializeCronJobs(): void {
     }
   });
   console.log('✅ Influencer Metrics: Daily at 04:00 UTC');
+
+  // 9. CT Feed Auto-Refresh - Every 4 hours
+  cron.schedule('0 */4 * * *', async () => {
+    console.log('\n[CRON] Refreshing CT Feed tweets...');
+    try {
+      const result = await ctFeedService.refreshTweets();
+      console.log(`[CRON] CT Feed refresh: ${result.tweetsStored} tweets from ${result.influencersProcessed} influencers`);
+      if (result.errors.length > 0) {
+        console.warn(`[CRON] CT Feed refresh had ${result.errors.length} error(s)`);
+      }
+    } catch (error) {
+      console.error('[CRON] CT Feed refresh failed:', error);
+    }
+  });
+  console.log('✅ CT Feed Refresh: Every 4 hours');
 
   console.log('\n========================================');
   console.log('All Cron Jobs Initialized');
@@ -679,38 +696,44 @@ async function scoreEndedPrizedContests(): Promise<void> {
               .orderBy('created_at', 'desc')
               .first();
 
-            // Calculate score based on deltas (simplified)
             let influencerScore = 0;
             if (startSnapshot && endSnapshot) {
-              // Activity score
-              const tweetsThisWeek = endSnapshot.tweet_count - startSnapshot.tweet_count;
-              const activityScore = Math.min(35, tweetsThisWeek * 1.5);
-
-              // Growth score
-              const followersGained = endSnapshot.follower_count - startSnapshot.follower_count;
-              const growthRate = startSnapshot.follower_count > 0
-                ? (followersGained / startSnapshot.follower_count) * 100
-                : 0;
-              const absoluteGrowth = Math.min(20, followersGained / 2000);
-              const rateGrowth = Math.min(20, growthRate * 5);
-              const growthScore = Math.min(40, absoluteGrowth + rateGrowth);
-
-              // Engagement score (simplified)
-              const engagementScore = Math.min(60, Math.sqrt(
-                (endSnapshot.likes_count || 0) +
-                (endSnapshot.retweets_count || 0) * 2
-              ) * 1.5);
-
-              influencerScore = activityScore + growthScore + engagementScore;
+              // Use the canonical V2 scoring formula from fantasyScoringService
+              const delta = {
+                influencerId,
+                twitterHandle: '',
+                displayName: '',
+                tier: '',
+                basePrice: 0,
+                followerGrowth: (endSnapshot.follower_count || 0) - (startSnapshot.follower_count || 0),
+                tweetsThisWeek: (endSnapshot.tweet_count || 0) - (startSnapshot.tweet_count || 0),
+                totalLikes: endSnapshot.likes_count || 0,
+                totalRetweets: endSnapshot.retweets_count || 0,
+                totalReplies: endSnapshot.replies_count || 0,
+                totalViews: endSnapshot.views_count || 0,
+                tweetsAnalyzed: endSnapshot.tweets_analyzed || Math.max(1, (endSnapshot.tweet_count || 0) - (startSnapshot.tweet_count || 0)),
+                avgEngagementPerTweet: 0,
+                hasStartSnapshot: true,
+                hasEndSnapshot: true,
+                isComplete: true,
+              };
+              const scoreResult = calculateInfluencerWeeklyScore(delta, startSnapshot.follower_count);
+              influencerScore = scoreResult.baseTotal;
             } else {
-              // Fallback: use stored metrics
+              // Fallback: compute deterministic score from stored influencer metrics
               const influencer = await db('influencers').where('id', influencerId).first();
               if (influencer) {
-                influencerScore = 25 + Math.random() * 50; // Base score with variance
+                const followers = influencer.follower_count || 0;
+                const engagementRate = parseFloat(influencer.engagement_rate || '0');
+                const tierScores: Record<string, number> = { S: 30, A: 25, B: 18, C: 12 };
+                const activityScore = tierScores[influencer.tier] || 15;
+                const engagementScore = Math.min(60, engagementRate * 10);
+                const growthScore = Math.min(40, Math.log10(Math.max(followers, 1)) * 5);
+                influencerScore = activityScore + engagementScore + growthScore;
               }
             }
 
-            // Apply captain bonus
+            // Apply captain bonus (1.5x per V2 formula)
             const isCaptain = captainId === influencerId;
             if (isCaptain) {
               influencerScore *= 1.5;
@@ -779,6 +802,25 @@ async function scoreEndedPrizedContests(): Promise<void> {
             }
           } catch (questError) {
             console.error(`[CRON] Error triggering quest for user ${entry.userId}:`, questError);
+          }
+        }
+
+        // Store scores on Tapestry (async, non-blocking)
+        for (let i = 0; i < scoredEntries.length; i++) {
+          const entry = scoredEntries[i];
+          const rank = i + 1;
+          try {
+            const user = await db('users').where({ id: entry.userId }).first();
+            if (user?.tapestry_user_id) {
+              tapestryService.storeScore(user.tapestry_user_id, entry.userId, {
+                contestId: String(contest.id),
+                totalScore: entry.score,
+                rank,
+                breakdown: { activity: 0, engagement: 0, growth: 0, viral: 0 },
+              }).catch((err) => console.error(`[CRON] Tapestry storeScore error for user ${entry.userId}:`, err));
+            }
+          } catch (tapestryError) {
+            console.error(`[CRON] Error storing Tapestry score for user ${entry.userId}:`, tapestryError);
           }
         }
 

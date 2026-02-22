@@ -27,7 +27,7 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
     if (freeLeagueContestId) {
       navigate(`/draft?contestId=${freeLeagueContestId}&type=FREE_LEAGUE&teamSize=5&hasCaptain=true&isFree=true`);
     } else {
-      navigate('/contests?tab=browse&filter=free');
+      navigate('/play?tab=contests');
     }
   };
 
@@ -40,12 +40,12 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
   const steps = [
     // Step 1: Welcome
     {
-      title: "Welcome to CT Fantasy",
+      title: "Welcome to Foresight",
       subtitle: "The fantasy league for Crypto Twitter",
       content: (
         <div className="space-y-6">
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center">
               <Trophy weight="fill" className="w-10 h-10 text-white" />
             </div>
             <p className="text-gray-300 text-lg">
@@ -60,14 +60,14 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
               <p className="text-xs text-gray-400">Influencers</p>
             </div>
             <div className="p-4 rounded-xl bg-gray-800/50 text-center">
-              <Target weight="fill" className="w-8 h-8 mx-auto mb-2 text-purple-400" />
+              <Target weight="fill" className="w-8 h-8 mx-auto mb-2 text-cyan-400" />
               <p className="text-sm font-medium text-white">150 pts</p>
               <p className="text-xs text-gray-400">Budget</p>
             </div>
             <div className="p-4 rounded-xl bg-gray-800/50 text-center">
               <Trophy weight="fill" className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
               <p className="text-sm font-medium text-white">Win</p>
-              <p className="text-xs text-gray-400">ETH Prizes</p>
+              <p className="text-xs text-gray-400">Prizes</p>
             </div>
           </div>
         </div>
@@ -103,9 +103,9 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-gold-500/10 to-amber-500/10 border border-gold-500/20">
             <div className="flex items-start gap-3">
-              <Star weight="fill" className="w-6 h-6 text-purple-400 flex-shrink-0 mt-0.5" />
+              <Star weight="fill" className="w-6 h-6 text-gold-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-white mb-1">Tier Strategy</p>
                 <p className="text-sm text-gray-300">
@@ -152,7 +152,7 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
                 </div>
               </div>
               <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm font-bold">
-                0.002+ ETH
+                0.002+ SOL
               </span>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
                 </div>
               </div>
               <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-sm font-bold">
-                0.001 ETH
+                0.001 SOL
               </span>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-colors ${
-                i === step ? 'bg-brand-500' : i < step ? 'bg-brand-500/50' : 'bg-gray-600'
+                i === step ? 'bg-gold-500' : i < step ? 'bg-gold-500/50' : 'bg-gray-600'
               }`}
             />
           ))}
@@ -238,7 +238,7 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
             ) : (
               <button
                 onClick={() => setStep(step + 1)}
-                className="flex-1 py-3 rounded-xl bg-brand-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-brand-600 transition-colors"
+                className="flex-1 py-3 rounded-xl bg-gold-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-gold-600 transition-colors"
               >
                 Next
                 <ArrowRight weight="bold" className="w-5 h-5" />

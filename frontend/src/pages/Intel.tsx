@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import axios from 'axios';
 import {
   Newspaper,
@@ -30,6 +29,7 @@ import {
   UsersFour,
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../hooks/useAuth';
 import { useBrowseTimeTracker } from '../hooks/useBrowseTimeTracker';
 import ProfilesTab from '../components/intel/ProfilesTab';
 import RisingStarsTab from '../components/intel/RisingStarsTab';
@@ -80,7 +80,7 @@ const TIER_COLORS: Record<string, { text: string; bg: string; border: string }> 
 };
 
 export default function Intel() {
-  const { isConnected } = useAccount();
+  const { isConnected } = useAuth();
   const { showToast } = useToast();
 
   // Main tab state

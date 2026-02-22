@@ -1,7 +1,10 @@
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  // Create sessions table for JWT token management
+  // Create sessions table for JWT token management (skip if already exists)
+  const exists = await knex.schema.hasTable('sessions');
+  if (exists) return;
+
   await knex.schema.createTable('sessions', (table) => {
     table.uuid('id').primary();
     table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');

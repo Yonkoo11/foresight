@@ -5,15 +5,15 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 import axios from 'axios';
 import {
-  Trophy, Users, Clock, CurrencyEth, Crown, ArrowLeft,
+  Trophy, Users, Clock, Coins, Crown, ArrowLeft,
   Timer, ChartLineUp, Medal, Gift, Lock, Play, Lightning,
   CheckCircle, Star, Fire, CaretRight, Wallet
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import { useAuth } from '../hooks/useAuth';
 import { getRarityInfo } from '../utils/rarities';
 import PotentialWinningsModal from '../components/onboarding/PotentialWinningsModal';
 import FormationPreview from '../components/FormationPreview';
@@ -100,9 +100,9 @@ const contestTypeConfig: Record<string, {
   },
   WEEKLY_STANDARD: {
     icon: Trophy,
-    color: 'text-purple-400',
-    gradient: 'from-purple-500 to-pink-600',
-    bgGradient: 'from-purple-500/20 to-pink-600/10',
+    color: 'text-gold-400',
+    gradient: 'from-gold-500 to-amber-600',
+    bgGradient: 'from-gold-500/20 to-amber-600/10',
   },
   WEEKLY_PRO: {
     icon: Crown,
@@ -121,7 +121,7 @@ const contestTypeConfig: Record<string, {
 export default function ContestDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const { showToast } = useToast();
   const {
     state: onboardingState,
@@ -144,6 +144,24 @@ export default function ContestDetail() {
       fetchContestData();
     }
   }, [id, address]);
+
+  // Auto-refresh leaderboard every 30 seconds
+  useEffect(() => {
+    if (!id || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const [entriesRes, contestRes] = await Promise.all([
+          axios.get(`${API_URL}/api/v2/contests/${id}/entries`),
+          axios.get(`${API_URL}/api/v2/contests/${id}`),
+        ]);
+        setEntries(entriesRes.data.entries || []);
+        setContest(contestRes.data.contest);
+      } catch {
+        // Silently fail on refresh — don't disrupt the user
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [id, loading]);
 
   useEffect(() => {
     if (contest) {
@@ -278,7 +296,7 @@ export default function ContestDetail() {
       twitter_handle: player.handle,
       tier: player.tier,
       profile_image_url: player.avatarUrl,
-      total_points: myEntry?.score ? Math.round(myEntry.score / myTeamWithDetails.length) : 0,
+      total_points: myEntry?.score ? Math.round(parseFloat(String(myEntry.score)) / myTeamWithDetails.length) : 0,
     }));
   }, [myTeamWithDetails, myEntry]);
 
@@ -303,7 +321,7 @@ export default function ContestDetail() {
           <Trophy size={64} className="text-gray-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">Contest Not Found</h2>
           <p className="text-gray-400 mb-4">This contest doesn't exist or has been removed.</p>
-          <Link to="/contests" className="text-brand-400 hover:text-brand-300">
+          <Link to="/play?tab=contests" className="text-gold-400 hover:text-gold-300">
             Back to Contests
           </Link>
         </div>
@@ -316,7 +334,7 @@ export default function ContestDetail() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/contests')}
+          onClick={() => navigate('/play?tab=contests')}
           className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
         >
           <ArrowLeft size={20} />
@@ -370,7 +388,7 @@ export default function ContestDetail() {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-black/20 rounded-xl p-4 text-center">
-              <CurrencyEth size={24} className={`mx-auto mb-2 ${config.color}`} />
+              <Coins size={24} className={`mx-auto mb-2 ${config.color}`} />
               <p className="text-lg font-bold text-white">{contest.prizePoolFormatted}</p>
               <p className="text-xs text-gray-400">Prize Pool</p>
             </div>
@@ -406,7 +424,7 @@ export default function ContestDetail() {
                 <p className="font-bold text-white">You're In!</p>
                 <p className="text-sm text-green-300">
                   {myEntry.rank ? `Current Rank: #${myEntry.rank}` : 'Scoring in progress...'}
-                  {myEntry.score > 0 && ` | Score: ${myEntry.score.toFixed(1)} pts`}
+                  {myEntry.score && parseFloat(String(myEntry.score)) > 0 && ` | Score: ${parseFloat(String(myEntry.score)).toFixed(1)} pts`}
                 </p>
               </div>
             </div>
@@ -501,7 +519,7 @@ export default function ContestDetail() {
                     <div
                       key={entry.id}
                       className={`grid grid-cols-12 gap-4 px-6 py-4 items-center ${
-                        isMe ? 'bg-brand-500/10' : 'hover:bg-gray-700/20'
+                        isMe ? 'bg-gold-500/10' : 'hover:bg-gray-700/20'
                       } transition-colors`}
                     >
                       <div className="col-span-1">
@@ -520,7 +538,7 @@ export default function ContestDetail() {
                       <div className="col-span-5">
                         <p className="font-bold text-white flex items-center gap-2">
                           {entry.username || entry.walletAddress.slice(0, 6) + '...' + entry.walletAddress.slice(-4)}
-                          {isMe && <span className="text-xs text-brand-400">(You)</span>}
+                          {isMe && <span className="text-xs text-gold-400">(You)</span>}
                         </p>
                         <p className="text-xs text-gray-500">{entry.teamIds?.length || 0} picks</p>
                       </div>
@@ -544,13 +562,13 @@ export default function ContestDetail() {
                         </div>
                       </div>
                       <div className="col-span-2 text-right">
-                        <span className="font-bold text-white">{entry.score?.toFixed(1) || '-'}</span>
+                        <span className="font-bold text-white">{entry.score ? parseFloat(String(entry.score)).toFixed(1) : '-'}</span>
                         <span className="text-gray-500 text-sm"> pts</span>
                       </div>
                       <div className="col-span-1 text-right">
                         {entry.prizeAmount && entry.prizeAmount > 0 ? (
                           <span className="text-green-400 font-bold">
-                            {entry.prizeAmount.toFixed(3)}
+                            {parseFloat(String(entry.prizeAmount)).toFixed(3)}
                           </span>
                         ) : (
                           <span className="text-gray-500">-</span>
@@ -658,7 +676,7 @@ export default function ContestDetail() {
               <div className="mt-6 pt-6 border-t border-gray-700">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-2xl font-bold text-white">{myEntry.score?.toFixed(1) || '-'}</p>
+                    <p className="text-2xl font-bold text-white">{myEntry.score ? parseFloat(String(myEntry.score)).toFixed(1) : '-'}</p>
                     <p className="text-sm text-gray-400">Total Score</p>
                   </div>
                   <div>
@@ -667,7 +685,7 @@ export default function ContestDetail() {
                   </div>
                   <div>
                     <p className={`text-2xl font-bold ${myEntry.prizeAmount ? 'text-green-400' : 'text-gray-500'}`}>
-                      {myEntry.prizeAmount ? `${myEntry.prizeAmount.toFixed(3)} ETH` : '-'}
+                      {myEntry.prizeAmount ? `${parseFloat(String(myEntry.prizeAmount)).toFixed(3)} SOL` : '-'}
                     </p>
                     <p className="text-sm text-gray-400">Prize</p>
                   </div>
@@ -682,7 +700,7 @@ export default function ContestDetail() {
       {showPotentialWinningsModal && myEntry && entries.length > 0 && (
         <PotentialWinningsModal
           onClose={() => setShowPotentialWinningsModal(false)}
-          userScore={myEntry.score || 0}
+          userScore={parseFloat(String(myEntry.score)) || 0}
           userRank={myEntry.rank || entries.length}
           totalPlayers={entries.length}
         />

@@ -73,7 +73,7 @@ const Cookies = () => {
             Some cookies are set by third-party services we use:
           </p>
           <ul className="list-disc list-inside space-y-2 ml-4">
-            <li><strong>RainbowKit:</strong> Wallet connection interface</li>
+            <li><strong>Privy:</strong> Wallet authentication and connection</li>
             <li><strong>Analytics Providers:</strong> Anonymous usage tracking</li>
           </ul>
         </section>

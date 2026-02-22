@@ -38,7 +38,7 @@ router.post('/create', authenticateToken, async (req: Request, res: Response) =>
     }
 
     if (entry_fee < 0 || entry_fee > 1) {
-      return res.status(400).json({ error: 'Entry fee must be between 0 and 1 ETH' });
+      return res.status(400).json({ error: 'Entry fee must be between 0 and 1 SOL' });
     }
 
     const validDistributions = ['winner_takes_all', 'top_3', 'top_5'];

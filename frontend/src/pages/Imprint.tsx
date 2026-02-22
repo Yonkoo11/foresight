@@ -18,7 +18,7 @@ const Imprint = () => {
               <strong className="text-white">Platform Type:</strong> Decentralized Web Application (dApp)
             </p>
             <p>
-              <strong className="text-white">Blockchain Network:</strong> Base (Ethereum Layer 2)
+              <strong className="text-white">Blockchain Network:</strong> Solana
             </p>
           </div>
         </section>
@@ -26,7 +26,7 @@ const Imprint = () => {
         <section>
           <h2 className="text-2xl font-semibold text-white mb-3">Responsible Party</h2>
           <p className="mb-3">
-            As a decentralized application, Foresight operates on smart contracts deployed on the Base blockchain. The platform is community-governed and open-source.
+            As a decentralized application, Foresight operates on smart contracts deployed on the Solana blockchain. The platform is community-governed and open-source.
           </p>
           <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700/30">
             <p className="text-sm">
@@ -88,7 +88,7 @@ const Imprint = () => {
         <section>
           <h2 className="text-2xl font-semibold text-white mb-3">Smart Contract Addresses</h2>
           <p className="mb-3">
-            All smart contracts are deployed on Base blockchain and are publicly verifiable:
+            All smart contracts are deployed on Solana blockchain and are publicly verifiable:
           </p>
           <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700/30">
             <p className="text-sm text-gray-400">

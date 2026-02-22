@@ -8,18 +8,18 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useAccount, useSignMessage } from 'wagmi';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { SiweMessage } from 'siwe';
 import axios from 'axios';
 import {
   Trophy, ArrowLeft, Lock, CheckCircle, Warning,
-  Timer, CurrencyEth, Users, Info
+  Timer, Coins, Users, Info
 } from '@phosphor-icons/react';
 import FormationTeam from '../components/draft/FormationTeam';
 import InfluencerGrid from '../components/draft/InfluencerGrid';
+import TapestryBadge from '../components/TapestryBadge';
 import { useToast } from '../contexts/ToastContext';
 import { useDelayedLoading } from '../hooks/useDelayedLoading';
+import { useAuth } from '../hooks/useAuth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -75,8 +75,7 @@ interface ExistingTeam {
 const MAX_BUDGET = 150;
 
 export default function Draft() {
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const { address, isConnected, login } = useAuth();
   const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -95,6 +94,8 @@ export default function Draft() {
   const showLoadingSpinner = useDelayedLoading(loading, 200);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [existingTeam, setExistingTeam] = useState<ExistingTeam | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [tapestryPublished, setTapestryPublished] = useState(false);
 
   // Computed
   const usedBudget = useMemo(
@@ -123,7 +124,7 @@ export default function Draft() {
   // Load data
   useEffect(() => {
     if (!contestId) {
-      navigate('/compete?tab=contests');
+      navigate('/play?tab=contests');
       return;
     }
 
@@ -296,42 +297,17 @@ export default function Draft() {
     }
   };
 
-  // Authentication
+  // Authentication — Privy handles auth automatically via usePrivyAuth
   const authenticate = async () => {
-    if (!address) return false;
-
-    try {
-      // Get nonce
-      const nonceRes = await axios.get(`${API_URL}/api/auth/nonce`);
-      const nonce = nonceRes.data.nonce;
-
-      // Create SIWE message
-      const message = new SiweMessage({
-        domain: window.location.host,
-        address,
-        statement: 'Sign in to Foresight',
-        uri: window.location.origin,
-        version: '1',
-        chainId: 84532,
-        nonce,
-      });
-
-      const signature = await signMessageAsync({ message: message.prepareMessage() });
-
-      // Verify
-      const verifyRes = await axios.post(`${API_URL}/api/auth/verify`, {
-        message: message.prepareMessage(),
-        signature,
-      });
-
-      localStorage.setItem('authToken', verifyRes.data.token);
+    const token = localStorage.getItem('authToken');
+    if (token) {
       setIsAuthenticated(true);
       return true;
-    } catch (err) {
-      console.error('Auth failed:', err);
-      showToast('Authentication failed', 'error');
-      return false;
     }
+    // No token — prompt login
+    showToast('Please sign in first', 'error');
+    login();
+    return false;
   };
 
   // Submit team
@@ -365,8 +341,11 @@ export default function Draft() {
         : await axios.post(endpoint, { teamIds, captainId }, { headers: { Authorization: `Bearer ${token}` } });
 
       if (res.data.success) {
+        setTapestryPublished(res.data.tapestry?.published || false);
+        setShowSuccess(true);
         showToast(isUpdate ? 'Team updated!' : 'Team submitted!', 'success');
-        navigate(`/contest/${contestId}`);
+        // Redirect after celebration
+        setTimeout(() => navigate(`/contest/${contestId}`), 2500);
       }
     } catch (err) {
       console.error('Submit failed:', err);
@@ -399,9 +378,30 @@ export default function Draft() {
         <div className="text-center">
           <Warning size={48} className="mx-auto mb-4 text-red-400" />
           <p className="text-gray-400">Contest not found</p>
-          <Link to="/compete?tab=contests" className="text-cyan-400 hover:underline mt-2 block">
+          <Link to="/play?tab=contests" className="text-cyan-400 hover:underline mt-2 block">
             Back to contests
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Success celebration overlay
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="w-20 h-20 rounded-2xl bg-gold-500/20 border border-gold-500/30 flex items-center justify-center mx-auto mb-6 animate-bounce">
+            <Trophy size={40} weight="fill" className="text-gold-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">You're in!</h2>
+          <p className="text-gray-400 mb-6">
+            Your team has been entered into {contest.name}. Good luck!
+          </p>
+          {tapestryPublished && (
+            <TapestryBadge variant="confirmation" className="mb-4 justify-center" />
+          )}
+          <p className="text-xs text-gray-600">Redirecting to leaderboard...</p>
         </div>
       </div>
     );
@@ -414,7 +414,7 @@ export default function Draft() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Link
-              to="/compete?tab=contests"
+              to="/play?tab=contests"
               className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
             >
               <ArrowLeft size={20} className="text-gray-400" />
@@ -423,7 +423,7 @@ export default function Draft() {
               <h1 className="text-xl font-bold text-white">{contest.name}</h1>
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <span className="flex items-center gap-1">
-                  <CurrencyEth size={14} />
+                  <Coins size={14} />
                   {contest.isFree ? 'Free Entry' : contest.entryFeeFormatted}
                 </span>
                 <span className="flex items-center gap-1">
@@ -535,7 +535,7 @@ export default function Draft() {
             <div className="mt-4">
               {!isConnected ? (
                 <div className="p-4 bg-gray-800/50 rounded-lg text-center">
-                  <p className="text-gray-400 text-sm mb-2">Connect wallet to submit team</p>
+                  <p className="text-gray-400 text-sm mb-2">Sign in to submit your team</p>
                 </div>
               ) : timeUntilLock === 'LOCKED' ? (
                 <button disabled className="w-full py-3 bg-gray-700 text-gray-400 rounded-lg cursor-not-allowed flex items-center justify-center gap-2">

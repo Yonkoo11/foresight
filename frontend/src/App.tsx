@@ -1,11 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import '@rainbow-me/rainbowkit/styles.css';
-import { useEffect } from 'react';
+import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
+import { useEffect, useMemo, useCallback } from 'react';
 
-import { config } from './config/wagmi';
 import { RealtimeProvider } from './contexts/RealtimeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -16,13 +14,13 @@ import Layout from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { setupGlobalErrorHandlers } from './utils/errorLogger';
 import { useMiniApp } from './hooks/useMiniApp';
-import { useAutoAuth } from './hooks/useAutoAuth';
+import { usePrivyAuth } from './hooks/usePrivyAuth';
+import { AuthContext, type AuthState } from './hooks/useAuth';
 
 // Pages - Primary Navigation
 import Home from './pages/Home';
-import League from './pages/League';
-import Compete from './pages/Compete';
-import Intel from './pages/Intel';
+import Play from './pages/Compete';
+import Feed from './pages/Intel';
 import Profile from './pages/Profile';
 
 // Pages - Sub-routes
@@ -31,7 +29,6 @@ import Settings from './pages/Settings';
 import Referrals from './pages/Referrals';
 
 // Pages - Game Features
-import LeagueUltra from './pages/LeagueUltra';
 import Draft from './pages/Draft';
 import ContestDetail from './pages/ContestDetail';
 
@@ -41,22 +38,58 @@ import Privacy from './pages/Privacy';
 import Cookies from './pages/Cookies';
 import Imprint from './pages/Imprint';
 
+const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || '';
+
+const solanaConnectors = toSolanaWalletConnectors();
 
 const queryClient = new QueryClient();
 
+/**
+ * Privy auth bridge — populates AuthContext from Privy state
+ */
+function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
+  const { ready, authenticated, user, login, logout: privyLogout } = usePrivy();
+  usePrivyAuth();
+
+  const address = useMemo(() => {
+    if (!user) return undefined;
+    const solanaWallet = user.linkedAccounts?.find(
+      (a: any) => a.type === 'wallet' && a.chainType === 'solana'
+    );
+    if (solanaWallet && 'address' in solanaWallet) return (solanaWallet as any).address as string;
+    const anyWallet = user.linkedAccounts?.find((a: any) => a.type === 'wallet');
+    if (anyWallet && 'address' in anyWallet) return (anyWallet as any).address as string;
+    return undefined;
+  }, [user]);
+
+  const handleLogout = useCallback(async () => {
+    localStorage.removeItem('authToken');
+    await privyLogout();
+  }, [privyLogout]);
+
+  const authState: AuthState = useMemo(() => ({
+    isConnected: ready && authenticated,
+    address,
+    displayAddress: address ? `${address.slice(0, 4)}...${address.slice(-4)}` : '',
+    isBackendAuthed: !!localStorage.getItem('authToken'),
+    login,
+    logout: handleLogout,
+  }), [ready, authenticated, address, login, handleLogout]);
+
+  return (
+    <AuthContext.Provider value={authState}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
 function AppContent() {
-  // Initialize Farcaster Mini App SDK
-  const { isReady, isInMiniApp } = useMiniApp();
+  const { isReady } = useMiniApp();
 
-  // Auto-authenticate with SIWE when wallet connects
-  useAutoAuth();
-
-  // Setup global error handlers on mount
   useEffect(() => {
     setupGlobalErrorHandlers();
   }, []);
 
-  // Show loading screen while Mini App initializes
   if (!isReady) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -72,11 +105,10 @@ function AppContent() {
     <Router>
       <Layout>
         <Routes>
-          {/* Primary Navigation */}
+          {/* Primary Navigation — 4 items */}
           <Route path="/" element={<Home />} />
-          <Route path="/league" element={<League />} />
-          <Route path="/compete" element={<Compete />} />
-          <Route path="/intel" element={<Intel />} />
+          <Route path="/play" element={<Play />} />
+          <Route path="/feed" element={<Feed />} />
           <Route path="/profile" element={<Profile />} />
 
           {/* Sub-routes */}
@@ -85,10 +117,16 @@ function AppContent() {
           <Route path="/referrals" element={<Referrals />} />
 
           {/* Game Features */}
-          <Route path="/draft" element={<Draft />} /> {/* New clean draft interface */}
-          <Route path="/draft-legacy" element={<LeagueUltra />} /> {/* Old draft - keep for reference */}
+          <Route path="/draft" element={<Draft />} />
           <Route path="/contest/:id" element={<ContestDetail />} />
-          <Route path="/contests" element={<Navigate to="/compete?tab=contests" replace />} />
+
+          {/* Legacy redirects */}
+          <Route path="/league" element={<Navigate to="/play" replace />} />
+          <Route path="/compete" element={<Navigate to="/play" replace />} />
+          <Route path="/contests" element={<Navigate to="/play?tab=contests" replace />} />
+          <Route path="/intel" element={<Navigate to="/feed" replace />} />
+          <Route path="/quests" element={<Navigate to="/progress" replace />} />
+          <Route path="/arena" element={<Navigate to="/play" replace />} />
 
           {/* Legal Pages */}
           <Route path="/terms" element={<Terms />} />
@@ -101,35 +139,51 @@ function AppContent() {
   );
 }
 
+function AppProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <PrivyProvider
+      appId={PRIVY_APP_ID}
+      config={{
+        appearance: {
+          theme: 'dark',
+          accentColor: '#F59E0B',
+          walletChainType: 'solana-only',
+          showWalletLoginFirst: true,
+        },
+        loginMethods: ['wallet'],
+        externalWallets: {
+          solana: {
+            connectors: solanaConnectors,
+          },
+        },
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <PrivyAuthBridge>
+          {children}
+        </PrivyAuthBridge>
+      </QueryClientProvider>
+    </PrivyProvider>
+  );
+}
+
 function App() {
-  console.log('App component rendering');
   return (
     <ErrorBoundary>
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider
-            theme={darkTheme({
-              accentColor: '#F59E0B',
-              accentColorForeground: '#09090B',
-              borderRadius: 'medium',
-              overlayBlur: 'small',
-            })}
-          >
-            <RealtimeProvider>
-              <NotificationProvider>
-                <ToastProvider>
-                  <AchievementToastProvider>
-                    <OnboardingProvider>
-                      <AppContent />
-                      <AchievementToastContainer />
-                    </OnboardingProvider>
-                  </AchievementToastProvider>
-                </ToastProvider>
-              </NotificationProvider>
-            </RealtimeProvider>
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+      <AppProviders>
+        <RealtimeProvider>
+          <NotificationProvider>
+            <ToastProvider>
+              <AchievementToastProvider>
+                <OnboardingProvider>
+                  <AppContent />
+                  <AchievementToastContainer />
+                </OnboardingProvider>
+              </AchievementToastProvider>
+            </ToastProvider>
+          </NotificationProvider>
+        </RealtimeProvider>
+      </AppProviders>
     </ErrorBoundary>
   );
 }

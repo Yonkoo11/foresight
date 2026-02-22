@@ -13,7 +13,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 interface Influencer {
   id: number;
   name: string;
-  twitter_handle: string;
+  twitter_handle?: string;
+  handle?: string;
   tier: string;
   profile_image_url?: string;
   price?: number;
@@ -100,17 +101,17 @@ export default function FormationPreview({
         };
       case 'A':
         return {
-          bg: 'bg-gradient-to-br from-purple-500 to-violet-600',
-          border: 'border-purple-400',
-          glow: 'shadow-[0_0_15px_rgba(139,92,246,0.4)]',
-          badge: 'bg-purple-500 text-white',
-        };
-      case 'B':
-        return {
           bg: 'bg-gradient-to-br from-cyan-500 to-blue-600',
           border: 'border-cyan-400',
           glow: 'shadow-[0_0_15px_rgba(6,182,212,0.4)]',
           badge: 'bg-cyan-500 text-white',
+        };
+      case 'B':
+        return {
+          bg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+          border: 'border-emerald-400',
+          glow: 'shadow-[0_0_15px_rgba(16,185,129,0.4)]',
+          badge: 'bg-emerald-500 text-white',
         };
       default:
         return {
@@ -172,7 +173,7 @@ export default function FormationPreview({
               {influencer.name.split(' ')[0]}
             </h4>
             <p className={`text-center text-gray-400 truncate ${isLarge ? 'text-[10px]' : 'text-[8px]'}`}>
-              @{influencer.twitter_handle}
+              @{influencer.handle || influencer.twitter_handle}
             </p>
 
             {/* Stats (optional) */}
@@ -193,8 +194,8 @@ export default function FormationPreview({
 
   const isHero = variant === 'hero';
   const isTeamView = variant === 'team';
-  const containerHeight = isHero || isTeamView ? 'min-h-[350px] md:min-h-[400px]' : 'min-h-[250px]';
-  const gap = isHero || isTeamView ? 'gap-12 md:gap-16' : 'gap-8';
+  const containerHeight = isHero || isTeamView ? 'min-h-[380px] md:min-h-[440px]' : 'min-h-[260px]';
+  const gap = isHero || isTeamView ? 'gap-14 md:gap-20' : 'gap-8';
 
   return (
     <div className={`relative ${className}`}>
@@ -213,22 +214,27 @@ export default function FormationPreview({
 
       {/* Pitch Background */}
       <div className={`relative rounded-2xl overflow-hidden ${containerHeight}`}>
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/30 via-gray-900/60 to-gray-950"></div>
+        {/* Gradient Background — rich emerald pitch feel */}
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/60 via-gray-900/80 to-gray-950"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.08)_0%,transparent_70%)]"></div>
 
-        {/* Subtle Pitch Lines */}
+        {/* Pitch Lines */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Center Circle */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 md:w-48 h-32 md:h-48 border border-white/10 rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/20 rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-52 h-36 md:h-52 border border-white/[0.07] rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white/10 rounded-full"></div>
 
-          {/* Cross Lines */}
-          <div className="absolute top-1/2 left-0 right-0 h-px bg-white/5"></div>
+          {/* Horizontal Line */}
+          <div className="absolute top-1/2 left-8 right-8 h-px bg-white/[0.05]"></div>
+
+          {/* Top & Bottom Arcs */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 md:w-56 h-16 border-b border-l border-r border-white/[0.05] rounded-b-full"></div>
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 md:w-56 h-16 border-t border-l border-r border-white/[0.05] rounded-t-full"></div>
         </div>
 
         {/* Formation: 2-1-2 Layout */}
         <div className="relative z-10 h-full flex items-center justify-center py-8">
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-8 md:space-y-10">
             {/* Top Row - 2 Forwards (S-tier + A-tier) */}
             <div className={`flex justify-center ${gap}`}>
               {renderPlayerCard(influencers[0], 0, true)} {/* Captain - S-tier */}
@@ -248,11 +254,11 @@ export default function FormationPreview({
           </div>
         </div>
 
-        {/* Decorative Corner Elements */}
-        <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/10 rounded-tl-lg"></div>
-        <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/10 rounded-tr-lg"></div>
-        <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/10 rounded-bl-lg"></div>
-        <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/10 rounded-br-lg"></div>
+        {/* Corner brackets */}
+        <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-white/[0.08] rounded-tl"></div>
+        <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-white/[0.08] rounded-tr"></div>
+        <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-white/[0.08] rounded-bl"></div>
+        <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-white/[0.08] rounded-br"></div>
       </div>
     </div>
   );

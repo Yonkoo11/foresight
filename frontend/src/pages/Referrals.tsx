@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import axios from 'axios';
 import {
   Users,
@@ -26,6 +25,7 @@ import {
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
 import { API_URL } from '../config/api';
+import { useAuth } from '../hooks/useAuth';
 
 interface ReferralData {
   referralCode: string;
@@ -49,7 +49,7 @@ interface ReferralData {
 }
 
 export default function Referrals() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const { showToast } = useToast();
 
   const [data, setData] = useState<ReferralData | null>(null);
@@ -115,7 +115,7 @@ export default function Referrals() {
   const getMilestoneInfo = (type: string) => {
     const info: Record<string, { icon: any; label: string; color: string }> = {
       recruiter: { icon: Users, label: 'Recruiter', color: 'text-blue-400' },
-      talent_scout: { icon: Sparkle, label: 'Talent Scout', color: 'text-purple-400' },
+      talent_scout: { icon: Sparkle, label: 'Talent Scout', color: 'text-gold-400' },
       ct_influencer: { icon: Fire, label: 'CT Influencer', color: 'text-orange-400' },
       kingmaker: { icon: Crown, label: 'Kingmaker', color: 'text-yellow-400' },
       legend: { icon: Trophy, label: 'Legend', color: 'text-yellow-300' },
@@ -129,7 +129,7 @@ export default function Referrals() {
       <div className="max-w-4xl mx-auto">
         {/* Hero */}
         <div className="text-center py-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
             <ShareNetwork size={32} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Invite & Earn</h1>
@@ -162,10 +162,10 @@ export default function Referrals() {
         </div>
 
         {/* CTA */}
-        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-6 text-center">
+        <div className="bg-gradient-to-r from-gold-500/10 to-amber-500/10 border border-gold-500/30 rounded-xl p-6 text-center">
           <h3 className="text-lg font-bold text-white mb-2">Ready to start inviting?</h3>
-          <p className="text-gray-400 mb-4">Connect your wallet to get your unique referral link</p>
-          <div className="text-sm text-gray-500">Use the "Connect Wallet" button above</div>
+          <p className="text-gray-400 mb-4">Sign in to get your unique referral link</p>
+          <div className="text-sm text-gray-500">Use the "Sign In" button above</div>
         </div>
       </div>
     );
@@ -245,9 +245,9 @@ export default function Referrals() {
             </div>
           </div>
 
-          <div className="card bg-gray-800/50 p-6 border border-purple-500/30">
+          <div className="card bg-gray-800/50 p-6 border border-gold-500/30">
             <div className="flex items-center gap-3 mb-2">
-              <ChartLine size={24} className="text-purple-400" />
+              <ChartLine size={24} className="text-gold-400" />
               <span className="text-gray-400 font-medium">Quality Score</span>
             </div>
             <div className="text-4xl font-black text-white">{data.qualityScore}%</div>

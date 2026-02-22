@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 import {
   Star, Crown, Lightning, TrendUp, Medal, Diamond,
   Trophy, Fire, ArrowRight, Sparkle, Users
@@ -80,10 +80,10 @@ const TIER_CONFIG = {
     icon: Crown
   },
   diamond: {
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/20',
-    border: 'border-purple-500/30',
-    gradient: 'from-purple-500/20 to-purple-400/5',
+    color: 'text-gold-400',
+    bg: 'bg-gold-500/20',
+    border: 'border-gold-500/30',
+    gradient: 'from-gold-500/20 to-gold-400/5',
     icon: Diamond
   },
 } as const;
@@ -94,7 +94,7 @@ export default function ForesightScoreDisplay({
   hideEmptyState = false,
   className = ''
 }: Props) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const [loading, setLoading] = useState(true);
   const [fsData, setFsData] = useState<FSData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +148,7 @@ export default function ForesightScoreDisplay({
       <div className={`bg-gray-900/50 rounded-xl border border-gray-800 p-6 ${className}`}>
         <div className="text-center">
           <Sparkle size={32} className="mx-auto mb-3 text-gray-600" />
-          <p className="text-gray-400 text-sm mb-4">Connect wallet to track your Foresight Score</p>
+          <p className="text-gray-400 text-sm mb-4">Sign in to track your Foresight Score</p>
         </div>
       </div>
     );
@@ -189,10 +189,10 @@ export default function ForesightScoreDisplay({
       return null;
     }
     return (
-      <div className={`bg-gradient-to-br from-brand-600/20 via-brand-500/10 to-transparent rounded-xl border border-brand-500/30 p-6 ${className}`}>
+      <div className={`bg-gradient-to-br from-gold-600/20 via-gold-500/10 to-transparent rounded-xl border border-gold-500/30 p-6 ${className}`}>
         <div className="text-center">
-          <div className="w-14 h-14 rounded-xl bg-brand-500/20 flex items-center justify-center mx-auto mb-4">
-            <Lightning size={28} className="text-brand-400" weight="fill" />
+          <div className="w-14 h-14 rounded-xl bg-gold-500/20 flex items-center justify-center mx-auto mb-4">
+            <Lightning size={28} className="text-gold-400" weight="fill" />
           </div>
           <h3 className="text-lg font-bold text-white mb-2">Start Earning Foresight Score</h3>
           <p className="text-gray-400 text-sm mb-4">
@@ -310,7 +310,7 @@ export default function ForesightScoreDisplay({
           </div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400 transition-all duration-500`}
+              className={`h-full rounded-full bg-gradient-to-r from-gold-500 to-gold-400 transition-all duration-500`}
               style={{ width: `${Math.min(100, fsData.tierProgress.progress)}%` }}
             />
           </div>

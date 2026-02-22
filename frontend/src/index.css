@@ -305,6 +305,58 @@
   }
 }
 
+/* ===== RAINBOWKIT OVERRIDES ===== */
+/* Force dark/gold theme on all RainbowKit modals */
+[data-rk] {
+  --rk-colors-accentColor: #F59E0B !important;
+  --rk-colors-accentColorForeground: #09090B !important;
+  --rk-colors-modalBackground: #111113 !important;
+  --rk-colors-modalBorder: #27272A !important;
+  --rk-colors-modalText: #FAFAFA !important;
+  --rk-colors-modalTextSecondary: #A1A1AA !important;
+  --rk-colors-actionButtonBorder: #27272A !important;
+  --rk-colors-actionButtonSecondaryBackground: #1A1A24 !important;
+  --rk-colors-closeButton: #A1A1AA !important;
+  --rk-colors-closeButtonBackground: #27272A !important;
+  --rk-colors-connectButtonBackground: #F59E0B !important;
+  --rk-colors-connectButtonInnerBackground: #1A1A24 !important;
+  --rk-colors-connectButtonText: #09090B !important;
+  --rk-colors-generalBorder: #27272A !important;
+  --rk-colors-menuItemBackground: #1A1A24 !important;
+  --rk-colors-profileAction: #1A1A24 !important;
+  --rk-colors-profileActionHover: #27272A !important;
+  --rk-colors-profileForeground: #111113 !important;
+  --rk-radii-actionButton: 8px !important;
+  --rk-radii-connectButton: 8px !important;
+  --rk-radii-menuButton: 8px !important;
+  --rk-radii-modal: 16px !important;
+  --rk-radii-modalMobile: 16px !important;
+  --rk-fonts-body: 'Inter', system-ui, sans-serif !important;
+}
+
+/* Modal overlay */
+[data-rk] [role="dialog"] {
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* Wallet option buttons in connect modal */
+[data-rk] button[data-testid^="rk-wallet-option"] {
+  background: #1A1A24 !important;
+  border: 1px solid #27272A !important;
+  border-radius: 12px !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-rk] button[data-testid^="rk-wallet-option"]:hover {
+  background: #27272A !important;
+  border-color: #F59E0B40 !important;
+}
+
+/* Account modal profile section */
+[data-rk] [data-testid="rk-account-modal-address"] {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
 /* ===== UTILITY CLASSES ===== */
 @layer utilities {
   .text-balance {

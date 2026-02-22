@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   X, Trophy, ArrowRight, Sparkle, Crown,
-  Lightning, Play, CurrencyEth, Star, Fire, Confetti
+  Lightning, Play, Coins, Star, Fire, Confetti
 } from '@phosphor-icons/react';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
@@ -42,7 +42,7 @@ export default function PotentialWinningsModal({
 
   // Estimate potential winnings based on performance
   const potentialWinnings = useMemo((): ContestPotential[] => {
-    // Prize pool estimates per contest type (in ETH)
+    // Prize pool estimates per contest type (in SOL)
     // These are conservative estimates based on typical pool sizes
     const contests: ContestPotential[] = [
       {
@@ -59,8 +59,8 @@ export default function PotentialWinningsModal({
         typeName: 'Weekly Standard',
         entryFee: 0.01,
         estimatedPrize: 0,
-        color: 'text-purple-400',
-        gradient: 'from-purple-500 to-pink-600',
+        color: 'text-gold-400',
+        gradient: 'from-gold-500 to-amber-600',
         icon: Trophy,
       },
       {
@@ -115,7 +115,7 @@ export default function PotentialWinningsModal({
 
   const handleTryContest = (typeCode: string) => {
     markPotentialWinningsSeen();
-    navigate(`/contests?tab=browse&filter=${typeCode.toLowerCase().includes('daily') ? 'daily' : 'weekly'}`);
+    navigate('/play?tab=contests');
   };
 
   const handleClose = () => {
@@ -176,7 +176,7 @@ export default function PotentialWinningsModal({
               <div className="text-xs text-gray-400">Score</div>
             </div>
             <div className="p-4 rounded-xl bg-gray-800/70 text-center">
-              <div className="text-2xl font-bold text-brand-400">#{userRank}</div>
+              <div className="text-2xl font-bold text-gold-400">#{userRank}</div>
               <div className="text-xs text-gray-400">Rank</div>
             </div>
             <div className="p-4 rounded-xl bg-gray-800/70 text-center">
@@ -208,12 +208,12 @@ export default function PotentialWinningsModal({
                           </div>
                           <div>
                             <p className="font-semibold text-white text-sm">{contest.typeName}</p>
-                            <p className="text-xs text-gray-400">{contest.entryFee} ETH entry</p>
+                            <p className="text-xs text-gray-400">{contest.entryFee} SOL entry</p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-green-400 flex items-center gap-1">
-                            <CurrencyEth weight="fill" className="w-4 h-4" />
+                            <Coins weight="fill" className="w-4 h-4" />
                             ~{contest.estimatedPrize.toFixed(3)}
                           </p>
                           <p className="text-xs text-gray-500">est. prize</p>
@@ -272,7 +272,7 @@ export default function PotentialWinningsModal({
               </button>
             ) : (
               <button
-                onClick={() => navigate('/contests?filter=free')}
+                onClick={() => navigate('/play?tab=contests')}
                 className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 transition-colors"
               >
                 Play Again Free

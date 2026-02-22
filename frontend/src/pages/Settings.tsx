@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -13,6 +12,7 @@ import {
   ShieldCheck, ArrowSquareOut, Spinner
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../hooks/useAuth';
 import { getXPLevel, getLevelBadge, getLevelColors } from '../utils/xp';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -46,8 +46,7 @@ interface Team {
 }
 
 export default function Settings() {
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { address, isConnected, logout } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
@@ -350,10 +349,8 @@ export default function Settings() {
 
   const handleDisconnect = () => {
     setDisconnecting(true);
-    localStorage.removeItem('authToken');
-    disconnect();
+    logout();
     showToast('Wallet disconnected', 'success');
-    // Navigate after a brief delay to ensure disconnect completes
     setTimeout(() => {
       navigate('/');
     }, 100);
@@ -363,8 +360,8 @@ export default function Settings() {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
         <User size={48} className="mx-auto mb-4 text-gray-600" />
-        <h1 className="text-2xl font-bold text-white mb-2">Connect Wallet</h1>
-        <p className="text-gray-400">Connect your wallet to access settings</p>
+        <h1 className="text-2xl font-bold text-white mb-2">Sign In</h1>
+        <p className="text-gray-400">Sign in to access settings</p>
       </div>
     );
   }
@@ -387,7 +384,7 @@ export default function Settings() {
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin mb-4">
-            <Sparkle size={48} weight="bold" className="text-brand-400" />
+            <Sparkle size={48} weight="bold" className="text-gold-400" />
           </div>
           <p className="text-gray-400 text-lg">Loading settings...</p>
         </div>
@@ -415,7 +412,7 @@ export default function Settings() {
         {/* Profile Section */}
         <div className="card p-8 mb-6">
           <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-800">
-            <User size={28} weight="bold" className="text-brand-400" />
+            <User size={28} weight="bold" className="text-gold-400" />
             <h2 className="text-2xl font-bold text-white">Profile</h2>
           </div>
 
@@ -425,7 +422,7 @@ export default function Settings() {
               Profile Picture
             </label>
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-2xl font-bold shadow-soft-lg overflow-hidden">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold-500 to-gold-700 flex items-center justify-center text-white text-2xl font-bold shadow-soft-lg overflow-hidden">
                 {profile?.avatarUrl ? (
                   <img src={profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -440,7 +437,7 @@ export default function Settings() {
                       value={avatarUrlInput}
                       onChange={(e) => setAvatarUrlInput(e.target.value)}
                       placeholder="Enter image URL..."
-                      className="flex-1 px-4 py-2 bg-gray-900 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-brand-500 text-white"
+                      className="flex-1 px-4 py-2 bg-gray-900 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-gold-500 text-white"
                     />
                     <button
                       onClick={handleUpdateProfile}
@@ -485,7 +482,7 @@ export default function Settings() {
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
                   placeholder="Enter username..."
-                  className="flex-1 px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-brand-500 text-white"
+                  className="flex-1 px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-gold-500 text-white"
                   maxLength={30}
                 />
                 <button
@@ -513,7 +510,7 @@ export default function Settings() {
                 </span>
                 <button
                   onClick={() => setIsEditingUsername(true)}
-                  className="text-brand-400 hover:text-brand-300 flex items-center gap-2"
+                  className="text-gold-400 hover:text-gold-300 flex items-center gap-2"
                 >
                   <PencilSimple size={18} weight="bold" />
                   Edit
@@ -539,7 +536,7 @@ export default function Settings() {
                       value={twitterHandleInput}
                       onChange={(e) => setTwitterHandleInput(e.target.value)}
                       placeholder="username"
-                      className="flex-1 px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-r-lg focus:outline-none focus:border-brand-500 text-white"
+                      className="flex-1 px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-r-lg focus:outline-none focus:border-gold-500 text-white"
                       maxLength={15}
                     />
                   </div>
@@ -568,7 +565,7 @@ export default function Settings() {
                   </span>
                   <button
                     onClick={() => setIsEditingTwitter(true)}
-                    className="text-brand-400 hover:text-brand-300 flex items-center gap-2"
+                    className="text-gold-400 hover:text-gold-300 flex items-center gap-2"
                   >
                     <PencilSimple size={18} weight="bold" />
                     Edit
@@ -800,7 +797,7 @@ export default function Settings() {
                     value={teamNameInput}
                     onChange={(e) => setTeamNameInput(e.target.value)}
                     placeholder="Enter team name..."
-                    className="flex-1 px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-brand-500 text-white"
+                    className="flex-1 px-4 py-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-gold-500 text-white"
                     maxLength={50}
                   />
                   <button
@@ -828,7 +825,7 @@ export default function Settings() {
                   </span>
                   <button
                     onClick={() => setIsEditingTeamName(true)}
-                    className="text-brand-400 hover:text-brand-300 flex items-center gap-2"
+                    className="text-gold-400 hover:text-gold-300 flex items-center gap-2"
                   >
                     <PencilSimple size={18} weight="bold" />
                     Edit
@@ -853,7 +850,7 @@ export default function Settings() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">
-                Disconnect Wallet
+                Sign Out
               </h3>
               <p className="text-gray-400 text-sm">
                 You will be logged out and need to reconnect to access your account

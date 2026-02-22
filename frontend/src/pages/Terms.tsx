@@ -31,7 +31,7 @@ const Terms = () => {
         <section>
           <h2 className="text-2xl font-semibold text-white mb-3">3. Web3 and Blockchain</h2>
           <p>
-            Foresight is a decentralized application built on the Base blockchain. Users are responsible for:
+            Foresight is a decentralized application built on the Solana blockchain. Users are responsible for:
           </p>
           <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
             <li>Managing their own wallet and private keys</li>

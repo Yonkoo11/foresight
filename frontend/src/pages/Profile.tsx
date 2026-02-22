@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -16,8 +15,10 @@ import {
 import ForesightScoreDisplay from '../components/ForesightScoreDisplay';
 import { ShareProfileButton } from '../components/ShareableProfileCard';
 import FormationPreview from '../components/FormationPreview';
+import TapestryBadge from '../components/TapestryBadge';
 import { getXPLevel, formatXP } from '../utils/xp';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../hooks/useAuth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -76,7 +77,7 @@ interface WatchlistItem {
 }
 
 export default function Profile() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -98,6 +99,9 @@ export default function Profile() {
   });
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [removingId, setRemovingId] = useState<number | null>(null);
+  const [tapestryStatus, setTapestryStatus] = useState<{ connected: boolean; tapestryUserId: string | null }>({ connected: false, tapestryUserId: null });
+  const [socialCounts, setSocialCounts] = useState<{ followers: number; following: number }>({ followers: 0, following: 0 });
+  const [tapestryContent, setTapestryContent] = useState<Array<{ id: string; properties: Record<string, string>; likeCount: number; commentCount: number }>>([]);
 
   useEffect(() => {
     setSearchParams({ tab: activeTab }, { replace: true });
@@ -156,6 +160,28 @@ export default function Profile() {
       if (watchlistRes.data?.success && watchlistRes.data?.data?.watchlist) {
         setWatchlist(watchlistRes.data.data.watchlist);
       }
+
+      // Fetch Tapestry status + social data (non-blocking)
+      axios.get(`${API_URL}/api/auth/tapestry-status`, { headers })
+        .then((res) => {
+          if (res.data?.data) {
+            const tId = res.data.data.tapestryUserId;
+            setTapestryStatus({
+              connected: res.data.data.connected,
+              tapestryUserId: tId,
+            });
+            // If connected, fetch social counts + content from Tapestry
+            if (tId) {
+              axios.get(`${API_URL}/api/tapestry/social-counts/${tId}`, { headers })
+                .then((r) => { if (r.data?.data) setSocialCounts(r.data.data); })
+                .catch(() => {});
+              axios.get(`${API_URL}/api/tapestry/content/${tId}`, { headers })
+                .then((r) => { if (r.data?.data?.content) setTapestryContent(r.data.data.content); })
+                .catch(() => {});
+            }
+          }
+        })
+        .catch(() => {}); // Silent fail — Tapestry is optional
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -267,8 +293,8 @@ export default function Profile() {
             <p className="text-sm text-gray-500">Track your performance over time</p>
           </div>
           <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-5 text-center">
-            <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mx-auto mb-3">
-              <Target size={24} weight="fill" className="text-purple-400" />
+            <div className="w-12 h-12 rounded-lg bg-gold-500/20 flex items-center justify-center mx-auto mb-3">
+              <Target size={24} weight="fill" className="text-gold-400" />
             </div>
             <h3 className="font-semibold text-white mb-1">Daily Quests</h3>
             <p className="text-sm text-gray-500">Complete tasks to earn rewards</p>
@@ -278,8 +304,8 @@ export default function Profile() {
         {/* CTA */}
         <div className="bg-gradient-to-r from-gold-500/10 to-amber-500/10 border border-gold-500/30 rounded-xl p-6 text-center">
           <h3 className="text-lg font-bold text-white mb-2">Ready to get started?</h3>
-          <p className="text-gray-400 mb-4">Connect your wallet to access your profile</p>
-          <div className="text-sm text-gray-500">Use the "Connect Wallet" button above</div>
+          <p className="text-gray-400 mb-4">Sign in to access your profile</p>
+          <div className="text-sm text-gray-500">Use the "Sign In" button above</div>
         </div>
       </div>
     );
@@ -327,7 +353,7 @@ export default function Profile() {
                   value={tempUsername}
                   onChange={(e) => setTempUsername(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveUsername()}
-                  className="text-2xl font-bold text-white bg-gray-800 border border-brand-500 rounded-lg px-3 py-1 focus:outline-none"
+                  className="text-2xl font-bold text-white bg-gray-800 border border-gold-500 rounded-lg px-3 py-1 focus:outline-none"
                   placeholder="Username"
                   maxLength={20}
                   autoFocus
@@ -418,37 +444,21 @@ export default function Profile() {
               Today's Actions
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Vote Action */}
+              {/* Enter Contest Action */}
               <Link
-                to="/league?tab=vote"
-                className={`group relative overflow-hidden rounded-xl border p-4 transition-all hover:scale-[1.02] ${
-                  actions.hasVotedThisWeek
-                    ? 'bg-gray-800/30 border-gray-700'
-                    : 'bg-gold-500/10 border-gold-500/30 hover:border-gold-500/50'
-                }`}
+                to="/play?tab=contests"
+                className="group relative overflow-hidden rounded-xl border p-4 transition-all hover:scale-[1.02] bg-gold-500/10 border-gold-500/30 hover:border-gold-500/50"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    actions.hasVotedThisWeek ? 'bg-gray-700' : 'bg-gold-500/20'
-                  }`}>
-                    {actions.hasVotedThisWeek ? (
-                      <CheckCircle size={20} weight="fill" className="text-green-400" />
-                    ) : (
-                      <Target size={20} className="text-gold-400" />
-                    )}
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gold-500/20">
+                    <Trophy size={20} className="text-gold-400" weight="fill" />
                   </div>
-                  {!actions.hasVotedThisWeek && (
-                    <span className="text-xs bg-gold-500/20 text-gold-400 px-2 py-1 rounded-full">
-                      +20 FS
-                    </span>
-                  )}
+                  <span className="text-xs bg-gold-500/20 text-gold-400 px-2 py-1 rounded-full">
+                    Free
+                  </span>
                 </div>
-                <h4 className={`font-semibold mb-1 ${actions.hasVotedThisWeek ? 'text-gray-400' : 'text-white'}`}>
-                  {actions.hasVotedThisWeek ? 'Voted' : 'Cast Your Vote'}
-                </h4>
-                <p className="text-xs text-gray-500">
-                  {actions.hasVotedThisWeek ? 'Come back next week' : 'Weekly CT Spotlight'}
-                </p>
+                <h4 className="font-semibold text-white mb-1">Enter Contest</h4>
+                <p className="text-xs text-gray-500">Draft your team & compete</p>
               </Link>
 
               {/* Quests Action */}
@@ -492,7 +502,7 @@ export default function Profile() {
 
               {/* Check Standings */}
               <Link
-                to="/compete"
+                to="/play"
                 className="group relative overflow-hidden rounded-xl bg-gray-800/30 border border-gray-700 p-4 transition-all hover:scale-[1.02] hover:border-gray-600"
               >
                 <div className="flex items-start justify-between mb-3">
@@ -546,7 +556,7 @@ export default function Profile() {
           {/* Quick Links */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
-              to="/compete?tab=contests"
+              to="/play?tab=contests"
               className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gold-500/50 transition-all group"
             >
               <div className="flex items-center gap-3">
@@ -579,19 +589,106 @@ export default function Profile() {
 
             <Link
               to="/referrals"
-              className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-purple-500/50 transition-all group"
+              className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gold-500/50 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                  <Share size={20} className="text-purple-400" />
+                <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
+                  <Share size={20} className="text-gold-400" />
                 </div>
                 <div>
                   <div className="font-medium text-white">Referrals</div>
                   <div className="text-sm text-gray-500">Invite friends, earn FS</div>
                 </div>
               </div>
-              <CaretRight size={20} className="text-gray-600 group-hover:text-purple-400" />
+              <CaretRight size={20} className="text-gray-600 group-hover:text-gold-400" />
             </Link>
+          </div>
+
+          {/* Tapestry Social Graph */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
+                  <Lightning size={20} weight="fill" className="text-gold-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">Tapestry Social Graph</h3>
+                  <p className="text-xs text-gray-500">On-chain social identity powered by Tapestry Protocol</p>
+                </div>
+              </div>
+              {tapestryStatus.connected && (
+                <span className="flex items-center gap-1 text-xs bg-gold-500/10 text-gold-400 px-2 py-1 rounded-full">
+                  <CheckCircle size={12} weight="fill" />
+                  On-chain
+                </span>
+              )}
+            </div>
+
+            {tapestryStatus.connected ? (
+              <div className="space-y-4">
+                {/* Social Counts */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-white">{socialCounts.followers}</div>
+                    <div className="text-xs text-gray-500">Followers</div>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-white">{socialCounts.following}</div>
+                    <div className="text-xs text-gray-500">Following</div>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold text-gold-400">{tapestryContent.length}</div>
+                    <div className="text-xs text-gray-500">On-chain Items</div>
+                  </div>
+                </div>
+
+                {/* On-chain Content */}
+                {tapestryContent.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Stored on Tapestry</h4>
+                    <div className="space-y-2">
+                      {tapestryContent.slice(0, 5).map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-2.5 bg-gray-800/30 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              item.properties.type === 'draft_team' ? 'bg-gold-500' : 'bg-cyan-500'
+                            }`} />
+                            <span className="text-sm text-white">
+                              {item.properties.type === 'draft_team' ? 'Draft Team' : 'Contest Score'}
+                            </span>
+                            {item.properties.contest_id && (
+                              <span className="text-xs text-gray-500">Contest #{item.properties.contest_id}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            {item.likeCount > 0 && <span>{item.likeCount} likes</span>}
+                            {item.commentCount > 0 && <span>{item.commentCount} comments</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                  <span className="font-mono text-xs text-gray-500">
+                    ID: {tapestryStatus.tapestryUserId?.slice(0, 12)}...
+                  </span>
+                  <a
+                    href="https://www.usetapestry.dev"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-gold-400 hover:text-gold-300 transition-colors"
+                  >
+                    View Protocol →
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">
+                Sign in to link your Tapestry social profile. Teams and scores will be published to the on-chain social graph.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -637,7 +734,7 @@ export default function Profile() {
                 team={teamForFormation}
                 showStats={true}
                 showEdit={true}
-                onEdit={() => navigate('/compete?tab=contests')}
+                onEdit={() => navigate('/play?tab=contests')}
               />
             </>
           ) : (
@@ -646,7 +743,7 @@ export default function Profile() {
               <h3 className="text-xl font-bold text-white mb-2">No Team Yet</h3>
               <p className="text-gray-400 mb-6">Draft your first team of 5 CT influencers</p>
               <Link
-                to="/compete?tab=contests"
+                to="/play?tab=contests"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gold-500 hover:bg-gold-600 rounded-lg text-gray-950 font-medium transition-colors"
               >
                 <Crown size={20} />
@@ -672,7 +769,7 @@ export default function Profile() {
                   <p className="text-sm text-gray-400">Your watchlist for draft research</p>
                 </div>
                 <Link
-                  to="/intel"
+                  to="/feed"
                   className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
                 >
                   Scout More
@@ -755,7 +852,7 @@ export default function Profile() {
                         Scouted {new Date(item.scoutedAt).toLocaleDateString()}
                       </span>
                       <Link
-                        to="/compete?tab=contests"
+                        to="/play?tab=contests"
                         className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
                       >
                         Draft
@@ -774,7 +871,7 @@ export default function Profile() {
                 Browse Intel to scout influencers for your team
               </p>
               <Link
-                to="/intel"
+                to="/feed"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-white font-medium transition-colors"
               >
                 <Binoculars size={20} />
@@ -851,7 +948,7 @@ export default function Profile() {
 
           {/* Leaderboard Link */}
           <Link
-            to="/compete?tab=rankings&type=xp"
+            to="/play?tab=rankings&type=xp"
             className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gray-700 transition-all group"
           >
             <div className="flex items-center gap-3">

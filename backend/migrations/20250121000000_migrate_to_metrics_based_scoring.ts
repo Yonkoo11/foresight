@@ -13,7 +13,38 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  // 2. Update influencer pricing for metrics-based system
+  // 2. Add tier and price columns if missing
+  if (!(await hasColumn('influencers', 'tier'))) {
+    await knex.schema.alterTable('influencers', (table) => {
+      table.string('tier', 1).defaultTo('C');
+    });
+  }
+
+  if (!(await hasColumn('influencers', 'price'))) {
+    await knex.schema.alterTable('influencers', (table) => {
+      table.decimal('price', 10, 2).defaultTo(12);
+    });
+  }
+
+  if (!(await hasColumn('influencers', 'is_active'))) {
+    await knex.schema.alterTable('influencers', (table) => {
+      table.boolean('is_active').defaultTo(true);
+    });
+  }
+
+  if (!(await hasColumn('influencers', 'total_points'))) {
+    await knex.schema.alterTable('influencers', (table) => {
+      table.integer('total_points').defaultTo(0);
+    });
+  }
+
+  if (!(await hasColumn('influencers', 'form_score'))) {
+    await knex.schema.alterTable('influencers', (table) => {
+      table.integer('form_score').defaultTo(0);
+    });
+  }
+
+  // 3. Update influencer pricing for metrics-based system
   // Budget: 100 points for 5 influencers
   // Tiers: S=28pts, A=22pts, B=18pts, C=12pts
 
@@ -49,7 +80,7 @@ export async function up(knex: Knex): Promise<void> {
       base_price: 12.00,
     });
 
-  // 3. Modify user_teams for metrics-based scoring
+  // 4. Modify user_teams for metrics-based scoring
   if (!(await hasColumn('user_teams', 'budget_used'))) {
     await knex.schema.alterTable('user_teams', (table) => {
       table.decimal('budget_used', 10, 2).defaultTo(0);

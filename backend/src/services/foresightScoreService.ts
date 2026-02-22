@@ -365,7 +365,8 @@ class ForesightScoreService {
         'fs.tier',
         'u.is_founding_member as isFoundingMember',
         'u.founding_member_number as foundingMemberNumber',
-        'u.early_adopter_tier as earlyAdopterTier'
+        'u.early_adopter_tier as earlyAdopterTier',
+        'u.tapestry_user_id as tapestryUserId'
       )
       .where(`fs.${scoreColumn}`, '>', 0)
       .orderBy(`fs.${scoreColumn}`, 'desc')

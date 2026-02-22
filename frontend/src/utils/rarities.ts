@@ -27,12 +27,12 @@ export const rarities: Record<string, RarityInfo> = {
   },
   A: {
     label: 'Epic',
-    gradient: 'from-purple-500/20 to-violet-500/10',
-    badge: 'bg-purple-500',
+    gradient: 'from-cyan-500/20 to-blue-500/10',
+    badge: 'bg-cyan-500',
     icon: Star,
-    glow: 'shadow-[0_0_15px_rgba(139,92,246,0.25)]',
-    border: 'border-purple-500/50',
-    text: 'text-purple-400',
+    glow: 'shadow-[0_0_15px_rgba(6,182,212,0.25)]',
+    border: 'border-cyan-500/50',
+    text: 'text-cyan-400',
   },
   B: {
     label: 'Rare',

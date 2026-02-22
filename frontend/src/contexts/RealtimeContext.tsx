@@ -68,14 +68,14 @@ function generateMockEvent(): RealtimeEvent {
   switch (type) {
     case 'win':
       event.data.amount = parseFloat((Math.random() * 2 + 0.1).toFixed(3));
-      event.data.description = `Won ${event.data.amount} ETH in ${game === 'draft' ? 'CT League' : game === 'whisperer' ? 'CT Whisperer' : game === 'arena' ? 'League' : 'Daily Gauntlet'}`;
+      event.data.description = `Won ${event.data.amount} SOL in ${game === 'draft' ? 'CT League' : game === 'whisperer' ? 'CT Whisperer' : game === 'arena' ? 'League' : 'Daily Gauntlet'}`;
       if (Math.random() > 0.7) {
         event.data.multiplier = Math.floor(Math.random() * 3) + 2; // 2x, 3x, or 4x
       }
       break;
     case 'prediction':
       const predictions = [
-        'ETH to hit $3000 by Friday',
+        'SOL to hit $300 by Friday',
         'BTC dominance will increase',
         'SOL outperforms this week',
         'Crypto market cap reaches ATH'
@@ -85,7 +85,7 @@ function generateMockEvent(): RealtimeEvent {
       break;
     case 'achievement':
       const achievements = [
-        'First Blood', 'ETH Hunter', 'Prophet', 'Perfect Week',
+        'First Blood', 'SOL Hunter', 'Prophet', 'Perfect Week',
         'Influencer', 'Consistency', 'Draft Master', 'League Champion'
       ];
       event.data.achievement = achievements[Math.floor(Math.random() * achievements.length)];
@@ -99,7 +99,7 @@ function generateMockEvent(): RealtimeEvent {
     case 'duel_created':
       event.data.duelId = `duel_${Date.now()}`;
       event.data.amount = parseFloat((Math.random() * 5 + 0.5).toFixed(2));
-      event.data.description = `Created ${event.data.amount} ETH duel`;
+      event.data.description = `Created ${event.data.amount} SOL duel`;
       break;
   }
 

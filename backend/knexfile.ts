@@ -44,7 +44,7 @@ const config: { [key: string]: Knex.Config } = {
 
   production: {
     client: 'postgresql',
-    connection: process.env.DATABASE_URL + (process.env.DB_SSL === 'true' ? '?sslmode=require' : ''),
+    connection: process.env.DATABASE_URL || '',
     pool: {
       min: 2,
       max: 20,

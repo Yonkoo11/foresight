@@ -5,8 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 import { X, TrendUp, Clock, Trophy, Fire, Lightning, Bell } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 
@@ -25,7 +25,7 @@ interface BannerMessage {
 }
 
 export default function EngagementBanner() {
-  const { address } = useAccount();
+  const { address } = useAuth();
   const [banner, setBanner] = useState<BannerMessage | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
@@ -75,7 +75,7 @@ export default function EngagementBanner() {
               message: daysUntilStart === 0
                 ? 'New contest starts today!'
                 : `New contest starts in ${daysUntilStart} day${daysUntilStart > 1 ? 's' : ''}!`,
-              action: { label: 'Get Ready', link: '/league' },
+              action: { label: 'Get Ready', link: '/play' },
               dismissible: true
             });
           }
@@ -102,7 +102,7 @@ export default function EngagementBanner() {
           message: daysRemaining === 0
             ? 'Contest ends today! Make your final picks.'
             : 'Only 1 day left in the contest!',
-          action: { label: 'Check Scores', link: '/compete' },
+          action: { label: 'Check Scores', link: '/play' },
           dismissible: true
         });
       }
@@ -114,7 +114,7 @@ export default function EngagementBanner() {
           type: 'info',
           icon: <Bell size={20} weight="fill" />,
           message: `${daysRemaining} days left to climb the rankings!`,
-          action: { label: 'View Leaderboard', link: '/compete' },
+          action: { label: 'View Leaderboard', link: '/play' },
           dismissible: true
         });
       }
@@ -135,7 +135,7 @@ export default function EngagementBanner() {
               type: 'warning',
               icon: <Trophy size={20} weight="fill" />,
               message: 'You haven\'t joined this week\'s contest yet!',
-              action: { label: 'Draft Now', link: '/league' },
+              action: { label: 'Draft Now', link: '/play' },
               dismissible: true
             });
           }
@@ -146,7 +146,7 @@ export default function EngagementBanner() {
             type: 'warning',
             icon: <Trophy size={20} weight="fill" />,
             message: 'Join this week\'s contest!',
-            action: { label: 'Draft Now', link: '/league' },
+            action: { label: 'Draft Now', link: '/play' },
             dismissible: true
           });
         }
@@ -162,7 +162,7 @@ export default function EngagementBanner() {
           type: 'success',
           icon: <TrendUp size={20} weight="fill" />,
           message: 'Scores just updated! Check your ranking.',
-          action: { label: 'View Scores', link: '/compete' },
+          action: { label: 'View Scores', link: '/play' },
           dismissible: true
         });
       }
@@ -174,7 +174,7 @@ export default function EngagementBanner() {
           type: 'info',
           icon: <Fire size={20} weight="fill" />,
           message: 'Welcome to Foresight! Draft your first team.',
-          action: { label: 'Get Started', link: '/league' },
+          action: { label: 'Get Started', link: '/play' },
           dismissible: true
         });
         localStorage.setItem('returning_user', 'true');
@@ -207,14 +207,14 @@ export default function EngagementBanner() {
   if (!banner) return null;
 
   const bgColors = {
-    info: 'bg-gradient-to-r from-brand-600/20 via-brand-500/10 to-transparent border-brand-500/30',
+    info: 'bg-gradient-to-r from-gold-600/20 via-gold-500/10 to-transparent border-gold-500/30',
     success: 'bg-gradient-to-r from-green-600/20 via-green-500/10 to-transparent border-green-500/30',
     warning: 'bg-gradient-to-r from-yellow-600/20 via-yellow-500/10 to-transparent border-yellow-500/30',
     urgent: 'bg-gradient-to-r from-red-600/20 via-red-500/10 to-transparent border-red-500/30'
   };
 
   const iconColors = {
-    info: 'text-brand-400',
+    info: 'text-gold-400',
     success: 'text-green-400',
     warning: 'text-yellow-400',
     urgent: 'text-red-400'
@@ -244,7 +244,7 @@ export default function EngagementBanner() {
                     ? 'bg-yellow-500 hover:bg-yellow-600 text-black'
                     : banner.type === 'success'
                     ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-brand-500 hover:bg-brand-600 text-white'
+                    : 'bg-gold-500 hover:bg-gold-600 text-white'
                 }`}
               >
                 {banner.action.label}

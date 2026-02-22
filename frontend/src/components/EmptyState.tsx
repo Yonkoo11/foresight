@@ -35,16 +35,16 @@ const icons = {
 
 const defaultColors = {
   search: 'text-gray-500',
-  users: 'text-brand-400',
+  users: 'text-gold-400',
   trophy: 'text-yellow-400',
   warning: 'text-amber-400',
   fire: 'text-orange-400',
-  crown: 'text-brand-500',
+  crown: 'text-gold-500',
   target: 'text-cyan-400',
   lightning: 'text-purple-400',
   star: 'text-yellow-400',
   lock: 'text-gray-500',
-  sparkle: 'text-brand-400',
+  sparkle: 'text-gold-400',
 };
 
 export function EmptyState({

@@ -7,19 +7,19 @@
  * - Dashboard functionality moved to Profile page
  */
 
-import { useAccount } from 'wagmi';
 import { Link } from 'react-router-dom';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import {
   ArrowRight,
   Trophy,
   CheckCircle,
+  SignIn,
 } from '@phosphor-icons/react';
 import FormationPreview from '../components/FormationPreview';
+import { useAuth } from '../hooks/useAuth';
 
 // ============ LANDING PAGE ============
 
-function LandingPage({ isConnected }: { isConnected: boolean }) {
+function LandingPage({ isConnected, login }: { isConnected: boolean; login: () => void }) {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero Section */}
@@ -33,7 +33,7 @@ function LandingPage({ isConnected }: { isConnected: boolean }) {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500"></span>
               </span>
-              Live on Base
+              Live on Solana
             </div>
 
             {/* Headline */}
@@ -53,24 +53,21 @@ function LandingPage({ isConnected }: { isConnected: boolean }) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               {isConnected ? (
                 <Link
-                  to="/compete?tab=contests"
+                  to="/play?tab=contests"
                   className="btn-primary btn-lg group"
                 >
-                  Browse Contests
+                  Start Playing
                   <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
                 </Link>
               ) : (
-                <ConnectButton.Custom>
-                  {({ openConnectModal }) => (
-                    <button
-                      onClick={openConnectModal}
-                      className="btn-primary btn-lg group"
-                    >
-                      Start Playing
-                      <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
-                    </button>
-                  )}
-                </ConnectButton.Custom>
+                <button
+                  onClick={login}
+                  className="btn-primary btn-lg group"
+                >
+                  <SignIn size={20} weight="bold" />
+                  Start Playing
+                  <ArrowRight size={20} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
+                </button>
               )}
             </div>
 
@@ -82,7 +79,7 @@ function LandingPage({ isConnected }: { isConnected: boolean }) {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle size={18} className="text-green-500" weight="fill" />
-                <span>Win real ETH</span>
+                <span>Win real prizes</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle size={18} className="text-green-500" weight="fill" />
@@ -144,9 +141,45 @@ function LandingPage({ isConnected }: { isConnected: boolean }) {
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Win prizes</h3>
               <p className="text-gray-400 text-sm">
-                Top teams win ETH. Build your Foresight Score for exclusive rewards.
+                Top teams win prizes. Build your Foresight Score for exclusive rewards.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Powered by Tapestry */}
+      <section className="py-16 border-t border-gray-800/50">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            Built on Solana's Social Graph
+          </h2>
+          <p className="text-gray-400 max-w-lg mx-auto">
+            Every team, score, and social connection is stored on-chain via Tapestry Protocol.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-5 text-center">
+            <div className="w-10 h-10 rounded-lg bg-gold-500/10 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle size={20} weight="fill" className="text-gold-400" />
+            </div>
+            <h3 className="font-semibold text-white mb-1 text-sm">On-chain Teams</h3>
+            <p className="text-xs text-gray-500">Draft teams stored as immutable content on Tapestry</p>
+          </div>
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-5 text-center">
+            <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle size={20} weight="fill" className="text-cyan-400" />
+            </div>
+            <h3 className="font-semibold text-white mb-1 text-sm">Social Graph</h3>
+            <p className="text-xs text-gray-500">Follow players, like teams, and build your reputation</p>
+          </div>
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-5 text-center">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle size={20} weight="fill" className="text-emerald-400" />
+            </div>
+            <h3 className="font-semibold text-white mb-1 text-sm">Verifiable Scores</h3>
+            <p className="text-xs text-gray-500">Contest results verified on Solana via Tapestry Protocol</p>
           </div>
         </div>
       </section>
@@ -163,16 +196,12 @@ function LandingPage({ isConnected }: { isConnected: boolean }) {
           <p className="text-gray-400 mb-8">
             Join the competition and show CT who's got the best picks.
           </p>
-          <ConnectButton.Custom>
-            {({ openConnectModal }) => (
-              <button
-                onClick={openConnectModal}
-                className="btn-primary btn-lg"
-              >
-                Connect Wallet to Start
-              </button>
-            )}
-          </ConnectButton.Custom>
+          <button
+            onClick={login}
+            className="btn-primary btn-lg"
+          >
+            Sign In to Start
+          </button>
         </div>
       </section>
     </div>
@@ -182,9 +211,9 @@ function LandingPage({ isConnected }: { isConnected: boolean }) {
 // ============ MAIN COMPONENT ============
 
 export default function Home() {
-  const { isConnected } = useAccount();
+  const { isConnected, login } = useAuth();
 
   // Always show landing page - same experience for everyone
   // CTAs change based on connection state
-  return <LandingPage isConnected={isConnected} />;
+  return <LandingPage isConnected={isConnected} login={login} />;
 }

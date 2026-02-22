@@ -37,7 +37,7 @@ const Privacy = () => {
         <section>
           <h2 className="text-2xl font-semibold text-white mb-3">3. Data Storage</h2>
           <p>
-            Most of your data is stored on the Base blockchain, which is public and immutable. Some preferences may be stored locally in your browser or on our servers for functionality purposes.
+            Most of your data is stored on the Solana blockchain, which is public and immutable. Some preferences may be stored locally in your browser or on our servers for functionality purposes.
           </p>
         </section>
 
@@ -47,8 +47,8 @@ const Privacy = () => {
             We use the following third-party services:
           </p>
           <ul className="list-disc list-inside space-y-2 ml-4">
-            <li><strong>RainbowKit:</strong> Wallet connection interface</li>
-            <li><strong>Base Network:</strong> Blockchain infrastructure</li>
+            <li><strong>Privy:</strong> Wallet authentication and connection</li>
+            <li><strong>Solana Network:</strong> Blockchain infrastructure</li>
             <li><strong>Twitter API:</strong> For influencer metrics (public data only)</li>
             <li><strong>Analytics Tools:</strong> For anonymous usage statistics</li>
           </ul>
