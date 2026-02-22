@@ -1,10 +1,10 @@
 # Foresight — Progress Checkpoint
 
-> **Last Updated:** February 22, 2026 (War Room Session)
-> **Phase:** Day 1-4 complete + War Room Final Decisions made
+> **Last Updated:** February 22, 2026 (Architecture Synthesis Complete)
+> **Phase:** Day 4-5: Phase 1 Social UI Implementation begins NOW
 > **Current Score:** 86/100 (2nd-3rd place, $1-1.5K)
-> **After Phase 1 Social UI:** 93/100 (1st place, $2.5K)
-> **Status:** Ready for Phase 1 Implementation (Days 1-2 of 5-day sprint)
+> **Target Score:** 93-95/100 (1st place, $2.5K)
+> **Status:** FINAL DECISIONS LOCKED - Implementation ready
 
 ---
 
@@ -131,64 +131,77 @@
 
 ---
 
-## WAR ROOM SESSION: Feb 22 — Final Architecture Decisions
+## SESSION: Feb 22 — FINAL ARCHITECTURE DECISIONS (All 5 Expert Perspectives Synthesized)
 
-### Debate Summary
-**Question:** Should we build social UI (follow/like/comments) or focus on polish + explorer links?
+### Decision Process
+1. **Analyzed 5 expert perspectives:** User Advocate, Growth Hacker, Behavioral Psychologist, Business Strategist, Design Lead
+2. **Identified consensus:** Live scoring mandatory, Follow + Friends Leaderboard highest-value, Comments harmful, Likes optional
+3. **Resolved conflicts:** Activity Feed scope (hybrid), Tapestry visibility (developer-focused for judges), Share priority (Twitter > in-app)
+4. **Locked feature set:** 5 core features, 3 explicitly cut, 1 optional if time permits
 
-**Positions:**
-- Product Strategist: NO (save 10+ hours for polish)
-- Judge + UX Designer: YES (it's the winning margin)
-- Tech Architect: Feasible in 15-16 hours with batch endpoint
+### Final Decision: Phase 1 Social UI (9.5 hours implementation)
 
-### Final Decision: Phase 1 Social UI (6 hours)
+**What we're building (LOCKED):**
+1. [ ] Follow Button + State Management (2h) — Core retention driver
+2. [ ] Activity Feed (2h) — Variable reward schedule, 30s refresh
+3. [ ] Friends Leaderboard (1.5h) — Local rivalry > global rank
+4. [ ] Shareable Team Card with Twitter pre-fill (2h) — Real viral loop
+5. [ ] Tapestry Visibility Badges (1h) — Subtle, purposeful
 
-**What we're building:**
-1. [x] Decision made: Follow button + Activity feed (highest ROI)
-2. [ ] Backend: Batch endpoint `/api/tapestry/following-state-batch` (1h, Day 1)
-3. [ ] Frontend: Follow button component (1.5h, Day 1-2)
-4. [ ] Frontend: Activity feed card on home (1.5h, Day 2)
-5. [ ] Frontend: Confirmations + toasts (0.5h, Day 1)
-6. [ ] Testing (0.5h, Day 2)
+**What we're NOT building (explicitly cut):**
+- Comments UI ❌ (toxicity risk, moderation burden, dilutes focus)
+- Likes UI ❌ (medium ROI, delay until week 2 if needed)
+- Advanced leaderboard features ❌ (seasonal, skill ratings, etc.)
 
-**What we're NOT building (saved time):**
-- Comments UI (3h) ❌
-- Likes UI (2h) ❌
-- Advanced social features ❌
+**Savings:** 5+ hours for polish + QA
 
 **Expected impact:**
-- Integration: 38 → 39 (+1)
-- Innovation: 25 → 27 (+2)
-- Polish: 18 → 19 (+1, no loss due to full QA time)
-- Narrative: 5 → 7 (+2, demo clearly shows social layer)
-- **Total: 86 → 93 (+7)**
+- Integration: 38 → 40 (+2, visible Tapestry social features)
+- Innovation: 25 → 27 (+2, formation + social graph)
+- Polish: 18 → 19 (+1, animations, toasts, badges)
+- Narrative: 5 → 7 (+2, clear demo of all features)
+- **Total: 86 → 93 (+7) = 1st place, $2.5K**
 
-### Key Insights
-- Judge explicitly requested: "Make the social features VISIBLE"
-- Backend is 100% done (all endpoints exist)
-- Frontend just wires UI to existing endpoints
-- 6 hours is low-risk (follow button = 1 component, activity feed = 1 card)
-- We have full QA time (Days 3-4) to verify + polish
-- Fallback: If Phase 1 breaks, remove it → keep activity feed only (still +4 pts)
+### Key Architectural Decisions
+1. **Follow button:** Cyan → Gold border (not following → following)
+2. **Activity Feed:** 6 items max, 30s auto-refresh (variable reward)
+3. **Friends Leaderboard:** Separate tab on /compete, filters to follows only
+4. **Shareable cards:** Puppeteer screenshot, pre-filled Twitter tweet
+5. **Tapestry messaging:** "Saved to Tapestry" for users, detailed integration narrative for judges
 
 ### Documents Created
-- `WAR_ROOM_FINAL_DECISIONS.md` — Full detailed decisions, implementation plan, timeline
-- `WAR_ROOM_EXECUTIVE_BRIEF.md` — One-page summary for quick reference
+1. **`FINAL_ARCHITECTURE_DECISIONS.md`** — 11-part comprehensive guide (ALL conflicts resolved, rationale explained)
+2. **`IMPLEMENTATION_CHECKLIST.md`** — Quick reference for developers (copy-paste code, timeline, common pitfalls)
+
+### Backend Status
+- ✅ All Tapestry endpoints complete (follow, activity feed, followers, likes, comments)
+- ✅ Zero TypeScript errors
+- ✅ Tests passing (64/64)
+- Ready for frontend wiring
 
 ---
 
-## What Still Needs Doing
+## Implementation Timeline (Days 4-5)
 
-### Day 4 (Feb 25-26): Polish + Demo Video
-- [ ] Formation visual polish
-- [ ] Tapestry badges visible everywhere
-- [ ] Record demo video (2:45-3:00)
-- [ ] Onboarding flow QA
+### Day 4 (Saturday) — 8 hours
+- [ ] 2h: Follow Button component (FollowButton.tsx) + state management
+- [ ] 2h: Activity Feed component (ActivityFeed.tsx) + 30s polling
+- [ ] 1.5h: Friends Leaderboard tab + filtering logic
+- [ ] 0.5h: Toast confirmations + error handling
+- [ ] 1h: Manual testing + debugging
 
-### Day 5 (Feb 27): Submit
-- [ ] Final QA (5x auth flow, 3x draft flow)
-- [ ] Mobile responsive QA
-- [ ] Submit to hackathon
+### Day 5 (Sunday) — 8 hours
+- [ ] 2h: Shareable team card modal + Twitter integration
+- [ ] 1h: Tapestry visibility badges
+- [ ] 2h: Mobile responsive refinement
+- [ ] 2h: Full E2E testing (all flows)
+- [ ] 1h: Buffer + bug fixes
+
+### Days 6-7 (Mon-Tue) — QA + Submission
+- [ ] Demo video recording (3 minutes)
+- [ ] Final mobile verification
+- [ ] GitHub cleanup + README
+- [ ] Submit to hackathon (Feb 27, 11:59 PM UTC)
 
 ---
 
