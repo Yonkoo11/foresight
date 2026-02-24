@@ -16,7 +16,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "Bash(grep:*)",
       "Bash(git add:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(python3:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

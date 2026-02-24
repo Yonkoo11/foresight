@@ -87,7 +87,7 @@ export default function Settings() {
     const messageParam = searchParams.get('message');
 
     if (twitterParam === 'success') {
-      showToast('success', `Twitter connected: @${handleParam}`);
+      showToast(`Twitter connected: @${handleParam}`, 'success');
       // Clear the URL params
       setSearchParams({});
       // Refresh Twitter status
@@ -100,7 +100,7 @@ export default function Settings() {
         'invalid_state': 'Session expired. Please try again.',
         'missing_params': 'Invalid callback. Please try again.',
       };
-      showToast('error', errorMessages[messageParam || ''] || 'Twitter connection failed');
+      showToast(errorMessages[messageParam || ''] || 'Twitter connection failed', 'error');
       setSearchParams({});
     }
   }, [searchParams]);
@@ -139,7 +139,7 @@ export default function Settings() {
       const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
         ? error.response.data.error
         : 'Failed to start Twitter connection';
-      showToast('error', errorMsg);
+      showToast(errorMsg, 'error');
       setTwitterLoading(false);
     }
   };
@@ -155,11 +155,11 @@ export default function Settings() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      showToast('success', 'Twitter disconnected');
+      showToast('Twitter disconnected', 'success');
       setTwitterStatus(null);
       await fetchTwitterStatus();
     } catch (error) {
-      showToast('error', 'Failed to disconnect Twitter');
+      showToast('Failed to disconnect Twitter', 'error');
     } finally {
       setTwitterLoading(false);
     }
@@ -178,9 +178,9 @@ export default function Settings() {
 
       if (response.data.success) {
         if (response.data.data.followsForesight) {
-          showToast('success', 'Follow verified! Quest completed.');
+          showToast('Follow verified! Quest completed.', 'success');
         } else {
-          showToast('error', 'You are not following @ForesightCT yet');
+          showToast('You are not following @ForesightCT yet', 'error');
         }
         await fetchTwitterStatus();
       }
@@ -188,7 +188,7 @@ export default function Settings() {
       const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
         ? error.response.data.error
         : 'Failed to verify follow';
-      showToast('error', errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setVerifyingFollow(false);
     }
@@ -196,7 +196,7 @@ export default function Settings() {
 
   const handleVerifyTweet = async () => {
     if (!tweetUrl.trim()) {
-      showToast('error', 'Please enter a tweet URL');
+      showToast('Please enter a tweet URL', 'error');
       return;
     }
 
@@ -211,14 +211,14 @@ export default function Settings() {
       );
 
       if (response.data.success) {
-        showToast('success', 'Tweet verified! Quest completed.');
+        showToast('Tweet verified! Quest completed.', 'success');
         setTweetUrl('');
       }
     } catch (error) {
       const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
         ? error.response.data.error
         : 'Failed to verify tweet';
-      showToast('error', errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setVerifyingTweet(false);
     }
@@ -270,7 +270,7 @@ export default function Settings() {
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
-      showToast('error', 'Failed to load settings');
+      showToast('Failed to load settings', 'error');
     } finally {
       setLoading(false);
     }
@@ -287,7 +287,7 @@ export default function Settings() {
       if (twitterHandleInput !== profile?.twitterHandle) updates.twitterHandle = twitterHandleInput;
 
       if (Object.keys(updates).length === 0) {
-        showToast('error', 'No changes to save');
+        showToast('No changes to save', 'error');
         return;
       }
 
@@ -297,7 +297,7 @@ export default function Settings() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      showToast('success', 'Profile updated successfully!');
+      showToast('Profile updated successfully!', 'success');
       setIsEditingUsername(false);
       setIsEditingAvatar(false);
       setIsEditingTwitter(false);
@@ -306,7 +306,7 @@ export default function Settings() {
       const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
         ? error.response.data.error
         : 'Failed to update profile';
-      showToast('error', errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setSavingProfile(false);
     }
@@ -318,13 +318,13 @@ export default function Settings() {
       const token = localStorage.getItem('authToken');
 
       if (teamNameInput === team?.team_name) {
-        showToast('error', 'No changes to save');
+        showToast('No changes to save', 'error');
         setIsEditingTeamName(false);
         return;
       }
 
       if (!teamNameInput || teamNameInput.trim().length < 3) {
-        showToast('error', 'Team name must be at least 3 characters');
+        showToast('Team name must be at least 3 characters', 'error');
         return;
       }
 
@@ -334,14 +334,14 @@ export default function Settings() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      showToast('success', 'Team name updated successfully!');
+      showToast('Team name updated successfully!', 'success');
       setIsEditingTeamName(false);
       await fetchUserData();
     } catch (error) {
       const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
         ? error.response.data.error
         : 'Failed to update team name';
-      showToast('error', errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setSavingTeam(false);
     }

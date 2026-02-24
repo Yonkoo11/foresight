@@ -13,19 +13,14 @@
  * Uses environment variable or falls back to localhost
  */
 export const getApiUrl = (): string => {
-  // Priority 1: Use environment variable if set
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-
-  // Priority 2: If in production and same domain, use relative URL
+  // In production, use env var if set, otherwise relative URL (same domain deploy)
   if (import.meta.env.PROD) {
-    // Use relative URL (assumes API is on same domain)
-    return '';
+    return import.meta.env.VITE_API_URL || '';
   }
 
-  // Priority 3: Development fallback to localhost
-  return 'http://localhost:3001';
+  // In development, use relative URL — Vite proxy forwards /api to the backend.
+  // Override with VITE_API_URL only if you need to point at a remote backend.
+  return import.meta.env.VITE_API_URL || '';
 };
 
 export const API_URL = getApiUrl();

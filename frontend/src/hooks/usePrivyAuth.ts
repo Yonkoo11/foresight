@@ -10,26 +10,29 @@
  * 5. Store our JWT in localStorage for subsequent API calls
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_URL } from '../config/api';
 
 export function usePrivyAuth() {
   const { ready, authenticated, user, getAccessToken, logout } = usePrivy();
   const hasAttemptedAuth = useRef(false);
   const lastUserId = useRef<string | undefined>();
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const syncWithBackend = useCallback(async () => {
     if (hasAttemptedAuth.current) return;
     hasAttemptedAuth.current = true;
+    setSyncError(null);
 
     try {
       // Get Privy access token
       const privyToken = await getAccessToken();
       if (!privyToken) {
         console.error('[PrivyAuth] No access token available');
+        setSyncError('No Privy access token. Try disconnecting and reconnecting.');
+        hasAttemptedAuth.current = false; // Allow retry
         return;
       }
 
@@ -51,6 +54,7 @@ export function usePrivyAuth() {
       }
 
       // Send Privy token to our backend for verification
+      console.log('[PrivyAuth] Syncing with backend...');
       const response = await axios.post(`${API_URL}/api/auth/verify`, {
         privyToken,
       });
@@ -65,12 +69,30 @@ export function usePrivyAuth() {
         console.log('[PrivyAuth] Backend session created');
         // Reload to fetch data with new auth context
         window.location.reload();
+      } else {
+        console.error('[PrivyAuth] No token in response:', response.data);
+        setSyncError('Backend returned no token. Contact support.');
+        hasAttemptedAuth.current = false; // Allow retry
       }
-    } catch (error) {
-      console.error('[PrivyAuth] Backend sync failed:', error);
-      // Don't throw — app can still function in limited mode
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const msg = error?.response?.data?.error || error?.message || 'Unknown error';
+      console.error('[PrivyAuth] Backend sync failed:', status, msg);
+      if (status === 429) {
+        setSyncError('rate_limited');
+      } else {
+        setSyncError('network_error');
+      }
+      hasAttemptedAuth.current = false; // Allow retry on next trigger
     }
   }, [getAccessToken]);
+
+  // Manual retry function
+  const retrySync = useCallback(() => {
+    hasAttemptedAuth.current = false;
+    setSyncError(null);
+    syncWithBackend();
+  }, [syncWithBackend]);
 
   useEffect(() => {
     if (!ready) return;
@@ -80,6 +102,7 @@ export function usePrivyAuth() {
       localStorage.removeItem('authToken');
       lastUserId.current = undefined;
       hasAttemptedAuth.current = false;
+      setSyncError(null);
       return;
     }
 
@@ -87,6 +110,11 @@ export function usePrivyAuth() {
     if (authenticated && user && user.id !== lastUserId.current) {
       hasAttemptedAuth.current = false;
       lastUserId.current = user.id;
+      syncWithBackend();
+    }
+
+    // User is authenticated but no backend token — retry
+    if (authenticated && user && user.id === lastUserId.current && !localStorage.getItem('authToken') && !hasAttemptedAuth.current) {
       syncWithBackend();
     }
   }, [ready, authenticated, user, syncWithBackend]);
@@ -119,6 +147,8 @@ export function usePrivyAuth() {
     authenticated,
     user,
     logout: handleLogout,
+    retrySync,
+    syncError,
     isBackendAuthed: !!localStorage.getItem('authToken'),
   };
 }

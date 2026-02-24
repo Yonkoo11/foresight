@@ -13,8 +13,10 @@ import {
   Trophy,
   CheckCircle,
   SignIn,
+  Play,
 } from '@phosphor-icons/react';
 import FormationPreview from '../components/FormationPreview';
+import ActivityFeedCard from '../components/ActivityFeedCard';
 import { useAuth } from '../hooks/useAuth';
 
 // ============ LANDING PAGE ============
@@ -148,6 +150,15 @@ function LandingPage({ isConnected, login }: { isConnected: boolean; login: () =
         </div>
       </section>
 
+      {/* Activity Feed — only for logged-in users */}
+      {isConnected && (
+        <section className="py-16 border-t border-gray-800/50">
+          <div className="max-w-lg mx-auto">
+            <ActivityFeedCard />
+          </div>
+        </section>
+      )}
+
       {/* Powered by Tapestry */}
       <section className="py-16 border-t border-gray-800/50">
         <div className="text-center mb-10">
@@ -191,17 +202,29 @@ function LandingPage({ isConnected, login }: { isConnected: boolean; login: () =
             <Trophy size={28} className="text-gold-400" weight="fill" />
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            Ready to build your team?
+            {isConnected ? 'Draft your dream team' : 'Ready to build your team?'}
           </h2>
           <p className="text-gray-400 mb-8">
-            Join the competition and show CT who's got the best picks.
+            {isConnected
+              ? 'Enter the Hackathon Demo League and prove your CT knowledge.'
+              : 'Join the competition and show CT who\'s got the best picks.'}
           </p>
-          <button
-            onClick={login}
-            className="btn-primary btn-lg"
-          >
-            Sign In to Start
-          </button>
+          {isConnected ? (
+            <Link
+              to="/draft?contestId=6&type=FREE_LEAGUE&teamSize=5&hasCaptain=true&isFree=true"
+              className="btn-primary btn-lg inline-flex items-center gap-2"
+            >
+              <Play size={20} weight="fill" />
+              Enter Contest
+            </Link>
+          ) : (
+            <button
+              onClick={login}
+              className="btn-primary btn-lg"
+            >
+              Sign In to Start
+            </button>
+          )}
         </div>
       </section>
     </div>

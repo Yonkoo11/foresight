@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_URL } from '../config/api';
 
 interface TierProgress {
   currentTier: string;
@@ -174,11 +174,12 @@ export default function ForesightScoreDisplay({
     );
   }
 
-  // Error state
+  // Error state — minimal variant renders nothing (avoids broken navbar UI)
   if (error) {
+    if (variant === 'minimal') return null;
     return (
-      <div className={`bg-gray-900/50 rounded-xl border border-red-800/50 p-6 ${className}`}>
-        <p className="text-red-400 text-sm text-center">{error}</p>
+      <div className={`bg-gray-900/50 rounded-xl border border-gray-800 p-4 ${className}`}>
+        <p className="text-gray-500 text-sm text-center">Score unavailable</p>
       </div>
     );
   }
@@ -343,6 +344,14 @@ export default function ForesightScoreDisplay({
             {fsData.allTimeRank ? `#${fsData.allTimeRank}` : '-'}
           </div>
         </div>
+      </div>
+
+      {/* Tapestry verification badge */}
+      <div className="px-4 pb-2">
+        <p className="text-[10px] text-gray-600 flex items-center gap-1">
+          <Sparkle size={10} weight="fill" className="text-gold-400/50" />
+          Scores stored on Tapestry Protocol — verifiable on Solana
+        </p>
       </div>
 
       {/* Footer with links */}

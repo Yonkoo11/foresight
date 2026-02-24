@@ -1,7 +1,7 @@
 # Foresight - Claude Memory
 
-> **Last Updated:** February 22, 2026
-> **Status:** Social Features UX Specification Complete - Ready for Implementation
+> **Last Updated:** February 25, 2026
+> **Status:** Crypto/Web3 UX Framework Complete - Ready for Implementation
 
 ---
 
@@ -9,7 +9,22 @@
 
 This file persists context across Claude sessions. **Update after major decisions.**
 
-**Current Priority:** Social features implementation (Follow, Like, Comments, Activity Feed, Social Counts)
+**Current Priority:** Crypto UX improvements (Prize display, wallet onboarding, Tapestry visibility, claim flow)
+
+### MOBILE FIRST — NON-NEGOTIABLE
+
+**The majority of our users are on mobile.** Every UI decision must start with mobile.
+
+- **Design for 375px width first**, then adapt for desktop
+- **Touch targets** must be ≥ 44px tall (buttons, links, interactive elements)
+- **Bottom navigation** is sacred — never more than 4 items, always thumb-reachable
+- **No hover-only interactions** — everything must work with tap
+- **Test every feature on mobile before marking done**
+- **Sharing flows** must work natively on iOS/Android (Web Share API, not clipboard)
+- **Forms** must use appropriate `inputmode` / `type` for mobile keyboards
+- When in doubt: if it's awkward on a phone, redesign it
+
+---
 
 ### UX Philosophy (ALWAYS FOLLOW)
 
@@ -19,7 +34,7 @@ This file persists context across Claude sessions. **Update after major decision
 3. **Question everything** - Is this the optimal layout? Would a modal, accordion, or different pattern work better?
 4. **Consider alternatives** - What are 2-3 other ways to solve this?
 5. **User journey** - How does this fit into the overall user flow?
-6. **Mobile first** - Will this work on mobile?
+6. **MOBILE FIRST** - Design for mobile first, every single time
 
 **For every page/section, answer:**
 - WHY does this exist?

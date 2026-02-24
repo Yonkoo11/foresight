@@ -142,11 +142,11 @@
 ### Final Decision: Phase 1 Social UI (9.5 hours implementation)
 
 **What we're building (LOCKED):**
-1. [ ] Follow Button + State Management (2h) — Core retention driver
-2. [ ] Activity Feed (2h) — Variable reward schedule, 30s refresh
-3. [ ] Friends Leaderboard (1.5h) — Local rivalry > global rank
-4. [ ] Shareable Team Card with Twitter pre-fill (2h) — Real viral loop
-5. [ ] Tapestry Visibility Badges (1h) — Subtle, purposeful
+1. [x] Follow Button + State Management — Core retention driver (FollowButton.tsx)
+2. [x] Activity Feed — Variable reward schedule, 30s refresh (ActivityFeedCard.tsx)
+3. [x] Friends Leaderboard — Local rivalry > global rank (friends tab in Compete.tsx)
+4. [x] Shareable Team Card with Twitter pre-fill — Real viral loop (ShareTeamCard.tsx)
+5. [x] Tapestry Visibility Badges — Subtle, purposeful (ForesightScoreDisplay, ContestDetail, Draft)
 
 **What we're NOT building (explicitly cut):**
 - Comments UI ❌ (toxicity risk, moderation burden, dilutes focus)
@@ -183,25 +183,44 @@
 
 ## Implementation Timeline (Days 4-5)
 
-### Day 4 (Saturday) — 8 hours
-- [ ] 2h: Follow Button component (FollowButton.tsx) + state management
-- [ ] 2h: Activity Feed component (ActivityFeed.tsx) + 30s polling
-- [ ] 1.5h: Friends Leaderboard tab + filtering logic
-- [ ] 0.5h: Toast confirmations + error handling
-- [ ] 1h: Manual testing + debugging
+### Day 4 (Saturday) — DONE
+- [x] Follow Button component (FollowButton.tsx) — cyan/gold toggle, rose unfollow hover
+- [x] Activity Feed component (ActivityFeedCard.tsx) — 30s polling, 6 items, live indicator
+- [x] Friends Leaderboard tab — "Friends" tab on FS leaderboard, filters to followed users
+- [x] Batch following-state endpoint — POST /api/tapestry/following-state-batch
+- [x] My-following endpoint — GET /api/tapestry/my-following
+- [x] ShareTeamCard (celebration + compact) — Twitter pre-filled tweet, copy button
+- [x] Enhanced Draft success screen — Formation card + ShareTeamCard + Tapestry badge
+- [x] Tapestry badges everywhere — ForesightScoreDisplay, ContestDetail, Profile, Leaderboard
+- [x] Follow buttons on FS leaderboard rows — with batch state loading
+- [x] Zero TypeScript errors (frontend + backend)
+- [x] Frontend production build clean
 
-### Day 5 (Sunday) — 8 hours
-- [ ] 2h: Shareable team card modal + Twitter integration
-- [ ] 1h: Tapestry visibility badges
-- [ ] 2h: Mobile responsive refinement
-- [ ] 2h: Full E2E testing (all flows)
-- [ ] 1h: Buffer + bug fixes
+### Day 5: Data Fixes + War Room UX Application (DONE)
+- [x] Fixed avatar_url for 49 influencers (was NULL → now unavatar.io URLs)
+- [x] Seeded 15 foresight_scores entries (leaderboard was 2 entries → now 17)
+- [x] Added tapestry_user_id to 15 demo users (follow buttons can now render)
+- [x] Added avatar_url to demo users (identicon avatars)
+- [x] Applied war room competitive tension: Top-3 podium styling (crown/medal icons, gold/silver/bronze borders)
+- [x] Added live indicator to FS leaderboard header
+- [x] Added Tapestry verification footer to FS leaderboard
+- [x] Migration: `20260222200000_fix_data_gaps.ts`
+- [x] Zero TypeScript errors (frontend + backend)
+- [x] Frontend production build clean
 
-### Days 6-7 (Mon-Tue) — QA + Submission
+### Next Steps
+- [ ] **VISUAL VERIFICATION** — User needs to screenshot pages to confirm fixes
+- [ ] QA all features end-to-end
+- [ ] Mobile responsive verification
 - [ ] Demo video recording (3 minutes)
-- [ ] Final mobile verification
-- [ ] GitHub cleanup + README
+- [ ] Deploy to production
 - [ ] Submit to hackathon (Feb 27, 11:59 PM UTC)
+
+### Pages to Verify (User screenshots needed)
+1. `/play?tab=rankings&type=fs` — FS leaderboard: 17 entries, avatars, follow buttons, competitive styling
+2. `/draft?contestId=6&type=FREE_LEAGUE&teamSize=5&hasCaptain=true&isFree=true` — Draft: influencer avatars visible
+3. `/` — Home: Activity feed card visible (if logged in)
+4. Submit a team on Draft page — Verify no error toast, celebration screen appears
 
 ---
 

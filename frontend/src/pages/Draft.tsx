@@ -11,12 +11,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Trophy, ArrowLeft, Lock, CheckCircle, Warning,
+  Trophy, ArrowLeft, ArrowRight, Lock, CheckCircle, Warning,
   Timer, Coins, Users, Info
 } from '@phosphor-icons/react';
 import FormationTeam from '../components/draft/FormationTeam';
 import InfluencerGrid from '../components/draft/InfluencerGrid';
 import TapestryBadge from '../components/TapestryBadge';
+import ShareTeamCard from '../components/ShareTeamCard';
 import { useToast } from '../contexts/ToastContext';
 import { useDelayedLoading } from '../hooks/useDelayedLoading';
 import { useAuth } from '../hooks/useAuth';
@@ -344,8 +345,6 @@ export default function Draft() {
         setTapestryPublished(res.data.tapestry?.published || false);
         setShowSuccess(true);
         showToast(isUpdate ? 'Team updated!' : 'Team submitted!', 'success');
-        // Redirect after celebration
-        setTimeout(() => navigate(`/contest/${contestId}`), 2500);
       }
     } catch (err) {
       console.error('Submit failed:', err);
@@ -386,22 +385,48 @@ export default function Draft() {
     );
   }
 
-  // Success celebration overlay
+  // Success celebration overlay — formation card is the hero
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-20 h-20 rounded-2xl bg-gold-500/20 border border-gold-500/30 flex items-center justify-center mx-auto mb-6 animate-bounce">
-            <Trophy size={40} weight="fill" className="text-gold-400" />
+        <div className="max-w-sm mx-auto px-4 w-full">
+          {/* Header */}
+          <div className="text-center mb-4">
+            <h2 className="text-2xl font-bold text-white mb-1">You're in! 🏆</h2>
+            <p className="text-gray-400 text-sm">
+              Share your lineup on Twitter
+            </p>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">You're in!</h2>
-          <p className="text-gray-400 mb-6">
-            Your team has been entered into {contest.name}. Good luck!
-          </p>
+
+          {/* Formation card + share buttons */}
+          <ShareTeamCard
+            picks={selectedPicks.map((p) => ({
+              id: p.id,
+              name: p.name,
+              handle: p.handle,
+              tier: p.tier,
+              profile_image_url: p.profile_image_url,
+              total_points: p.total_points,
+              isCaptain: p.id === captainId,
+            }))}
+            captainId={captainId}
+            contestName={contest.name}
+            variant="share-only"
+            className="mb-3"
+          />
+
           {tapestryPublished && (
-            <TapestryBadge variant="confirmation" className="mb-4 justify-center" />
+            <TapestryBadge variant="confirmation" className="mb-3" />
           )}
-          <p className="text-xs text-gray-600">Redirecting to leaderboard...</p>
+
+          {/* Secondary: View Contest */}
+          <button
+            onClick={() => navigate(`/contest/${contestId}`)}
+            className="w-full py-2.5 rounded-lg text-gray-400 hover:text-white text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+          >
+            View Contest & Leaderboard
+            <ArrowRight size={14} />
+          </button>
         </div>
       </div>
     );

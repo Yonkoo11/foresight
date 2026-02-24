@@ -16,6 +16,7 @@ import ForesightScoreDisplay from '../components/ForesightScoreDisplay';
 import { ShareProfileButton } from '../components/ShareableProfileCard';
 import FormationPreview from '../components/FormationPreview';
 import TapestryBadge from '../components/TapestryBadge';
+import ShareTeamCard from '../components/ShareTeamCard';
 import { getXPLevel, formatXP } from '../utils/xp';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
@@ -727,6 +728,21 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
+
+              {/* Share team */}
+              <ShareTeamCard
+                teamName={myTeam.team_name}
+                picks={myTeam.picks.map((p) => ({
+                  id: p.id,
+                  name: p.influencer_name,
+                  handle: p.influencer_handle,
+                  tier: p.influencer_tier,
+                  total_points: p.total_points,
+                }))}
+                totalScore={myTeam.total_score}
+                rank={myTeam.rank}
+                variant="compact"
+              />
 
               {/* Formation View */}
               <FormationPreview

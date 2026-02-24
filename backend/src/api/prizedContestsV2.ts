@@ -5,6 +5,15 @@ import foresightScoreService from '../services/foresightScoreService';
 import questService from '../services/questService';
 import tapestryService from '../services/tapestryService';
 import logger from '../utils/logger';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  sendAndConfirmTransaction,
+  LAMPORTS_PER_SOL,
+} from '@solana/web3.js';
 
 const router = Router();
 
@@ -297,8 +306,8 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
   try {
     const { id } = req.params;
     const { teamIds, captainId } = req.body;
-    const userId = (req as any).user.id;
-    const walletAddress = (req as any).user.walletAddress;
+    const userId = req.user!.userId;
+    const walletAddress = req.user!.walletAddress;
 
     console.log('📥 enter-free request:', { id, teamIds, captainId, userId, walletAddress, body: req.body });
 
@@ -465,7 +474,7 @@ router.put('/contests/:id/update-free-team', authenticate, async (req: Request, 
   try {
     const { id } = req.params;
     const { teamIds, captainId } = req.body;
-    const walletAddress = (req as any).user.walletAddress;
+    const walletAddress = req.user!.walletAddress;
 
     console.log('📝 update-free-team request:', { id, teamIds, captainId, walletAddress });
 
@@ -537,8 +546,8 @@ router.post('/contests/:id/enter-test', authenticate, async (req: Request, res: 
   try {
     const { id } = req.params;
     const { team_name, influencer_ids, captain_id } = req.body;
-    const userId = (req as any).user.id;
-    const walletAddress = (req as any).user.walletAddress;
+    const userId = req.user!.userId;
+    const walletAddress = req.user!.walletAddress;
 
     console.log('📥 enter-test request:', { id, team_name, influencer_ids, captain_id, userId, walletAddress, body: req.body });
 
@@ -639,8 +648,8 @@ router.get('/contests/:id/my-entry', authenticate, async (req: Request, res: Res
 
   try {
     const { id } = req.params;
-    const userId = (req as any).user.id;
-    const walletAddress = (req as any).user.walletAddress;
+    const userId = req.user!.userId;
+    const walletAddress = req.user!.walletAddress;
 
     if (!walletAddress) {
       return res.json({ entered: false, entry: null });
@@ -705,7 +714,7 @@ router.get('/contests/:id/my-entry', authenticate, async (req: Request, res: Res
  */
 router.get('/me/entries', authenticate, async (req: Request, res: Response) => {
   try {
-    const walletAddress = (req as any).user.walletAddress;
+    const walletAddress = req.user!.walletAddress;
 
     if (!walletAddress) {
       return res.json({ entries: [] });
@@ -787,7 +796,7 @@ router.get('/me/entries', authenticate, async (req: Request, res: Response) => {
  */
 router.get('/me/free-entries-remaining', authenticate, async (req: Request, res: Response) => {
   try {
-    const walletAddress = (req as any).user.walletAddress;
+    const walletAddress = req.user!.walletAddress;
 
     if (!walletAddress) {
       return res.json({ remaining: 1, max: 1 });
@@ -815,6 +824,146 @@ router.get('/me/free-entries-remaining', authenticate, async (req: Request, res:
   }
 });
 
+// ============ PRIZE CLAIMING ============
+
+/**
+ * POST /api/v2/contests/:id/claim-prize
+ * Transfer SOL prize from treasury to winner's wallet (devnet)
+ */
+router.post('/contests/:id/claim-prize', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.userId;
+    const walletAddress = req.user!.walletAddress;
+
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'No wallet connected' });
+    }
+
+    // Load the contest
+    const contest = await db('prized_contests').where('id', id).first();
+    if (!contest) {
+      return res.status(404).json({ error: 'Contest not found' });
+    }
+
+    if (contest.status !== 'finalized') {
+      return res.status(400).json({ error: 'Contest has not been finalized yet' });
+    }
+
+    // Find the user's entry in the correct table
+    const entriesTable = contest.is_free ? 'free_league_entries' : 'prized_entries';
+    const prizeColumn = contest.is_free ? 'prize_won' : 'prize_amount';
+
+    const entry = await db(entriesTable)
+      .where('contest_id', id)
+      .where('wallet_address', walletAddress.toLowerCase())
+      .first();
+
+    if (!entry) {
+      return res.status(404).json({ error: 'No entry found for this contest' });
+    }
+
+    const prizeAmount = parseFloat(entry[prizeColumn] || 0);
+
+    if (prizeAmount <= 0) {
+      return res.status(400).json({ error: 'No prize to claim for this entry' });
+    }
+
+    if (entry.claimed) {
+      return res.status(400).json({ error: 'Prize has already been claimed' });
+    }
+
+    // Mark as claimed optimistically (prevent double-claim race)
+    const updated = await db(entriesTable)
+      .where('id', entry.id)
+      .where('claimed', false)
+      .update({ claimed: true, updated_at: new Date() });
+
+    if (!updated) {
+      return res.status(400).json({ error: 'Prize has already been claimed' });
+    }
+
+    // Load treasury keypair from env
+    const secretKeyBase64 = process.env.TREASURY_SECRET_KEY_BASE64;
+    const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+
+    if (!secretKeyBase64) {
+      // Rollback the claimed flag if transfer can't happen
+      await db(entriesTable).where('id', entry.id).update({ claimed: false, updated_at: new Date() });
+      return res.status(500).json({ error: 'Treasury not configured' });
+    }
+
+    let txSignature: string;
+    let simulated = false;
+
+    try {
+      const secretKeyBytes = Buffer.from(secretKeyBase64, 'base64');
+      const treasuryKeypair = Keypair.fromSecretKey(secretKeyBytes);
+
+      const connection = new Connection(rpcUrl, 'confirmed');
+      const recipientPubkey = new PublicKey(walletAddress);
+
+      // Check treasury has enough funds before attempting transfer
+      const treasuryBalance = await connection.getBalance(treasuryKeypair.publicKey);
+      const lamports = Math.floor(prizeAmount * LAMPORTS_PER_SOL);
+
+      if (treasuryBalance < lamports + 5000) {
+        // Dev mode: simulate the transfer when treasury is unfunded (demo only)
+        if (process.env.NODE_ENV !== 'production') {
+          txSignature = `SIMULATED_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          simulated = true;
+          logger.warn(`Treasury underfunded (${treasuryBalance} lamports). Simulating transfer for dev.`, {
+            context: 'ClaimPrize',
+          });
+        } else {
+          await db(entriesTable).where('id', entry.id).update({ claimed: false, updated_at: new Date() });
+          return res.status(503).json({ error: 'Prize pool temporarily unavailable — please try again later' });
+        }
+      } else {
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: treasuryKeypair.publicKey,
+            toPubkey: recipientPubkey,
+            lamports,
+          })
+        );
+
+        txSignature = await sendAndConfirmTransaction(connection, transaction, [treasuryKeypair], {
+          commitment: 'confirmed',
+        });
+      }
+
+      // Save tx signature to entry
+      await db(entriesTable)
+        .where('id', entry.id)
+        .update({ claim_tx_hash: txSignature, updated_at: new Date() });
+
+      logger.info(`Prize ${simulated ? 'simulated' : 'claimed'}: ${prizeAmount} SOL to ${walletAddress}, tx: ${txSignature}`, {
+        context: 'ClaimPrize',
+      });
+    } catch (transferError: any) {
+      // Rollback claimed flag so user can retry
+      await db(entriesTable).where('id', entry.id).update({ claimed: false, updated_at: new Date() });
+      logger.error('SOL transfer failed:', transferError, { context: 'ClaimPrize' });
+      return res.status(500).json({
+        error: 'Transfer failed — please try again',
+        detail: process.env.NODE_ENV !== 'production' ? transferError.message : undefined,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `${prizeAmount.toFixed(3)} SOL sent to your wallet`,
+      txSignature,
+      explorerUrl: simulated ? null : `https://explorer.solana.com/tx/${txSignature}?cluster=devnet`,
+      simulated,
+    });
+  } catch (error: any) {
+    logger.error('Error claiming prize:', error, { context: 'ClaimPrize' });
+    res.status(500).json({ error: 'Failed to claim prize' });
+  }
+});
+
 // ============ ADMIN ENDPOINTS ============
 
 /**
@@ -823,7 +972,7 @@ router.get('/me/free-entries-remaining', authenticate, async (req: Request, res:
  */
 router.post('/admin/contests', authenticate, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = req.user!.userId;
     const user = await db('users').where('id', userId).first();
 
     if (!user?.is_admin) {

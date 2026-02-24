@@ -27,6 +27,7 @@ import {
 import { getNumericLevel } from '../utils/xp';
 import FoundingMemberBadge from '../components/FoundingMemberBadge';
 import TapestryBadge from '../components/TapestryBadge';
+import FollowButton from '../components/FollowButton';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 
@@ -34,7 +35,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 type MainTab = 'rankings' | 'contests';
 type RankingsSubTab = 'fs' | 'fantasy' | 'xp';
-type FsTimeframe = 'all_time' | 'season' | 'weekly' | 'referral';
+type FsTimeframe = 'all_time' | 'season' | 'weekly' | 'referral' | 'friends';
 type ContestFilter = 'all' | 'free' | 'weekly' | 'daily';
 
 interface FsLeaderEntry {
@@ -135,6 +136,8 @@ export default function Compete() {
   const [userPosition, setUserPosition] = useState<{ rank: number; percentile: number } | null>(null);
   const [contests, setContests] = useState<Contest[]>([]);
   const [myEntries, setMyEntries] = useState<MyEntry[]>([]);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [followStates, setFollowStates] = useState<Record<string, boolean>>({});
 
   // Update URL when tabs change
   useEffect(() => {
@@ -155,22 +158,74 @@ export default function Compete() {
     }
   }, [mainTab, rankingsSubTab, fsTimeframe]);
 
+  // Fetch who we follow (for friends tab + follow buttons)
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token || !isConnected) return;
+
+    axios.get(`${API_URL}/api/tapestry/my-following`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (res.data?.data?.following) {
+          const ids = new Set(res.data.data.following.map((f: any) => f.id));
+          setFollowingIds(ids as Set<string>);
+        }
+      })
+      .catch(() => {});
+  }, [isConnected]);
+
+  // Fetch batch follow states when FS leaders load (for follow buttons)
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token || fsLeaders.length === 0) return;
+
+    const profileIds = fsLeaders
+      .filter((e) => e.tapestryUserId)
+      .map((e) => e.tapestryUserId!);
+
+    if (profileIds.length === 0) return;
+
+    axios.post(
+      `${API_URL}/api/tapestry/following-state-batch`,
+      { targetProfileIds: profileIds },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+      .then((res) => {
+        if (res.data?.data?.states) {
+          setFollowStates(res.data.data.states);
+        }
+      })
+      .catch(() => {});
+  }, [fsLeaders]);
+
   const fetchRankingsData = async () => {
     try {
       setLoading(true);
 
       if (rankingsSubTab === 'fs') {
+        // For "friends" tab, fetch all-time data then filter client-side
+        const actualTimeframe = fsTimeframe === 'friends' ? 'all_time' : fsTimeframe;
         const response = await axios.get(`${API_URL}/api/v2/fs/leaderboard`, {
-          params: { type: fsTimeframe, limit: 50 },
+          params: { type: actualTimeframe, limit: 50 },
         });
         if (response.data.success) {
-          setFsLeaders(response.data.data.entries || []);
-          setFsTotal(response.data.data.total || 0);
+          let entries = response.data.data.entries || [];
+          // If friends filter, filter to only followed users
+          if (fsTimeframe === 'friends') {
+            entries = entries.filter((e: FsLeaderEntry) =>
+              e.tapestryUserId && followingIds.has(e.tapestryUserId)
+            );
+            // Re-rank
+            entries = entries.map((e: FsLeaderEntry, idx: number) => ({ ...e, rank: idx + 1 }));
+          }
+          setFsLeaders(entries);
+          setFsTotal(fsTimeframe === 'friends' ? entries.length : (response.data.data.total || 0));
         }
 
-        // Get user position
+        // Get user position (not for friends tab)
         const token = localStorage.getItem('authToken');
-        if (token) {
+        if (token && fsTimeframe !== 'friends') {
           try {
             const posRes = await axios.get(`${API_URL}/api/v2/fs/leaderboard/position`, {
               params: { type: fsTimeframe },
@@ -182,6 +237,8 @@ export default function Compete() {
           } catch {
             setUserPosition(null);
           }
+        } else {
+          setUserPosition(null);
         }
       } else if (rankingsSubTab === 'fantasy') {
         const response = await axios.get(`${API_URL}/api/league/leaderboard`);
@@ -264,7 +321,7 @@ export default function Compete() {
 
   const handleEnterContest = (contest: Contest) => {
     if (!isConnected) {
-      showToast('Please sign in first', 'warning');
+      showToast('Please sign in first', 'error');
       return;
     }
     navigate(`/draft?contestId=${contest.id}&type=${contest.typeCode}&teamSize=${contest.teamSize}&hasCaptain=${contest.hasCaptain}&isFree=${contest.isFree}`);
@@ -350,6 +407,7 @@ export default function Compete() {
             <div className="flex gap-1 bg-gray-800/50 border border-gray-700 rounded-lg p-1 w-fit">
               {[
                 { id: 'all_time' as FsTimeframe, label: 'All-Time' },
+                { id: 'friends' as FsTimeframe, label: 'Friends' },
                 { id: 'season' as FsTimeframe, label: 'Season' },
                 { id: 'weekly' as FsTimeframe, label: 'Weekly' },
                 { id: 'referral' as FsTimeframe, label: 'Referrals' },
@@ -403,36 +461,59 @@ export default function Compete() {
                 <div className="flex items-center gap-2">
                   <Sparkle size={20} weight="fill" className="text-gold-400" />
                   <span className="font-semibold text-white">
-                    {fsTimeframe === 'all_time' && 'All-Time'}
-                    {fsTimeframe === 'season' && 'Season'}
-                    {fsTimeframe === 'weekly' && 'Weekly'}
-                    {fsTimeframe === 'referral' && 'Top Referrers'} {fsTimeframe !== 'referral' && 'Leaders'}
+                    {fsTimeframe === 'all_time' && 'All-Time Leaders'}
+                    {fsTimeframe === 'season' && 'Season Leaders'}
+                    {fsTimeframe === 'weekly' && 'Weekly Leaders'}
+                    {fsTimeframe === 'referral' && 'Top Referrers'}
+                    {fsTimeframe === 'friends' && 'Friends Leaderboard'}
                   </span>
                 </div>
-                <span className="text-sm text-gray-500">{fsTotal.toLocaleString()} players</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-500">{fsTotal.toLocaleString()} players</span>
+                  <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Live
+                  </span>
+                </div>
               </div>
 
               <div className="divide-y divide-gray-800/50">
                 {fsLeaders.map((entry, index) => {
-                  const rank = entry.rank || index + 1;
+                  const rank = index + 1;
                   const tierConfig = TIER_CONFIG[entry.tier as keyof typeof TIER_CONFIG] || TIER_CONFIG.bronze;
+                  const isTop3 = rank <= 3;
+                  const rowBorder = rank === 1
+                    ? 'border-l-2 border-l-yellow-400 bg-yellow-500/5'
+                    : rank === 2
+                    ? 'border-l-2 border-l-gray-300 bg-gray-400/5'
+                    : rank === 3
+                    ? 'border-l-2 border-l-orange-400 bg-orange-500/5'
+                    : '';
 
                   return (
-                    <div key={entry.userId} className="p-4 hover:bg-gray-800/30 transition-colors">
+                    <div key={entry.userId} className={`p-4 hover:bg-gray-800/30 transition-colors ${rowBorder}`}>
                       <div className="flex items-center gap-4">
                         <div className={`w-12 text-center ${getRankStyle(rank)}`}>
-                          {getRankDisplay(rank)}
+                          {rank === 1 ? (
+                            <Crown size={24} weight="fill" className="mx-auto text-yellow-400" />
+                          ) : rank === 2 ? (
+                            <Medal size={22} weight="fill" className="mx-auto text-gray-300" />
+                          ) : rank === 3 ? (
+                            <Medal size={22} weight="fill" className="mx-auto text-orange-400" />
+                          ) : (
+                            getRankDisplay(rank)
+                          )}
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-500 to-amber-500 flex items-center justify-center text-white overflow-hidden">
+                        <div className={`${isTop3 ? 'w-12 h-12' : 'w-10 h-10'} rounded-full bg-gradient-to-br from-gold-500 to-amber-500 flex items-center justify-center text-white overflow-hidden ring-2 ${rank === 1 ? 'ring-yellow-400/50' : rank === 2 ? 'ring-gray-300/30' : rank === 3 ? 'ring-orange-400/30' : 'ring-transparent'}`}>
                           {entry.avatarUrl ? (
                             <img src={entry.avatarUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <Users size={18} weight="fill" />
+                            <Users size={isTop3 ? 20 : 18} weight="fill" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-white truncate">
+                            <span className={`${isTop3 ? 'text-base' : 'text-sm'} font-semibold text-white truncate`}>
                               {entry.username || 'Anonymous'}
                             </span>
                             <span className={`px-1.5 py-0.5 text-xs font-bold ${tierConfig.bg} ${tierConfig.color} rounded uppercase`}>
@@ -447,9 +528,31 @@ export default function Compete() {
                             <TapestryBadge variant="inline" tapestryUserId={entry.tapestryUserId} />
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className={`font-bold ${tierConfig.color}`}>
-                            {entry.score.toLocaleString()} FS
+                        <div className="flex items-center gap-3">
+                          {entry.tapestryUserId && isConnected && localStorage.getItem('authToken') && (
+                            <FollowButton
+                              targetProfileId={entry.tapestryUserId}
+                              initialFollowing={followStates[entry.tapestryUserId] || false}
+                              size="sm"
+                              onFollowChange={(following) => {
+                                setFollowStates((prev) => ({ ...prev, [entry.tapestryUserId!]: following }));
+                                if (following) {
+                                  setFollowingIds((prev) => new Set([...prev, entry.tapestryUserId!]));
+                                } else {
+                                  setFollowingIds((prev) => {
+                                    const next = new Set(prev);
+                                    next.delete(entry.tapestryUserId!);
+                                    return next;
+                                  });
+                                }
+                              }}
+                            />
+                          )}
+                          <div className="text-right">
+                            <div className={`${isTop3 ? 'text-lg' : 'text-base'} font-bold ${tierConfig.color}`}>
+                              {entry.score.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-500">FS</div>
                           </div>
                         </div>
                       </div>
@@ -457,13 +560,37 @@ export default function Compete() {
                   );
                 })}
 
-                {fsLeaders.length === 0 && (
+                {fsLeaders.length === 0 && fsTimeframe === 'friends' && (
+                  <div className="p-12 text-center">
+                    <Users size={40} className="mx-auto mb-3 text-gray-600" />
+                    <h3 className="text-lg font-semibold text-white mb-2">No friends yet</h3>
+                    <p className="text-gray-400 text-sm mb-4">Follow other players to see them here</p>
+                    <button
+                      onClick={() => setFsTimeframe('all_time')}
+                      className="text-sm text-cyan-400 hover:text-cyan-300"
+                    >
+                      Browse All-Time leaderboard to find players →
+                    </button>
+                  </div>
+                )}
+
+                {fsLeaders.length === 0 && fsTimeframe !== 'friends' && (
                   <div className="p-12 text-center">
                     <Sparkle size={40} className="mx-auto mb-3 text-gray-600" />
                     <p className="text-gray-400">No rankings yet</p>
                   </div>
                 )}
               </div>
+
+              {/* Tapestry verification footer */}
+              {fsLeaders.length > 0 && (
+                <div className="px-4 py-2 border-t border-gray-800">
+                  <p className="text-[10px] text-gray-600 flex items-center gap-1">
+                    <Sparkle size={10} weight="fill" className="text-gold-400/50" />
+                    All scores stored on Tapestry Protocol — verifiable on Solana
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

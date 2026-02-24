@@ -105,6 +105,26 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Image proxy for canvas CORS — allows frontend to draw external images
+app.get('/api/proxy-image', async (req, res) => {
+  const url = req.query.url as string;
+  if (!url) return res.status(400).send('Missing url param');
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return res.status(response.status).send('Upstream error');
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=86400',
+      'Access-Control-Allow-Origin': '*',
+    });
+    const buffer = await response.arrayBuffer();
+    res.send(Buffer.from(buffer));
+  } catch {
+    res.status(502).send('Failed to fetch image');
+  }
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

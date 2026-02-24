@@ -61,6 +61,8 @@ interface MyEntry {
   score: number;
   rank: number | null;
   prizeAmount: number | null;
+  claimed: boolean;
+  canClaim: boolean;
   team: {
     id: number;
     name: string;
@@ -138,6 +140,7 @@ export default function ContestDetail() {
   const [activeTab, setActiveTab] = useState<'leaderboard' | 'myteam'>('leaderboard');
   const [teamViewMode, setTeamViewMode] = useState<'formation' | 'grid'>('formation');
   const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -261,6 +264,29 @@ export default function ContestDetail() {
   const handleEnterContest = () => {
     if (!contest) return;
     navigate(`/draft?contestId=${contest.id}&type=${contest.typeCode}&teamSize=${contest.teamSize}&hasCaptain=${contest.hasCaptain}&isFree=${contest.isFree}`);
+  };
+
+  const handleClaimPrize = async () => {
+    if (!myEntry || !contest || claiming) return;
+    setClaiming(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await axios.post(
+        `${API_URL}/api/v2/contests/${id}/claim-prize`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMyEntry(prev => prev ? { ...prev, claimed: true, canClaim: false } : prev);
+      showToast(`${myEntry.prizeAmount?.toFixed(3)} SOL sent to your wallet!`, 'success');
+      if (res.data.explorerUrl) {
+        setTimeout(() => window.open(res.data.explorerUrl, '_blank'), 500);
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.error || 'Failed to claim prize';
+      showToast(msg, 'error');
+    } finally {
+      setClaiming(false);
+    }
   };
 
   const config = contest ? (contestTypeConfig[contest.typeCode] || contestTypeConfig.WEEKLY_STARTER) : contestTypeConfig.WEEKLY_STARTER;
@@ -579,6 +605,12 @@ export default function ContestDetail() {
                 })}
               </div>
             )}
+            {/* Tapestry verification footer */}
+            <div className="px-4 py-2 border-t border-gray-700/50">
+              <p className="text-[10px] text-gray-600 text-center">
+                All entries and scores are stored on Tapestry Protocol — verifiable on Solana
+              </p>
+            </div>
           </div>
         ) : (
           /* My Team Tab */
@@ -674,7 +706,7 @@ export default function ContestDetail() {
 
             {myEntry && (
               <div className="mt-6 pt-6 border-t border-gray-700">
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-3 gap-4 text-center mb-4">
                   <div>
                     <p className="text-2xl font-bold text-white">{myEntry.score ? parseFloat(String(myEntry.score)).toFixed(1) : '-'}</p>
                     <p className="text-sm text-gray-400">Total Score</p>
@@ -690,6 +722,33 @@ export default function ContestDetail() {
                     <p className="text-sm text-gray-400">Prize</p>
                   </div>
                 </div>
+
+                {/* Claim Prize CTA */}
+                {myEntry.canClaim && !myEntry.claimed && (
+                  <button
+                    onClick={handleClaimPrize}
+                    disabled={claiming}
+                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-lg transition-all flex items-center justify-center gap-3"
+                  >
+                    {claiming ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Sending SOL…
+                      </>
+                    ) : (
+                      <>
+                        <Coins size={24} weight="fill" />
+                        Claim {parseFloat(String(myEntry.prizeAmount)).toFixed(3)} SOL
+                      </>
+                    )}
+                  </button>
+                )}
+                {myEntry.claimed && (
+                  <div className="flex items-center justify-center gap-2 py-3 text-green-400 font-semibold">
+                    <CheckCircle size={20} weight="fill" />
+                    Prize Claimed
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -34,7 +34,10 @@ async function findOrCreateUser(
 ): Promise<FindOrCreateResult> {
   const { referralCode, authProvider = 'privy' } = options;
 
-  let user = await db('users').where({ wallet_address: walletAddress }).first();
+  // Case-insensitive lookup — handles transition from lowercase to original Solana case
+  let user = await db('users')
+    .whereRaw('LOWER(wallet_address) = LOWER(?)', [walletAddress])
+    .first();
   let isNewUser = false;
 
   if (!user) {
@@ -57,8 +60,9 @@ async function findOrCreateUser(
     const isFoundingMember = totalUsers < 1000;
     const foundingMemberNumber = isFoundingMember ? totalUsers + 1 : null;
 
-    // Generate unique referral code
-    const refCode = `FORESIGHT_${walletAddress.slice(2, 10).toUpperCase()}`;
+    // Generate collision-safe referral code
+    const suffix = uuidv4().slice(0, 4).toUpperCase();
+    const refCode = `FORESIGHT_${walletAddress.slice(2, 10).toUpperCase()}_${suffix}`;
     const autoUsername = `Trader_${walletAddress.slice(2, 8)}`;
 
     const [newUser] = await db('users')
@@ -87,10 +91,13 @@ async function findOrCreateUser(
       );
     }
   } else {
-    // Update last seen and auth provider if changed
+    // Update last seen, auth provider, and fix wallet case if needed
     const updates: Record<string, any> = { last_seen_at: db.fn.now() };
     if (user.auth_provider !== authProvider) {
       updates.auth_provider = authProvider;
+    }
+    if (user.wallet_address !== walletAddress) {
+      updates.wallet_address = walletAddress; // Fix case to match Privy
     }
     await db('users').where({ id: user.id }).update(updates);
   }
@@ -288,7 +295,10 @@ router.post(
       );
     }
 
-    const walletAddress = walletInfo.address.toLowerCase();
+    // Keep original case for Solana (base58 is case-sensitive)
+    const walletAddress = walletInfo.chainType === 'solana'
+      ? walletInfo.address
+      : walletInfo.address.toLowerCase();
 
     logger.info(`Privy auth successful for wallet ${walletAddress}`, {
       context: 'Auth API',

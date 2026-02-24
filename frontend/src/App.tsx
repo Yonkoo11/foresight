@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
 
 import { RealtimeProvider } from './contexts/RealtimeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -49,7 +49,7 @@ const queryClient = new QueryClient();
  */
 function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
   const { ready, authenticated, user, login, logout: privyLogout } = usePrivy();
-  usePrivyAuth();
+  const { syncError, retrySync } = usePrivyAuth();
 
   const address = useMemo(() => {
     if (!user) return undefined;
@@ -76,8 +76,53 @@ function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
     logout: handleLogout,
   }), [ready, authenticated, address, login, handleLogout]);
 
+  const isSyncing = ready && authenticated && !localStorage.getItem('authToken');
+  const [errorDismissed, setErrorDismissed] = useState(false);
+
+  // Reset dismiss when error changes
+  useEffect(() => {
+    if (syncError) setErrorDismissed(false);
+  }, [syncError]);
+
   return (
     <AuthContext.Provider value={authState}>
+      {/* Syncing indicator — only while actively completing sign-in, no error text */}
+      {isSyncing && !syncError && (
+        <div className="bg-gray-900/80 border-b border-gray-800 px-4 py-1.5 flex items-center justify-center gap-2 text-xs text-gray-400">
+          <div className="w-3 h-3 border border-gold-500 border-t-transparent rounded-full animate-spin" />
+          Completing sign-in…
+        </div>
+      )}
+      {/* Error notification — small, dismissible, non-blocking */}
+      {isSyncing && syncError && !errorDismissed && (
+        <div className="fixed bottom-24 right-4 z-50 max-w-xs bg-gray-900 border border-gray-700 rounded-xl shadow-lg px-4 py-3 flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white">Sign-in interrupted</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {syncError === 'rate_limited'
+                ? 'Too many attempts — try again in a few minutes'
+                : 'Could not reach server — check your connection'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5 shrink-0">
+            {syncError !== 'rate_limited' && (
+              <button
+                onClick={() => { setErrorDismissed(false); retrySync(); }}
+                className="text-xs text-gold-400 hover:text-gold-300 font-medium"
+              >
+                Retry
+              </button>
+            )}
+            <button
+              onClick={() => setErrorDismissed(true)}
+              className="text-gray-600 hover:text-gray-400 text-lg leading-none"
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {children}
     </AuthContext.Provider>
   );

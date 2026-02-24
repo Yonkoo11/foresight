@@ -95,7 +95,7 @@ export default function Referrals() {
     const shareUrl = `${window.location.origin}?ref=${data.referralCode}`;
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
-    showToast('success', 'Referral link copied!');
+    showToast('Referral link copied!', 'success');
 
     setTimeout(() => setCopied(false), 2000);
   };
