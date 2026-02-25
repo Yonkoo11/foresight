@@ -18,6 +18,8 @@ import {
   Play,
   Star,
   Lightning,
+  Seal,
+  LinkSimple,
 } from '@phosphor-icons/react';
 import FormationPreview from '../components/FormationPreview';
 import ActivityFeedCard from '../components/ActivityFeedCard';
@@ -37,13 +39,24 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Copy */}
           <div className="text-center lg:text-left">
-            {/* Live Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-sm text-gold-400 font-medium mb-6">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500"></span>
-              </span>
-              Live on Solana
+            {/* Badge row */}
+            <div className="flex flex-wrap items-center gap-2 justify-center lg:justify-start mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-sm text-gold-400 font-medium">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500"></span>
+                </span>
+                Live on Solana
+              </div>
+              <a
+                href="https://www.usetapestry.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700 text-xs text-gray-400 hover:border-gold-500/40 hover:text-gold-400 transition-colors"
+              >
+                <Seal size={13} weight="fill" className="text-gold-500/70" />
+                Powered by Tapestry Protocol
+              </a>
             </div>
 
             {/* Headline */}
@@ -82,7 +95,7 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
             </div>
 
             {/* Trust Signals */}
-            <div className="mt-8 flex flex-wrap gap-6 justify-center lg:justify-start text-sm text-gray-500">
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 justify-center lg:justify-start text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <CheckCircle size={18} className="text-green-500" weight="fill" />
                 <span>Free to play</span>
@@ -95,6 +108,10 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
                 <CheckCircle size={18} className="text-green-500" weight="fill" />
                 <span>No deposit required</span>
               </div>
+              <div className="flex items-center gap-2">
+                <Seal size={18} className="text-gold-500" weight="fill" />
+                <span className="text-gold-500/80">Teams locked on Tapestry</span>
+              </div>
             </div>
           </div>
 
@@ -103,6 +120,19 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
             <FormationPreview variant="hero" showStats={true} />
             {/* Glow effect behind */}
             <div className="absolute -inset-4 bg-gradient-to-r from-gold-500/20 via-transparent to-cyan-500/20 blur-3xl -z-10"></div>
+            {/* Tapestry on-chain seal — bottom right of the formation */}
+            <a
+              href="https://www.usetapestry.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-950/90 border border-gold-500/30 backdrop-blur-sm hover:border-gold-500/60 transition-colors group"
+            >
+              <Seal size={14} weight="fill" className="text-gold-400 group-hover:text-gold-300" />
+              <div className="text-left">
+                <p className="text-[10px] font-semibold text-gold-400 leading-none group-hover:text-gold-300">Sealed on-chain</p>
+                <p className="text-[9px] text-gray-500 leading-none mt-0.5">Tapestry · Solana</p>
+              </div>
+            </a>
           </div>
         </div>
       </section>
