@@ -7,7 +7,9 @@
  * - confirmation: Success state after publishing to Tapestry
  */
 
-import { CheckCircle, ArrowSquareOut, Link as LinkIcon } from '@phosphor-icons/react';
+import { CheckCircle, ArrowSquareOut } from '@phosphor-icons/react';
+
+const TAPESTRY_FAVICON = 'https://www.usetapestry.dev/favicon.ico';
 
 interface TapestryBadgeProps {
   variant?: 'inline' | 'card' | 'confirmation';
@@ -27,9 +29,9 @@ export default function TapestryBadge({
   if (variant === 'inline') {
     if (!isConnected) return null;
     return (
-      <span className={`inline-flex items-center gap-1 text-xs text-gold-400 ${className}`}>
-        <CheckCircle size={12} weight="fill" />
-        Saved on Solana
+      <span className={`inline-flex items-center gap-1 text-xs text-gray-400 ${className}`}>
+        <img src={TAPESTRY_FAVICON} alt="" className="w-3 h-3 rounded-sm opacity-70" />
+        On Tapestry
       </span>
     );
   }
@@ -57,7 +59,7 @@ export default function TapestryBadge({
     } ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <LinkIcon size={20} className="text-gold-400" weight="bold" />
+          <img src={TAPESTRY_FAVICON} alt="Tapestry" className="w-5 h-5 rounded-sm" />
           <h3 className="font-semibold text-white">Tapestry Protocol</h3>
         </div>
         {isConnected && (

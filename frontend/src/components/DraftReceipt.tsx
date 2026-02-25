@@ -5,7 +5,9 @@
  * Replaces the old static TapestryBadge confirmation variant.
  */
 
-import { CheckCircle, ArrowSquareOut, Lock, Seal } from '@phosphor-icons/react';
+import { CheckCircle, ArrowSquareOut, Lock } from '@phosphor-icons/react';
+
+const TAPESTRY_FAVICON = 'https://www.usetapestry.dev/favicon.ico';
 
 interface DraftReceiptProps {
   entryId?: number | string;
@@ -36,7 +38,7 @@ export default function DraftReceipt({
     <div className={`rounded-xl border border-gold-500/30 bg-gold-500/5 overflow-hidden ${className}`}>
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gold-500/20 bg-gold-500/10">
-        <Seal size={16} weight="fill" className="text-gold-400" />
+        <img src={TAPESTRY_FAVICON} alt="Tapestry" className="w-4 h-4 rounded-sm" />
         <span className="text-sm font-semibold text-gold-400">Team Locked on Solana</span>
         <Lock size={12} className="text-gold-500/50 ml-auto" />
       </div>
@@ -81,9 +83,10 @@ export default function DraftReceipt({
           href="https://www.usetapestry.dev"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-gold-400 hover:text-gold-300 transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-200 transition-colors"
         >
-          View proof <ArrowSquareOut size={11} />
+          <img src={TAPESTRY_FAVICON} alt="" className="w-3 h-3 rounded-sm opacity-60" />
+          Tapestry <ArrowSquareOut size={10} />
         </a>
       </div>
     </div>

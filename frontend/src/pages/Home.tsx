@@ -18,8 +18,6 @@ import {
   Play,
   Star,
   Lightning,
-  Seal,
-  LinkSimple,
 } from '@phosphor-icons/react';
 import FormationPreview from '../components/FormationPreview';
 import ActivityFeedCard from '../components/ActivityFeedCard';
@@ -35,7 +33,7 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero Section */}
-      <section className="py-12 md:py-20">
+      <section className="pt-6 pb-12 md:pt-10 md:pb-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Copy */}
           <div className="text-center lg:text-left">
@@ -52,9 +50,9 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
                 href="https://www.usetapestry.dev"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700 text-xs text-gray-400 hover:border-gold-500/40 hover:text-gold-400 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-800/80 border border-gray-700 text-xs text-gray-400 hover:border-gray-600 hover:text-gray-200 transition-colors"
               >
-                <Seal size={13} weight="fill" className="text-gold-500/70" />
+                <img src="https://www.usetapestry.dev/favicon.ico" alt="Tapestry" className="w-3.5 h-3.5 rounded-sm" />
                 Powered by Tapestry Protocol
               </a>
             </div>
@@ -95,43 +93,46 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
             </div>
 
             {/* Trust Signals */}
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 justify-center lg:justify-start text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <CheckCircle size={18} className="text-green-500" weight="fill" />
+            <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 justify-center lg:justify-start text-xs text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={15} className="text-emerald-500 shrink-0" weight="fill" />
                 <span>Free to play</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle size={18} className="text-green-500" weight="fill" />
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={15} className="text-emerald-500 shrink-0" weight="fill" />
                 <span>Win real prizes</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle size={18} className="text-green-500" weight="fill" />
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={15} className="text-emerald-500 shrink-0" weight="fill" />
                 <span>No deposit required</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Seal size={18} className="text-gold-500" weight="fill" />
-                <span className="text-gold-500/80">Teams locked on Tapestry</span>
+              <div className="flex items-center gap-1.5">
+                <img src="https://www.usetapestry.dev/favicon.ico" alt="Tapestry" className="w-3.5 h-3.5 rounded-sm shrink-0" />
+                <span className="text-gray-400">Teams on Tapestry</span>
               </div>
             </div>
           </div>
 
           {/* Right: Formation Preview */}
-          <div className="relative">
-            <FormationPreview variant="hero" showStats={true} />
-            {/* Glow effect behind */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-gold-500/20 via-transparent to-cyan-500/20 blur-3xl -z-10"></div>
-            {/* Tapestry on-chain seal — bottom right of the formation */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative w-full">
+              <FormationPreview variant="hero" showStats={true} />
+              {/* Glow effect behind */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-gold-500/20 via-transparent to-cyan-500/20 blur-3xl -z-10"></div>
+            </div>
+            {/* Tapestry attribution — below the formation, clean and intentional */}
             <a
               href="https://www.usetapestry.dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-950/90 border border-gold-500/30 backdrop-blur-sm hover:border-gold-500/60 transition-colors group"
+              className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors group"
             >
-              <Seal size={14} weight="fill" className="text-gold-400 group-hover:text-gold-300" />
-              <div className="text-left">
-                <p className="text-[10px] font-semibold text-gold-400 leading-none group-hover:text-gold-300">Sealed on-chain</p>
-                <p className="text-[9px] text-gray-500 leading-none mt-0.5">Tapestry · Solana</p>
-              </div>
+              <img
+                src="https://www.usetapestry.dev/favicon.ico"
+                alt="Tapestry"
+                className="w-4 h-4 rounded-sm opacity-70 group-hover:opacity-100 transition-opacity"
+              />
+              <span>Teams sealed on-chain · Tapestry Protocol</span>
             </a>
           </div>
         </div>
