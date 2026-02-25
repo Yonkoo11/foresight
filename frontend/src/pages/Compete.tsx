@@ -849,12 +849,9 @@ export default function Compete() {
                   return (
                     <div
                       key={contest.id}
-                      className="relative bg-gold-500/5 border border-gold-500/30 rounded-xl overflow-hidden hover:border-gold-500/50 transition-all group"
+                      className="relative bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gold-500/30 transition-all group"
                     >
-                      {/* Thick gold gradient bar */}
-                      <div className="h-1.5 bg-gradient-to-r from-gold-500 to-amber-600" />
-
-                      <div className="p-4">
+                      <div className="p-5">
                         {/* Header row */}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -917,23 +914,23 @@ export default function Compete() {
 
                         {/* Stats */}
                         <div className="grid grid-cols-4 gap-2 mb-4">
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className={`text-sm font-semibold ${contest.isFree ? 'text-emerald-400' : 'text-white'}`}>
                               {contest.isFree ? 'FREE' : contest.entryFeeFormatted}
                             </div>
                             <div className="text-[10px] text-gray-500">Entry</div>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className="text-sm font-semibold text-white">
                               ${(contest.prizePool * solPrice).toFixed(2)}
                             </div>
                             <div className="text-[10px] text-gray-500 font-mono">{contest.prizePoolFormatted}</div>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className="text-sm font-semibold text-white">{contest.playerCount}</div>
                             <div className="text-[10px] text-gray-500">Players</div>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className="text-sm font-semibold text-white flex items-center justify-center gap-1">
                               <Clock size={12} />
                               {getTimeRemaining(contest.lockTime)}
@@ -981,10 +978,8 @@ export default function Compete() {
                   return (
                     <div
                       key={contest.id}
-                      className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all group"
+                      className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 hover:bg-gray-800/80 transition-all group"
                     >
-                      <div className={`h-1 bg-gradient-to-r ${config.gradient}`} />
-
                       <div className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -1016,23 +1011,23 @@ export default function Compete() {
                         </div>
 
                         <div className="grid grid-cols-4 gap-2 mb-4">
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className={`text-sm font-semibold ${contest.isFree ? 'text-emerald-400' : 'text-white'}`}>
                               {contest.isFree ? 'FREE' : contest.entryFeeFormatted}
                             </div>
                             <div className="text-[10px] text-gray-500">Entry</div>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className="text-sm font-semibold text-white">
                               ${(contest.prizePool * solPrice).toFixed(2)}
                             </div>
                             <div className="text-[10px] text-gray-500 font-mono">{contest.prizePoolFormatted}</div>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className="text-sm font-semibold text-white">{contest.playerCount}</div>
                             <div className="text-[10px] text-gray-500">Players</div>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-black/20">
+                          <div className="text-center p-2 rounded-lg bg-gray-800/60">
                             <div className="text-sm font-semibold text-white flex items-center justify-center gap-1">
                               <Clock size={12} />
                               {getTimeRemaining(contest.lockTime)}
