@@ -12,7 +12,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   Trophy, ArrowLeft, ArrowRight, Lock, CheckCircle, Warning,
-  Timer, Coins, Users, Info
+  Timer, Coins, Users, Info, Wallet, X
 } from '@phosphor-icons/react';
 import FormationTeam from '../components/draft/FormationTeam';
 import InfluencerGrid from '../components/draft/InfluencerGrid';
@@ -97,6 +97,8 @@ export default function Draft() {
   const [existingTeam, setExistingTeam] = useState<ExistingTeam | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [tapestryPublished, setTapestryPublished] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [solPrice, setSolPrice] = useState<number>(145);
 
   // Computed
   const usedBudget = useMemo(
@@ -122,10 +124,18 @@ export default function Draft() {
     return `${hours}h ${mins}m`;
   }, [contest?.lockTime]);
 
+  // Fetch live SOL price for paid contest display
+  useEffect(() => {
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
+      .then(r => r.json())
+      .then(d => { if (d?.solana?.usd) setSolPrice(d.solana.usd); })
+      .catch(() => {});
+  }, []);
+
   // Load data
   useEffect(() => {
     if (!contestId) {
-      navigate('/play?tab=contests');
+      navigate('/compete?tab=contests');
       return;
     }
 
@@ -311,40 +321,57 @@ export default function Draft() {
     return false;
   };
 
-  // Submit team
+  // Submit team — forks on free vs paid
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
+    // Paid contests show a confirmation modal first
+    if (contest && !contest.isFree) {
+      setShowPaymentModal(true);
+      return;
+    }
+
+    await doSubmit();
+  };
+
+  // Actual submission (called directly for free, or after payment confirmation for paid)
+  const doSubmit = async () => {
     setSubmitting(true);
+    setShowPaymentModal(false);
 
     try {
-      // Ensure authenticated
       let token = localStorage.getItem('authToken');
       if (!token) {
         const success = await authenticate();
-        if (!success) {
-          setSubmitting(false);
-          return;
-        }
+        if (!success) { setSubmitting(false); return; }
         token = localStorage.getItem('authToken');
       }
 
       const teamIds = selectedPicks.map((p) => p.id);
+      const isPaid = contest && !contest.isFree;
 
-      // Use PUT for updates, POST for new entries
-      const isUpdate = !!existingTeam;
-      const endpoint = isUpdate
-        ? `${API_URL}/api/v2/contests/${contestId}/update-free-team`
-        : `${API_URL}/api/v2/contests/${contestId}/enter-free`;
-
-      const res = isUpdate
-        ? await axios.put(endpoint, { teamIds, captainId }, { headers: { Authorization: `Bearer ${token}` } })
-        : await axios.post(endpoint, { teamIds, captainId }, { headers: { Authorization: `Bearer ${token}` } });
+      let res;
+      if (isPaid) {
+        // Paid: use enter-test endpoint (devnet — simulates payment for hackathon)
+        res = await axios.post(
+          `${API_URL}/api/v2/contests/${contestId}/enter-test`,
+          { team_name: 'My Team', influencer_ids: teamIds, captain_id: captainId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        const isUpdate = !!existingTeam;
+        const endpoint = isUpdate
+          ? `${API_URL}/api/v2/contests/${contestId}/update-free-team`
+          : `${API_URL}/api/v2/contests/${contestId}/enter-free`;
+        res = isUpdate
+          ? await axios.put(endpoint, { teamIds, captainId }, { headers: { Authorization: `Bearer ${token}` } })
+          : await axios.post(endpoint, { teamIds, captainId }, { headers: { Authorization: `Bearer ${token}` } });
+      }
 
       if (res.data.success) {
         setTapestryPublished(res.data.tapestry?.published || false);
         setShowSuccess(true);
-        showToast(isUpdate ? 'Team updated!' : 'Team submitted!', 'success');
+        showToast(existingTeam ? 'Team updated!' : 'Team entered!', 'success');
       }
     } catch (err) {
       console.error('Submit failed:', err);
@@ -377,7 +404,7 @@ export default function Draft() {
         <div className="text-center">
           <Warning size={48} className="mx-auto mb-4 text-red-400" />
           <p className="text-gray-400">Contest not found</p>
-          <Link to="/play?tab=contests" className="text-cyan-400 hover:underline mt-2 block">
+          <Link to="/compete?tab=contests" className="text-cyan-400 hover:underline mt-2 block">
             Back to contests
           </Link>
         </div>
@@ -439,7 +466,7 @@ export default function Draft() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Link
-              to="/play?tab=contests"
+              to="/compete?tab=contests"
               className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
             >
               <ArrowLeft size={20} className="text-gray-400" />
@@ -606,6 +633,81 @@ export default function Draft() {
           </div>
         </div>
       </div>
+
+      {/* ── Payment Confirmation Modal ─────────────────────────────────── */}
+      {showPaymentModal && contest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-gray-900 border border-gray-700 shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-700">
+              <h3 className="text-lg font-bold text-white">Confirm Entry</h3>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5">
+              <div className="text-center mb-5">
+                <div className="text-4xl mb-3">🏆</div>
+                <p className="font-bold text-white text-lg mb-0.5">{contest.name}</p>
+                <p className="text-sm text-gray-400">Entry fee</p>
+              </div>
+
+              {/* Fee display */}
+              <div className="rounded-xl bg-gray-800/80 p-4 mb-4 text-center">
+                <p className="text-3xl font-bold text-white mb-0.5">
+                  {contest.entryFeeFormatted}
+                </p>
+                <p className="text-sm text-gray-400">
+                  ≈ ${(contest.entryFee * solPrice).toFixed(2)} USD
+                </p>
+              </div>
+
+              {/* Wallet */}
+              <div className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+                <Wallet size={16} className="text-gray-400 flex-shrink-0" />
+                <p className="text-xs text-gray-400 font-mono truncate">
+                  {address ? `${address.slice(0, 10)}...${address.slice(-6)}` : 'No wallet connected'}
+                </p>
+              </div>
+
+              {/* Prize pool context */}
+              <p className="text-xs text-gray-500 text-center mb-5">
+                Prize pool: <span className="text-emerald-400 font-medium">{contest.prizePoolFormatted}</span>
+                {' '}· {contest.playerCount} players entered
+              </p>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-gray-600 text-gray-300 font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={doSubmit}
+                  disabled={submitting}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-gold-500 to-amber-600 hover:opacity-90 text-gray-950 font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <div className="w-5 h-5 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Coins size={18} weight="fill" />
+                      Pay & Enter
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

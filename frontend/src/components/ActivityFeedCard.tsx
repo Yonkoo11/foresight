@@ -133,7 +133,7 @@ export default function ActivityFeedCard() {
           <Users size={28} className="mx-auto mb-2 text-gray-600" />
           <p className="text-xs text-gray-500">Follow other players to see their activity here</p>
           <Link
-            to="/play"
+            to="/compete"
             className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 mt-2"
           >
             Browse Leaderboard <ArrowRight size={12} />

@@ -27,7 +27,7 @@ export default function WelcomeModal({ onClose, freeLeagueContestId }: WelcomeMo
     if (freeLeagueContestId) {
       navigate(`/draft?contestId=${freeLeagueContestId}&type=FREE_LEAGUE&teamSize=5&hasCaptain=true&isFree=true`);
     } else {
-      navigate('/play?tab=contests');
+      navigate('/compete?tab=contests');
     }
   };
 

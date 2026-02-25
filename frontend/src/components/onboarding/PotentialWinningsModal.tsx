@@ -115,7 +115,7 @@ export default function PotentialWinningsModal({
 
   const handleTryContest = (typeCode: string) => {
     markPotentialWinningsSeen();
-    navigate('/play?tab=contests');
+    navigate('/compete?tab=contests');
   };
 
   const handleClose = () => {
@@ -272,7 +272,7 @@ export default function PotentialWinningsModal({
               </button>
             ) : (
               <button
-                onClick={() => navigate('/play?tab=contests')}
+                onClick={() => navigate('/compete?tab=contests')}
                 className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 transition-colors"
               >
                 Play Again Free

@@ -447,7 +447,7 @@ export default function Profile() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Enter Contest Action */}
               <Link
-                to="/play?tab=contests"
+                to="/compete?tab=contests"
                 className="group relative overflow-hidden rounded-xl border p-4 transition-all hover:scale-[1.02] bg-gold-500/10 border-gold-500/30 hover:border-gold-500/50"
               >
                 <div className="flex items-start justify-between mb-3">
@@ -503,7 +503,7 @@ export default function Profile() {
 
               {/* Check Standings */}
               <Link
-                to="/play"
+                to="/compete"
                 className="group relative overflow-hidden rounded-xl bg-gray-800/30 border border-gray-700 p-4 transition-all hover:scale-[1.02] hover:border-gray-600"
               >
                 <div className="flex items-start justify-between mb-3">
@@ -557,7 +557,7 @@ export default function Profile() {
           {/* Quick Links */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
-              to="/play?tab=contests"
+              to="/compete?tab=contests"
               className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gold-500/50 transition-all group"
             >
               <div className="flex items-center gap-3">
@@ -750,7 +750,7 @@ export default function Profile() {
                 team={teamForFormation}
                 showStats={true}
                 showEdit={true}
-                onEdit={() => navigate('/play?tab=contests')}
+                onEdit={() => navigate('/compete?tab=contests')}
               />
             </>
           ) : (
@@ -759,7 +759,7 @@ export default function Profile() {
               <h3 className="text-xl font-bold text-white mb-2">No Team Yet</h3>
               <p className="text-gray-400 mb-6">Draft your first team of 5 CT influencers</p>
               <Link
-                to="/play?tab=contests"
+                to="/compete?tab=contests"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gold-500 hover:bg-gold-600 rounded-lg text-gray-950 font-medium transition-colors"
               >
                 <Crown size={20} />
@@ -868,7 +868,7 @@ export default function Profile() {
                         Scouted {new Date(item.scoutedAt).toLocaleDateString()}
                       </span>
                       <Link
-                        to="/play?tab=contests"
+                        to="/compete?tab=contests"
                         className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
                       >
                         Draft
@@ -964,7 +964,7 @@ export default function Profile() {
 
           {/* Leaderboard Link */}
           <Link
-            to="/play?tab=rankings&type=xp"
+            to="/compete?tab=rankings&type=xp"
             className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gray-700 transition-all group"
           >
             <div className="flex items-center gap-3">

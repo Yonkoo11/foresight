@@ -29,7 +29,7 @@ export default function TapestryBadge({
     return (
       <span className={`inline-flex items-center gap-1 text-xs text-gold-400 ${className}`}>
         <CheckCircle size={12} weight="fill" />
-        Tapestry
+        Saved on Solana
       </span>
     );
   }
@@ -39,7 +39,7 @@ export default function TapestryBadge({
       <div className={`px-4 py-3 rounded-xl bg-gold-500/10 border border-gold-500/20 ${className}`}>
         <div className="flex items-center gap-2 mb-1">
           <CheckCircle size={18} weight="fill" className="text-gold-400" />
-          <span className="text-sm text-gold-400 font-semibold">Published to Tapestry Protocol</span>
+          <span className="text-sm text-gold-400 font-semibold">Saved to Solana</span>
         </div>
         <p className="text-xs text-gray-400 ml-[26px]">
           Your team is stored on Solana's social graph — immutable and verifiable.

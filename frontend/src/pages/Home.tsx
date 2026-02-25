@@ -8,20 +8,28 @@
  */
 
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   ArrowRight,
   Trophy,
   CheckCircle,
   SignIn,
   Play,
+  Star,
+  Lightning,
 } from '@phosphor-icons/react';
 import FormationPreview from '../components/FormationPreview';
 import ActivityFeedCard from '../components/ActivityFeedCard';
 import { useAuth } from '../hooks/useAuth';
+import { getXPLevel } from '../utils/xp';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // ============ LANDING PAGE ============
 
-function LandingPage({ isConnected, login }: { isConnected: boolean; login: () => void }) {
+function LandingPage({ isConnected, login, xp }: { isConnected: boolean; login: () => void; xp: number }) {
+  const xpInfo = xp > 0 ? getXPLevel(xp) : null;
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero Section */}
@@ -55,7 +63,7 @@ function LandingPage({ isConnected, login }: { isConnected: boolean; login: () =
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               {isConnected ? (
                 <Link
-                  to="/play?tab=contests"
+                  to="/compete?tab=contests"
                   className="btn-primary btn-lg group"
                 >
                   Start Playing
@@ -150,10 +158,45 @@ function LandingPage({ isConnected, login }: { isConnected: boolean; login: () =
         </div>
       </section>
 
-      {/* Activity Feed — only for logged-in users */}
+      {/* XP Progression + Activity Feed — only for logged-in users */}
       {isConnected && (
         <section className="py-16 border-t border-gray-800/50">
-          <div className="max-w-lg mx-auto">
+          <div className="max-w-lg mx-auto space-y-4">
+            {/* XP Progression Card */}
+            {xpInfo && (
+              <div className="rounded-xl bg-gray-900/60 border border-gray-700 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Star size={16} className="text-gold-400" weight="fill" />
+                    <span className="text-sm font-semibold text-white">Your Progress</span>
+                  </div>
+                  <span className="text-xs text-gray-400 font-mono">
+                    {xp.toLocaleString()} XP
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-gold-400 uppercase tracking-wide">
+                    {xpInfo.levelInfo.label}
+                  </span>
+                  {xpInfo.nextLevel && (
+                    <span className="text-xs text-gray-500">
+                      {xpInfo.xpToNext.toLocaleString()} XP to {xpInfo.nextLevel}
+                    </span>
+                  )}
+                </div>
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-gold-500 to-amber-500 rounded-full transition-all duration-500"
+                    style={{ width: `${xpInfo.progress}%` }}
+                  />
+                </div>
+                <div className="mt-3 flex items-center gap-1 text-xs text-gray-500">
+                  <Lightning size={12} className="text-gold-400" />
+                  Draft a team, complete quests, and win contests to earn XP
+                </div>
+              </div>
+            )}
+
             <ActivityFeedCard />
           </div>
         </section>
@@ -235,8 +278,16 @@ function LandingPage({ isConnected, login }: { isConnected: boolean; login: () =
 
 export default function Home() {
   const { isConnected, login } = useAuth();
+  const [xp, setXp] = useState(0);
 
-  // Always show landing page - same experience for everyone
-  // CTAs change based on connection state
-  return <LandingPage isConnected={isConnected} login={login} />;
+  useEffect(() => {
+    if (!isConnected) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    axios.get(`${API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setXp(r.data.xp || 0))
+      .catch(() => {});
+  }, [isConnected]);
+
+  return <LandingPage isConnected={isConnected} login={login} xp={xp} />;
 }

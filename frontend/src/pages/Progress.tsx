@@ -418,14 +418,14 @@ export default function Progress() {
           {!localStorage.getItem('authToken') ? (
             <>
               <p className="text-gray-400 mb-4">Sign in to track your progress and complete quests</p>
-              <Link to="/play?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
+              <Link to="/compete?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
                 <Lightning size={18} weight="fill" /> Sign In & Play <CaretRight size={16} />
               </Link>
             </>
           ) : (
             <>
               <p className="text-gray-400 mb-4">Complete quests and play games to build your score</p>
-              <Link to="/play?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
+              <Link to="/compete?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">
                 <Trophy size={18} /> Browse Contests <CaretRight size={16} />
               </Link>
             </>
@@ -610,7 +610,7 @@ export default function Progress() {
 
       {/* Leaderboard Link */}
       <Link
-        to="/play?tab=rankings&type=fs"
+        to="/compete?tab=rankings&type=fs"
         className="flex items-center justify-between p-4 mt-8 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gray-700 transition-all group"
       >
         <div className="flex items-center gap-3">

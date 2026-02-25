@@ -57,7 +57,7 @@ export default function Layout({ children }: LayoutProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // 4-item navigation: Home / Play / Feed / Profile
+  // 4-item navigation: Home / Compete / Feed / Profile
   const navItems: NavItem[] = [
     {
       path: '/',
@@ -65,8 +65,8 @@ export default function Layout({ children }: LayoutProps) {
       icon: House,
     },
     {
-      path: '/play',
-      label: 'Play',
+      path: '/compete',
+      label: 'Compete',
       icon: Trophy,
       matchPaths: ['/draft', '/contest'],
     },

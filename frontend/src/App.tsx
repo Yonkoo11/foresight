@@ -152,7 +152,7 @@ function AppContent() {
         <Routes>
           {/* Primary Navigation — 4 items */}
           <Route path="/" element={<Home />} />
-          <Route path="/play" element={<Play />} />
+          <Route path="/compete" element={<Play />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/profile" element={<Profile />} />
 
@@ -166,12 +166,12 @@ function AppContent() {
           <Route path="/contest/:id" element={<ContestDetail />} />
 
           {/* Legacy redirects */}
-          <Route path="/league" element={<Navigate to="/play" replace />} />
-          <Route path="/compete" element={<Navigate to="/play" replace />} />
-          <Route path="/contests" element={<Navigate to="/play?tab=contests" replace />} />
+          <Route path="/play" element={<Navigate to="/compete" replace />} />
+          <Route path="/league" element={<Navigate to="/compete" replace />} />
+          <Route path="/contests" element={<Navigate to="/compete?tab=contests" replace />} />
           <Route path="/intel" element={<Navigate to="/feed" replace />} />
           <Route path="/quests" element={<Navigate to="/progress" replace />} />
-          <Route path="/arena" element={<Navigate to="/play" replace />} />
+          <Route path="/arena" element={<Navigate to="/compete" replace />} />
 
           {/* Legal Pages */}
           <Route path="/terms" element={<Terms />} />

@@ -133,6 +133,10 @@ router.get('/contests', async (req: Request, res: Response) => {
         isOpen: c.status === 'open' && new Date(c.lock_time) > new Date(),
         winnersCount: c.winners_count,
         createdAt: c.created_at,
+        isSignatureLeague: c.is_signature_league || false,
+        creatorHandle: c.creator_handle || null,
+        creatorAvatarUrl: c.creator_avatar_url || null,
+        creatorFollowerCount: c.creator_follower_count || 0,
       })),
     });
   } catch (error: any) {
