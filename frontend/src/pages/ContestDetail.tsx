@@ -18,6 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getRarityInfo } from '../utils/rarities';
 import PotentialWinningsModal from '../components/onboarding/PotentialWinningsModal';
 import FormationPreview from '../components/FormationPreview';
+import ScoreBreakdown from '../components/ScoreBreakdown';
 import { API_URL } from '../config/api';
 
 interface Contest {
@@ -64,6 +65,7 @@ interface MyEntry {
   prizeAmount: number | null;
   claimed: boolean;
   canClaim: boolean;
+  scoreBreakdown?: string | { activity?: number; engagement?: number; growth?: number; viral?: number } | null;
   team: {
     id: number;
     name: string;
@@ -922,6 +924,26 @@ export default function ContestDetail() {
                     <p className="text-sm text-gray-400">Prize</p>
                   </div>
                 </div>
+
+                {/* Score breakdown — only show when score has been calculated */}
+                {myEntry.score > 0 && myEntry.scoreBreakdown && (() => {
+                  const bd = typeof myEntry.scoreBreakdown === 'string'
+                    ? (() => { try { return JSON.parse(myEntry.scoreBreakdown as string); } catch { return {}; } })()
+                    : myEntry.scoreBreakdown;
+                  const captainPlayer = myEntry.team?.find(p => p.isCaptain);
+                  const baseScore = bd && (bd.activity ?? 0) + (bd.engagement ?? 0) + (bd.growth ?? 0) + (bd.viral ?? 0);
+                  const captainBonus = baseScore && myEntry.score > 0
+                    ? Math.max(0, myEntry.score - baseScore)
+                    : undefined;
+                  return (
+                    <ScoreBreakdown
+                      breakdown={bd ?? {}}
+                      captainBonus={captainBonus}
+                      total={Math.round(myEntry.score)}
+                      className="mt-4"
+                    />
+                  );
+                })()}
               </div>
             )}
           {/* Next Week banner — show for finalized recurring leagues */}
