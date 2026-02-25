@@ -685,8 +685,51 @@ router.get('/influencers', async (req: Request, res: Response) => {
         `)
       );
 
+    // Compute archetype for each influencer from available metrics
+    const withArchetypes = influencers.map((inf) => {
+      const engRate  = parseFloat(String(inf.engagement_rate || 0));
+      const tweets   = parseFloat(String(inf.daily_tweets   || 0));
+      const followers = parseInt(String(inf.follower_count  || 0), 10);
+
+      // Normalize each metric to 0–1 scale
+      const actNorm  = Math.min(1, tweets   / 10);           // 10+ tweets/day = peak activity
+      const engNorm  = Math.min(1, engRate  / 5);            // 5%+ engagement = peak engagement
+      const growNorm = Math.min(1, followers / 5_000_000);   // 5M+ followers = peak growth
+
+      const scores = [
+        { key: 'activity',   norm: actNorm  },
+        { key: 'engagement', norm: engNorm  },
+        { key: 'growth',     norm: growNorm },
+      ].sort((a, b) => b.norm - a.norm);
+
+      const dominant = scores[0];
+      const second   = scores[1];
+
+      let archetype = 'All-Rounder';
+      if (dominant.norm >= 0.25) {
+        // Clear leader in one category
+        const gap = dominant.norm - second.norm;
+        if (gap > 0.15) {
+          // Significantly dominant in one category
+          const map: Record<string, string> = {
+            activity:   'Activity Beast',
+            engagement: 'Engagement Wizard',
+            growth:     'Growth Machine',
+          };
+          archetype = map[dominant.key] ?? 'All-Rounder';
+        } else if (engRate > 4 && tweets < 5) {
+          // High engagement but low volume = punchy/viral
+          archetype = 'Viral Sniper';
+        } else {
+          archetype = 'All-Rounder';
+        }
+      }
+
+      return { ...inf, archetype };
+    });
+
     res.json({
-      influencers,
+      influencers: withArchetypes,
       budget_info: {
         max_budget: 150,
         team_size: 5,

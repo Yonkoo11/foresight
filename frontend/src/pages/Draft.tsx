@@ -35,6 +35,7 @@ interface Influencer {
   follower_count?: number;
   engagement_rate?: number;
   total_points?: number;
+  archetype?: string;
 }
 
 interface InfluencerApiResponse {
@@ -50,6 +51,7 @@ interface InfluencerApiResponse {
   follower_count?: number;
   engagement_rate?: string | number;
   total_points?: string | number;
+  archetype?: string;
 }
 
 interface Contest {
@@ -175,6 +177,7 @@ export default function Draft() {
         follower_count: i.follower_count,
         engagement_rate: typeof i.engagement_rate === 'string' ? parseFloat(i.engagement_rate || '0') : (i.engagement_rate || 0),
         total_points: typeof i.total_points === 'string' ? parseInt(i.total_points || '0') : (i.total_points || 0),
+        archetype: i.archetype,
       }));
       setInfluencers(data);
     } catch (err) {

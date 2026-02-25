@@ -17,7 +17,16 @@ interface Influencer {
   follower_count?: number;
   engagement_rate?: number;
   total_points?: number;
+  archetype?: string;
 }
+
+const ARCHETYPE_STYLE: Record<string, string> = {
+  'Activity Beast':     'text-blue-400',
+  'Engagement Wizard':  'text-gold-400',
+  'Growth Machine':     'text-emerald-400',
+  'Viral Sniper':       'text-rose-400',
+  'All-Rounder':        'text-gray-400',
+};
 
 interface InfluencerGridProps {
   influencers: Influencer[];
@@ -211,6 +220,13 @@ export default function InfluencerGrid({
                           <Info size={12} className="text-gray-400 hover:text-white" />
                         </button>
                       </div>
+
+                      {/* Archetype label */}
+                      {inf.archetype && inf.archetype !== 'All-Rounder' && (
+                        <p className={`text-[9px] mt-1 italic truncate ${ARCHETYPE_STYLE[inf.archetype] ?? 'text-gray-400'}`}>
+                          {inf.archetype}
+                        </p>
+                      )}
 
                       {/* Can't afford label */}
                       {!affordable && !selected && (
