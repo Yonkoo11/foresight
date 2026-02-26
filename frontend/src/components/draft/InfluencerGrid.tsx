@@ -133,7 +133,7 @@ export default function InfluencerGrid({
       </div>
 
       {/* Tier Sections */}
-      <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+      <div className="space-y-6">
         {TIER_ORDER.map((tier) => {
           const items = groupedInfluencers[tier];
           if (!items || items.length === 0) return null;

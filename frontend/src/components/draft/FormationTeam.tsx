@@ -195,7 +195,7 @@ function CompactPlayerSlot({ player, isCaptain, onRemove, onSetCaptain }: Compac
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-400 rounded-full flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-400 rounded-full flex items-center justify-center z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
       >
         <X size={8} weight="bold" className="text-white" />
       </button>

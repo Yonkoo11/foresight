@@ -658,9 +658,9 @@ export default function Compete() {
                           </div>
                         </div>
 
-                        {/* Follow — hidden on mobile to keep rows clean */}
+                        {/* Follow — visible on all screen sizes */}
                         {entry.tapestryUserId && isConnected && localStorage.getItem('authToken') && (
-                          <div className="hidden sm:block shrink-0">
+                          <div className="shrink-0">
                             <FollowButton
                               targetProfileId={entry.tapestryUserId}
                               targetUsername={entry.username}

@@ -34,9 +34,9 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
     <div className="max-w-6xl mx-auto">
       {/* Hero Section */}
       <section className="pt-6 pb-12 md:pt-10 md:pb-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Copy */}
-          <div className="text-center lg:text-left">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Left: Copy — below formation on mobile, left on desktop */}
+          <div className="order-2 lg:order-1 text-center lg:text-left">
             {/* Badge row */}
             <div className="flex flex-wrap items-center gap-2 justify-center lg:justify-start mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-sm text-gold-400 font-medium">
@@ -113,8 +113,8 @@ function LandingPage({ isConnected, login, xp, teamsOnChain }: { isConnected: bo
             </div>
           </div>
 
-          {/* Right: Formation Preview */}
-          <div className="flex flex-col items-center gap-3">
+          {/* Right: Formation Preview — first on mobile, right on desktop */}
+          <div className="order-1 lg:order-2 flex flex-col items-center gap-3">
             <div className="relative w-full">
               <FormationPreview variant="hero" showStats={true} />
               {/* Glow effect behind */}

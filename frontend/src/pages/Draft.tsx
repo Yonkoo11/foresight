@@ -105,6 +105,7 @@ export default function Draft() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [solPrice, setSolPrice] = useState<number>(145);
   const [transferStatus, setTransferStatus] = useState<{ remaining: number; allowed: number; level: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{ username: string; avatarUrl?: string } | null>(null);
 
   // Computed
   const usedBudget = useMemo(
@@ -129,6 +130,22 @@ export default function Draft() {
     const mins = Math.floor((diff % 3600000) / 60000);
     return `${hours}h ${mins}m`;
   }, [contest?.lockTime]);
+
+  // Fetch user info for the share card footer
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    fetch(`${API_URL}/api/v2/fs/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d?.success && d?.data) {
+          setUserInfo({ username: d.data.username || '', avatarUrl: d.data.avatarUrl });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch live SOL price for paid contest display
   useEffect(() => {
@@ -459,6 +476,8 @@ export default function Draft() {
             }))}
             captainId={captainId}
             contestName={contest.name}
+            username={userInfo?.username}
+            userAvatar={userInfo?.avatarUrl}
             variant="share-only"
             className="mb-3"
           />
@@ -498,8 +517,8 @@ export default function Draft() {
               <ArrowLeft size={20} className="text-gray-400" />
             </Link>
             <div>
-              <h1 className="text-xl font-bold text-white">{contest.name}</h1>
-              <div className="flex items-center gap-3 text-sm text-gray-400">
+              <h1 className="text-base md:text-xl font-bold text-white">{contest.name}</h1>
+              <div className="hidden sm:flex items-center gap-3 text-sm text-gray-400">
                 <span className="flex items-center gap-1">
                   <Coins size={14} />
                   {contest.isFree ? 'Free Entry' : contest.entryFeeFormatted}
@@ -513,6 +532,9 @@ export default function Draft() {
                   {contest.playerCount} entered
                 </span>
               </div>
+              <p className="sm:hidden text-xs text-gray-400">
+                {contest.isFree ? 'Free' : contest.entryFeeFormatted} · {contest.prizePoolFormatted} prize
+              </p>
             </div>
           </div>
 
