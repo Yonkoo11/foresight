@@ -1203,7 +1203,28 @@ export default function Compete() {
             <div className="text-center py-16">
               <Trophy size={48} className="mx-auto mb-4 text-gray-600" />
               <h3 className="text-xl font-bold text-white mb-2">No contests available</h3>
-              <p className="text-gray-400">Check back soon for new contests!</p>
+              <p className="text-gray-400 mb-6">Check back soon for new contests!</p>
+              {isConnected && address && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('authToken');
+                      const r = await fetch(`${API_URL}/api/admin/seed-demo-contest`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      const d = await r.json();
+                      showToast(d.message || 'Done', 'success');
+                      setTimeout(() => window.location.reload(), 1200);
+                    } catch {
+                      showToast('Failed to seed contest', 'error');
+                    }
+                  }}
+                  className="text-xs text-gray-600 hover:text-gray-400 underline"
+                >
+                  Seed demo contest
+                </button>
+              )}
             </div>
           )}
 
