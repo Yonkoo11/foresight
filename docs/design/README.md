@@ -1,30 +1,58 @@
-# Design System Documentation
+# Foresight Design System
 
-**Complete as of:** February 27, 2026
-
-This folder contains the definitive design direction for Foresight. Three documents, one vision.
+> **The law for all visual decisions. Read this first.**
+> **Updated:** February 27, 2026 — Creative Direction Established (Trading Terminal Paradigm)
 
 ---
 
-## 📄 The Three Documents
+## QUICK START (For Everyone)
 
-### 1. **CREATIVE_BRIEF.md** (842 lines)
-**"The Vision & Philosophy"**
+1. **Read:** `CREATIVE_DIRECTOR_SUMMARY.md` (5 min) — Strategic overview
+2. **Daily:** `CREATIVE_DIRECTOR_QUICK_REFERENCE.md` (10 min) — Decision trees + patterns
+3. **Before PR:** Use `VISUAL_AUDIT_CHECKLIST.md` — Pass all checks
+4. **Deep dive:** `CREATIVE_DIRECTOR_BRIEF.md` (30 min) — Full strategic brief
 
-This is the creative direction. Read this first. Contains:
-- Vision statement (what Foresight feels like)
-- Target user persona (who we design for)
-- Design personality (5 defining adjectives)
-- What we are / what we are NOT
-- Tone of voice (copy guidelines)
-- Core visual language (color, typography, spacing)
-- 10 non-negotiable design rules
-- Page-by-page design direction (Home, Draft, Leaderboard, Contest Detail, CT Feed, Profile, Progress)
-- Component decisions (high-level)
-- Inspiration sources (which apps to reference for which pages)
+---
 
-**When to use:** Architects, product managers, designers, anyone making visual decisions.
-**Who should read first:** The CTO, the designer, anyone leading UI/UX changes.
+## THE 7 CREATIVE DECISIONS (Non-Negotiable)
+
+**These are final.** Every design work justifies itself against these.
+
+1. **Visual Metaphor:** Trading Terminal Dashboard (Hyperliquid style, not DraftKings)
+2. **Visual Signature:** Formation Grid (5-player layout, 1.5x captain slot, only Foresight has this)
+3. **Color System:** 60-30-10 (dark, neutral, ONE gold CTA per context)
+4. **Typography:** 3 fonts, 6 sizes, monospace for ALL numbers
+5. **Design Principle:** "Color in content, not chrome" (controls hierarchy)
+6. **Delete:** 7 AI slop patterns (glows, gradients, neon, long buttons, multiple gold CTAs, hover-only info, confetti)
+7. **Reference:** Hyperliquid (density), Linear (polish), Axiom (speed)
+
+---
+
+## CRITICAL RULES (Enforce in Every PR)
+
+- [ ] Formation grid is the visual hero (if applicable)
+- [ ] All numbers are monospace (JetBrains Mono 13px, tabular-nums)
+- [ ] One gold CTA per screen section max
+- [ ] No gradients on cards (flat dark + gray borders)
+- [ ] No hover-only info on mobile
+- [ ] No neon green glows
+- [ ] Animations 200ms max
+- [ ] Mobile works at 375px (no horizontal scroll)
+
+**If any fail:** PR doesn't ship.
+
+---
+
+## DOCUMENTS (In Order of Importance)
+
+### 🎯 THE LAW (Read These First)
+
+| Document | Purpose | Read Time | Status |
+|----------|---------|-----------|--------|
+| **CREATIVE_DIRECTOR_BRIEF.md** | Full strategic brief. 7 definitive answers with rationale. THE LAW. | 30 min | ✅ Complete |
+| **CREATIVE_DIRECTOR_QUICK_REFERENCE.md** | TL;DR. Decision trees. Daily reference. Copy-paste patterns. | 10 min | ✅ Complete |
+| **VISUAL_AUDIT_CHECKLIST.md** | Pre-PR audit checklist. 30-second pass + detailed. Use before every PR. | 15 min | ✅ Complete |
+| **CREATIVE_DIRECTOR_SUMMARY.md** | Strategic overview for leadership. Why trading terminal? Formation grid strategy. | 5 min | ✅ Complete |
 
 ---
 
