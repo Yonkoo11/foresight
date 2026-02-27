@@ -13,27 +13,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --filter frontend
-
       - name: Deploy to Vercel
-        working-directory: frontend
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx vercel --prod --token=$VERCEL_TOKEN --yes
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./frontend
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   deploy-backend:
     name: Backend to Railway
@@ -49,4 +37,9 @@ jobs:
         working-directory: backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service=${{ secrets.RAILWAY_SERVICE_ID }} --detach
+        run: |
+          railway up \
+            --service=69a452ed-26c4-402d-b3e7-5e5502624d96 \
+            --project=119c3ac8-92b0-47bb-9e20-d65d9a7ea6c2 \
+            --environment=61753e30-9121-4abf-9ddb-9783add6ac1d \
+            --detach
