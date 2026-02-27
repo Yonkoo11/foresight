@@ -15,14 +15,16 @@ export async function up(knex: Knex): Promise<void> {
       code: 'FREE_LEAGUE',
       name: 'Free League',
       description: 'Practice mode - no entry fee, real prizes funded by platform',
-      entry_fee: '0',
+      entry_fee: 0,
       team_size: 5,
       has_captain: true,
-      min_players: 2,
+      duration_hours: 168,
+      rake_percent: 0,
+      min_players: 10,
       max_players: 0,
-      rake_percent: '0',
-      prize_structure: JSON.stringify({ type: 'platform_funded' }),
-      is_active: true,
+      winners_percent: 10,
+      is_free: true,
+      display_order: 1,
     });
     console.log('✅ Inserted FREE_LEAGUE contest type.');
   }
