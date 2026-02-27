@@ -455,7 +455,7 @@ Would enable:
 | Frontend | Vercel | Free | 10 min |
 | Backend API | Railway or Render | $10-20/mo | 20 min |
 | Database | Neon (Postgres) | Free tier | 15 min |
-| Domain | foresight.gg | $12/yr | 5 min |
+| Domain | ct-foresight.xyz | $12/yr | 5 min |
 | CDN | Vercel (included) | Free | Automatic |
 
 ### Deployment Timeline (1 Day)
@@ -491,7 +491,7 @@ Would enable:
 5. Test: https://foresight.vercel.app
 
 #### Evening (30 min): Domain + Finishing
-1. Point foresight.gg domain to Vercel
+1. Point ct-foresight.xyz domain to Vercel
 2. SSL certificate auto-provisioned
 3. Test all flows end-to-end
 4. Write deployment checklist for day-of-hackathon
@@ -629,12 +629,12 @@ Would enable:
 - [ ] Deploy database to Neon (migrations + seed data)
 - [ ] Deploy backend to Railway/Render
 - [ ] Deploy frontend to Vercel
-- [ ] Set DNS: foresight.gg → Vercel
+- [ ] Set DNS: ct-foresight.xyz → Vercel
 - [ ] End-to-end test on production
 - [ ] Commit: "deploy: production release"
 
 **Success Criteria:**
-- https://foresight.gg loads
+- https://ct-foresight.xyz loads
 - Auth works
 - Demo contest is joinable
 - Leaderboard updates

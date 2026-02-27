@@ -1,8 +1,9 @@
 # Foresight - Claude Memory
 
-> **Last Updated:** February 25, 2026 (23:15 UTC)
-> **Status:** Scoring System Validated Against CT Culture + Ready for Launch
-> **Session Focus:** The CT Native's Cultural Analysis — Influence Scoring Framework
+> **Last Updated:** February 27, 2026 (21:15 UTC)
+> **Status:** ✅ COMPREHENSIVE UX RESEARCH COMPLETE — 15 COMPETITIVE INSIGHTS SYNTHESIZED
+> **Current Priority:** Execute design refresh using validated CT-native patterns + fantasy sports retention science
+> **New Deliverables:** 2 comprehensive research documents + psychology playbook
 
 ---
 
@@ -10,12 +11,141 @@
 
 This file persists context across Claude sessions. **Update after major decisions.**
 
-**Current Priority:** Launch readiness (scoring system validated, social features complete, demo video next)
+**Current Priority:** Design implementation using proven patterns (CT credibility, fantasy retention, SaaS dark-theme)
+**Key Docs to Read First:**
+  1. **`docs/UX_RESEARCH_COMPETITIVE_AUDIT_2026.md`** — Full research + 15 insights + implementation roadmap
+  2. **`docs/UX_QUICK_REFERENCE_BATTLE_GUIDE.md`** — Daily reference guide for implementation team
+  3. `docs/design/DESIGN_PRINCIPLES.md` — Visual law (non-negotiable)
+**Phase:** 2 (Implementation) — Ready to build with validation
 
-**NEW DELIVERABLES (Today):**
-- ✅ `docs/CT_INFLUENCE_CULTURAL_ANALYSIS.md` (10K+ words) — Complete cultural framework for influence scoring
-- ✅ `docs/CT_INFLUENCE_QUICK_REFERENCE.md` (3K words) — TL;DR for team + how to talk to CT power users
-- ✅ **Verdict:** Foresight's scoring system = 8/10, very respectful to CT culture. Ready to launch as-is.
+---
+
+## CREATIVE DIRECTION: 7 DEFINITIVE ANSWERS (Feb 27, 2026)
+
+**Documents:**
+- `docs/design/CREATIVE_DIRECTOR_BRIEF.md` — FULL STRATEGIC BRIEF (8K+ words, non-negotiable)
+- `docs/design/CREATIVE_DIRECTOR_QUICK_REFERENCE.md` — TL;DR for daily work
+
+### The 7 Answers (Executive Summary)
+
+1. **Visual Metaphor:** Trading Terminal Dashboard (not sports arena). Monospace data, real-time updates, minimal decoration.
+2. **Unique Visual Signature:** Formation grid (5-player layout with 1.5x captain slot, gold glow). Only Foresight has this.
+3. **Color System:** 60-30-10 rule. Dark backgrounds (#09090B), neutral text/borders, one gold CTA per context. No neon. Subtle gold flash for updates.
+4. **Typography:** 3 fonts, 6 sizes. JetBrains Mono for ALL numbers. Inter for body. Plus Jakarta Sans for bold headers only.
+5. **One Design Principle:** "Color in content, not chrome." Chrome = dark gray. Color = badges, icons, primary metrics only.
+6. **Remove Immediately:** 7 AI slop patterns (excessive glows, gradient cards, neon green, long buttons, multiple gold CTAs, hover-only info, confetti/celebration).
+7. **Three References:** Hyperliquid (data density), Linear (polish), Axiom (speed). Study their leaderboards, components, animations.
+
+### Critical Implementation Rules
+
+- Formation grid is the visual signature (must be prominent, functional, beautiful)
+- All numbers = monospace (JetBrains Mono 13px, tabular-nums)
+- One gold CTA per screen section (secondary/ghost otherwise)
+- Animations max 200ms (snappy, not smooth)
+- Mobile first at 375px (design there, scale up)
+- Dark backgrounds verified on real phone in dark room
+- No emoji in UI (Phosphor icons only)
+- No gradients on cards (flat dark + gray borders)
+- No hover-only info on mobile (provide tap alternative)
+
+**Next Action:** Read the Creative Director Brief. It's the law for all design work going forward.
+
+---
+
+## TRADING APP DESIGN INSIGHTS (Feb 27, 2026) [ARCHIVE]
+
+### What Makes Premium Crypto UIs Feel Right
+
+**Hyperliquid standard:** Professional, restrained, precise. Uses monospace data + indigo accents. Flash animations are 300ms (shows update, fades).
+
+**Axiom approach:** Terminal-native, Solana-fast. Everything is monospace (JetBrains Mono). Animations are 100ms. Neon green signals speed.
+
+**Photon philosophy:** Mobile-first, memecoin energy. Space Mono font + permanent color commits (not flashes). Bottom sheets instead of modals.
+
+**Birdeye method:** Analytics-focused, chart-first. Cyan + purple accents. Generous padding, whitespace is a feature.
+
+**DexScreener simplicity:** Minimalist, one thing done perfectly. Orange CTAs, cyan secondary. Chart occupies 60%+ of screen.
+
+### 10 Lessons Applied to Foresight
+
+1. ✅ **Monospace data only** — Use font-mono for scores/ranks/amounts (not body text)
+2. ✅ **Glow over shadow** — Glows work better in dark themes (use `--shadow-gold`)
+3. ✅ **Flash animations** — 150-200ms for score updates (implement soon)
+4. ✅ **Button hover reveal** — Border appears on hover, not color change
+5. ✅ **Repeated actions whisper** — Ghost styling for follow/like buttons
+6. ✅ **Commit to secondary colors** — Gold + cyan is good, don't add 5 colors
+7. ⚠️ **Simplify type scale** — Reduce from 12 to 6 sizes (TODO)
+8. ⚠️ **Border-radius consistency** — Keep 8px (already correct)
+9. ✅ **Real-time update animations** — Start with leaderboard scores
+10. ✅ **Mobile-first data layout** — One row = complete unit at 375px
+
+### Priority Implementation Items
+
+**High Impact (do first):**
+- [ ] Add `scoreFlash` animation (150-200ms) to leaderboard
+- [ ] Increase glow usage 2x (especially achievements)
+- [ ] Simplify type scale (reduce to 6 core sizes)
+- [ ] Test button hover states on mobile (tap-friendly)
+
+**Medium Impact (polish):**
+- [ ] Replace 30% of shadows with glows
+- [ ] Add emerald as third accent color (for free contests)
+- [ ] Consider pulsing glow for "Live" indicators
+- [ ] Audit all repeated action buttons (follow, like)
+
+**Reference Documents:**
+- **Full research:** `docs/design/research/TRADING_APPS.md` (read first)
+- **Quick reference:** `docs/design/research/TRADING_APPS_QUICK_REFERENCE.md` (for implementation)
+- **Code examples:** `docs/design/research/TRADING_APPS_CODE_EXAMPLES.md` (copy-paste ready)
+
+---
+
+## REDESIGN WORKFLOW (MANDATORY)
+
+### The Standard
+This is not a hackathon anymore. Foresight must feel like a product thousands of CT users will use daily. The bar is Hyperliquid for aesthetics, Linear for polish, DraftKings for fantasy UX.
+
+### The Process
+```
+RESEARCH → CREATIVE BRIEF → PAGE SPEC → IMPLEMENT → SCREENSHOT → ITERATE
+```
+
+### Before Touching Any Page
+1. Check `REDESIGN_PROGRESS.md` for the current phase and page queue
+2. Read the page's spec file in `docs/design/pages/`
+3. Take a BEFORE screenshot using the dev-browser extension
+4. Implement ONLY what the spec says
+5. Take an AFTER screenshot
+6. Update `REDESIGN_PROGRESS.md`
+
+### Agent Team Structure
+- **CTO (orchestrator):** Decides which agents to run, synthesizes outputs, makes final calls
+- **UX Researcher:** Competitive analysis, what patterns work and why
+- **Creative Director:** Brand, visual language, aesthetic decisions
+- **Lead UX Designer:** Page layouts, flows, wireframes, interaction specs
+- **Frontend Architect:** Component patterns, implementation
+
+### When to Run Agents
+- **Parallel:** Research tasks (independent, no dependencies)
+- **Sequential:** Research → Creative Brief → Page Spec (each depends on previous)
+- **Solo:** Single-page implementation (no collaboration needed)
+- **Meeting room:** Creative Director + UX Designer for cross-page decisions
+
+### Design Principles (Non-Negotiable)
+1. Every number = `font-mono` (JetBrains Mono)
+2. Neon green `#10F981` = real-time / alive / wins only
+3. Gold `#F59E0B` = authority / #1 / winning / primary CTA
+4. 150ms transitions (snappy, not smooth)
+5. Mobile-first always (375px starting point)
+6. No emoji in code — Phosphor icons only
+7. Density over whitespace — CT users handle information
+8. One gold CTA per screen
+
+**NEW DELIVERABLES (Feb 27, 2026):**
+- ✅ `docs/design/research/TRADING_APPS.md` (12K words) — Deep dive into Hyperliquid, Axiom, Photon, Birdeye, DexScreener design patterns
+- ✅ `docs/design/research/TRADING_APPS_QUICK_REFERENCE.md` (3K words) — TL;DR copy-paste patterns for implementation
+- ✅ `docs/design/research/TRADING_APPS_CODE_EXAMPLES.md` (4K words) — Production-ready code snippets (React, CSS, animations)
+- ✅ **Verdict:** Foresight is 80% aligned with premium trading app aesthetics. Focus areas: simplify type scale, increase glow usage, add score flash animations
 
 ### MOBILE FIRST — NON-NEGOTIABLE
 

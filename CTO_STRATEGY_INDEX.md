@@ -96,9 +96,9 @@ Day-by-day execution plan with specific tasks:
 - Deploy to Neon (database)
 - Deploy to Railway (backend)
 - Deploy to Vercel (frontend)
-- Point foresight.gg domain
+- Point ct-foresight.xyz domain
 - End-to-end testing on production
-- **Success:** App is live at foresight.gg
+- **Success:** App is live at ct-foresight.xyz
 
 **Thursday:** QA & demo
 - Desktop + mobile testing
@@ -148,7 +148,7 @@ Day-by-day execution plan with specific tasks:
 |-----|------|---------|-------|
 | **Mon 24** | Remove EVM code, get Tapestry API key | Zero compiler errors | 8 |
 | **Tue 25** | Wire Tapestry scoring | Scores stored on Solana | 8 |
-| **Wed 26** | Deploy to production | Live at foresight.gg | 6 |
+| **Wed 26** | Deploy to production | Live at ct-foresight.xyz | 6 |
 | **Thu 27** | QA, load test, demo video | Polished, bug-free | 8 |
 | **Fri 28** | Submit + monitor | Shipped 🚀 | 2 |
 | **TOTAL** | | **32 hours core, 40 available** | **40** |
@@ -269,7 +269,7 @@ Day-by-day execution plan with specific tasks:
 - [ ] Create Neon.tech account
 - [ ] Create Railway.app account (or Render.com)
 - [ ] Create Vercel account
-- [ ] Have foresight.gg domain credentials ready
+- [ ] Have ct-foresight.xyz domain credentials ready
 
 ### Team Alignment
 - [ ] All engineers read **CTO_QUICK_REFERENCE.md**
@@ -298,7 +298,7 @@ Day-by-day execution plan with specific tasks:
 - [ ] Production: Zero 500 errors
 
 **Product Quality:**
-- [ ] foresight.gg is live
+- [ ] ct-foresight.xyz is live
 - [ ] Auth works for 20 simultaneous users
 - [ ] Demo contest has 15 entrants
 - [ ] Leaderboard shows real scores

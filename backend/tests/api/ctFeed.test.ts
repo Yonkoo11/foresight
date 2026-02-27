@@ -67,6 +67,36 @@ describe('CT Feed API', () => {
         expect(tweet).toHaveProperty('influencer');
       }
     });
+
+    it('should cap any single influencer at 2 tweets in the feed', async () => {
+      const response = await request(app)
+        .get('/api/ct-feed?limit=50')
+        .expect(200);
+
+      const tweets = response.body.data?.tweets || [];
+      const countByInfluencer: Record<number, number> = {};
+      for (const tweet of tweets) {
+        const id = tweet.influencer.id;
+        countByInfluencer[id] = (countByInfluencer[id] || 0) + 1;
+      }
+      for (const [influencerId, count] of Object.entries(countByInfluencer)) {
+        expect(count, `influencer ${influencerId} has ${count} tweets (max 2)`).toBeLessThanOrEqual(2);
+      }
+    });
+
+    it('should not show the same influencer on consecutive tweets', async () => {
+      const response = await request(app)
+        .get('/api/ct-feed?limit=50')
+        .expect(200);
+
+      const tweets = response.body.data?.tweets || [];
+      for (let i = 1; i < tweets.length; i++) {
+        expect(
+          tweets[i].influencer.id,
+          `tweet[${i}] same influencer as tweet[${i - 1}] — interleaving broken`
+        ).not.toBe(tweets[i - 1].influencer.id);
+      }
+    });
   });
 
   describe('GET /api/ct-feed/highlights', () => {

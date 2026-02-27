@@ -44,7 +44,7 @@ Same vibe. Better monetization.
 • Leaderboard (all-time, weekly, monthly)
 
 Beta access for first 500 signups: [LINK]
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Tone:** Unironic. We're not apologizing. We're building what Kaito couldn't finish.
@@ -122,7 +122,7 @@ Foresight fixes all of it:
 4/
 
 Beta live. 500 slots. First come, first served.
-https://foresight.xyz
+https://ct-foresight.xyz
 
 (Join us, and 30 days in, you'll check Foresight before checking prices.)
 
@@ -412,7 +412,7 @@ Here's the deal:
 You don't have to do anything. Just keep tweeting.
 We'll make the money.
 
-Want in? https://foresight.xyz
+Want in? https://ct-foresight.xyz
 
 P.S. This is testnet, so no real money yet.
 But in 3 months, we're going mainnet.
@@ -441,7 +441,7 @@ if you crack the leaderboard top 100.
 Want to see how it works? We'll give you $20 testnet ETH
 to get started.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Incentives:**
@@ -464,7 +464,7 @@ Predict CT influence, build your credibility score.
 
 Early access code + $20 testnet ETH: [CODE]
 
-https://foresight.xyz
+https://ct-foresight.xyz
 
 (Leaderboard resets weekly—come climb it)
 ```
@@ -539,7 +539,7 @@ The Most Predictable CT Influencers (Week 1)
 "Predictable" = Our users called your engagement trend correctly.
 
 Who do you want to beat? Come make predictions at
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Why it works:**
@@ -568,7 +568,7 @@ Top user who beats them all:
 + One month free Premium
 
 Can you predict engagement better than the experts?
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Why it works:**
@@ -595,7 +595,7 @@ This week's biggest leaderboard climber:
 How? Focused predictions on underrated influencers.
 
 Anyone can climb. What's your strategy?
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Why it works:**
@@ -617,7 +617,7 @@ Foresight users are torn:
 
 Settlement in 8 hours. Who's right?
 
-Make your pick: https://foresight.xyz
+Make your pick: https://ct-foresight.xyz
 ```
 
 **Note:** Playful, never mean-spirited. This is about creating narrative, not drama.
@@ -639,7 +639,7 @@ They hit 78K.
 Credibility unlocked. 📊
 
 What will you predict tomorrow?
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Why it works:**
@@ -855,7 +855,7 @@ Top 10 Predictors (This Week):
 #2 @basebuilder
     CS: 76, Win Rate: 61%
 
-[Full leaderboard → https://foresight.xyz]
+[Full leaderboard → https://ct-foresight.xyz]
 
 Compete to be featured.
 ```
@@ -1869,7 +1869,7 @@ Kaito couldn't finish: prediction markets on CT influence.
 Daily markets. Real payouts. Credibility scores.
 
 Beta live. 500 slots. First come, first served.
-https://foresight.xyz
+https://ct-foresight.xyz
 
 1/
 ```
@@ -1886,7 +1886,7 @@ For you: Free Premium access + revenue share once we hit 500 DAU.
 
 Users predict your engagement daily. You earn 0.5% of losing bets.
 
-Want in? https://foresight.xyz
+Want in? https://ct-foresight.xyz
 ```
 
 ### Partnership Pitch (One-Pager)

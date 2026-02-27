@@ -86,7 +86,7 @@ Screenshots confirm UI matches scoring system. If anything is confusing, note it
 **Segment 5: Call-to-Action (15 seconds)**
 - "Draft this week, compete for SOL prizes"
 - "Leaderboard is live. Real engagement, real skill."
-- "foresight.gg"
+- "ct-foresight.xyz"
 
 ### Video Production Notes
 - Use actual gameplay (not mockups)

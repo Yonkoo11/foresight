@@ -515,7 +515,7 @@ Foresight on Tapestry."
 ```
 [FADE OUT]
 
-"Learn more at foresight.gg"
+"Learn more at ct-foresight.xyz"
 ```
 
 ### Video Production Checklist

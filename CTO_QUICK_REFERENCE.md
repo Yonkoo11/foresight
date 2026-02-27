@@ -11,7 +11,7 @@
 
 1. **Clean EVM code** → Remove ethers.js + SIWE (Mon)
 2. **Activate Tapestry** → Wire scoring to Solana (Tue)
-3. **Deploy to prod** → foresight.gg live (Wed)
+3. **Deploy to prod** → ct-foresight.xyz live (Wed)
 4. **Perfect demo** → 2-min video + load test (Thu)
 5. **Submit** → Celebrate (Fri)
 
@@ -27,7 +27,7 @@ Before Monday, confirm:
 - [ ] **Tapestry API key requested at usetapestry.dev?** In progress (should arrive by Tue)
 - [ ] **Accounts created at Neon + Railway + Vercel?** YES
 - [ ] **Team capacity for 5-day sprint?** 4-5 people, 40 hours
-- [ ] **foresight.gg domain ready?** YES
+- [ ] **ct-foresight.xyz domain ready?** YES
 
 ---
 
@@ -126,7 +126,7 @@ Before Monday, confirm:
 | Database | Neon | Run migrations + seed | 30 min |
 | Backend | Railway | Set env vars + deploy | 30 min |
 | Frontend | Vercel | Set env vars + deploy | 20 min |
-| Domain | DNS | Point foresight.gg to Vercel | 5 min |
+| Domain | DNS | Point ct-foresight.xyz to Vercel | 5 min |
 | **TOTAL** | | | **1.5 hours** |
 
 **Go-live:** Wednesday 2 PM UTC (end-to-end tested)
@@ -166,7 +166,7 @@ Before Monday, confirm:
 **WED:** Production live
 ```
 ✅ Deploy Neon + Railway + Vercel
-✅ foresight.gg is live
+✅ ct-foresight.xyz is live
 ✅ End-to-end flow works
 ```
 
@@ -238,7 +238,7 @@ VITE_API_URL=https://railway-backend.com
 ```
 Mon: cleanup: remove EVM, activate Tapestry
 Tue: feat: wire Tapestry scoring and team storage
-Wed: deploy: production release (foresight.gg)
+Wed: deploy: production release (ct-foresight.xyz)
 Thu: docs: final submission materials
 Fri: release: hackathon submission
 ```
@@ -280,7 +280,7 @@ Fri: release: hackathon submission
 
 ## FINAL CHECKLIST BEFORE SUBMISSION
 
-- [ ] App loads at https://foresight.gg
+- [ ] App loads at https://ct-foresight.xyz
 - [ ] Auth works (test Privy signup)
 - [ ] Can draft a team
 - [ ] Leaderboard shows entries

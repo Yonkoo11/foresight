@@ -269,7 +269,7 @@ Solana's social graph.
 
 Foresight on Tapestry.
 
-Learn more at foresight.gg"
+Learn more at ct-foresight.xyz"
 
 [FADE OUT]
 ```

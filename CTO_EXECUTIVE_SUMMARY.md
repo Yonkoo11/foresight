@@ -53,7 +53,7 @@ You have a **working, polished fantasy sports game** with clean authentication (
 |-----|------|-------|-------|---------|
 | **Mon 24** | Remove EVM code, get Tapestry API key | Backend | 8 | Zero compiler errors |
 | **Tue 25** | Wire Tapestry scoring, add UI badges | Backend + Frontend | 8 | Scores stored on Solana |
-| **Wed 26** | Deploy to production (Neon + Railway + Vercel) | DevOps | 6 | Live app at foresight.gg |
+| **Wed 26** | Deploy to production (Neon + Railway + Vercel) | DevOps | 6 | Live app at ct-foresight.xyz |
 | **Thu 27** | QA, load test, record demo video | QA + Marketing | 8 | Polished 2-min demo |
 | **Fri 28** | Final submission + monitor | Full team | 2 | Shipped 🚀 |
 
@@ -175,7 +175,7 @@ You have a **working, polished fantasy sports game** with clean authentication (
 - ✅ Tapestry integration working end-to-end
 
 **Product Quality:**
-- ✅ App deployed at foresight.gg
+- ✅ App deployed at ct-foresight.xyz
 - ✅ Auth works for 20 simultaneous users
 - ✅ Demo contest has 15 entrants, real scores
 - ✅ All 6 pages render without errors on desktop + mobile

@@ -101,7 +101,7 @@ Every system in the codebase has been audited by specialized agents. This docume
 ### Data Flow: User Journey
 
 ```
-1. User visits foresight.gg
+1. User visits ct-foresight.xyz
 2. Clicks "Sign In" → Privy modal (Solana wallet)
 3. Privy authenticates → usePrivyAuth sends token to backend
 4. Backend: POST /api/auth/verify { privyToken }
@@ -706,7 +706,7 @@ GET /api/tapestry/verify/:userId/:contestId
 | Frontend | Vercel | Free tier, instant deploys, edge CDN |
 | Backend | Railway | $5/mo, auto-deploy from git, easy Postgres |
 | Database | Railway Postgres | Same platform, low latency to backend |
-| Domain | foresight.gg | Already referenced in codebase |
+| Domain | ct-foresight.xyz | Already referenced in codebase |
 
 ### Environment Variables (Production)
 
@@ -718,12 +718,12 @@ PRIVY_APP_ID=<from privy.io>
 PRIVY_APP_SECRET=<from privy.io>
 TAPESTRY_API_KEY=<from usetapestry.dev>
 TWITTER_API_IO_KEY=<api-key>
-FRONTEND_URL=https://foresight.gg
+FRONTEND_URL=https://ct-foresight.xyz
 NODE_ENV=production
 PORT=3001
 
 # Frontend
-VITE_API_URL=https://api.foresight.gg
+VITE_API_URL=https://api.ct-foresight.xyz
 VITE_PRIVY_APP_ID=<same as backend>
 ```
 
@@ -734,7 +734,7 @@ VITE_PRIVY_APP_ID=<same as backend>
 - [ ] Railway: Run migrations (`knex migrate:latest`)
 - [ ] Railway: Seed demo data (`knex seed:run`)
 - [ ] Vercel: Deploy frontend from git, set env vars
-- [ ] DNS: Point foresight.gg to Vercel, api.foresight.gg to Railway
+- [ ] DNS: Point ct-foresight.xyz to Vercel, api.ct-foresight.xyz to Railway
 - [ ] Test: Auth flow end-to-end on production
 - [ ] Test: Draft a team, verify Tapestry badge
 - [ ] Test: Leaderboard loads with demo data
@@ -810,7 +810,7 @@ If the Privy modal is confusing to judges, the demo dies in the first 30 seconds
 - [ ] Deploy frontend to Vercel
 - [ ] Configure production environment variables
 - [ ] Run migrations + seed data on production
-- [ ] DNS setup (foresight.gg + api.foresight.gg)
+- [ ] DNS setup (ct-foresight.xyz + api.ct-foresight.xyz)
 
 **Afternoon (4 hours):**
 - [ ] End-to-end test on production: Signup → Draft → Leaderboard

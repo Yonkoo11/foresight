@@ -30,7 +30,7 @@ what Kaito couldn't finish: prediction markets on CT influence.
 
 Daily markets. Real metrics. Real payouts.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 
 1/ 🧵
 ```
@@ -86,7 +86,7 @@ Beta live. 500 slots.
 
 First come, first served.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 
 [Screenshot of leaderboard]
 
@@ -103,7 +103,7 @@ https://foresight.xyz
 
 **Expected results after 4 tweets:**
 - 1K-2K impressions
-- 50-100 click-throughs to foresight.xyz
+- 50-100 click-throughs to ct-foresight.xyz
 - 20-30 signups (if product is working)
 
 ---
@@ -135,7 +135,7 @@ No promotion required. Just keep tweeting.
 
 We'll make the money.
 
-Want in? https://foresight.xyz
+Want in? https://ct-foresight.xyz
 
 —Mujeeb, Foresight
 ```
@@ -160,7 +160,7 @@ is your public proof of intelligence about CT.
 
 Beta live 48h. First 500 users are founding members.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Expected response rate:** 30% (5 confirmations)
@@ -178,7 +178,7 @@ Early access code + $20 testnet ETH: [CODE]
 
 Leaderboard resets weekly. Come climb it.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Expected response rate:** 20% (6-8 confirmations)
@@ -210,7 +210,7 @@ Daily markets. Real payouts. Leaderboard resets weekly.
 
 Founding members (first 500): Your CS determines your future airdrop allocation.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 
 Who had the best Yaps streak? Come defend your title on Foresight.
 ```
@@ -229,7 +229,7 @@ Monthly "Modular Metrics" tournaments with prize pools.
 
 Early access code: [CODE]
 
-https://foresight.xyz
+https://ct-foresight.xyz
 
 See you on the leaderboard.
 ```
@@ -245,7 +245,7 @@ Foresight: Daily markets on Crypto Twitter.
 
 For Polymarket users: New market type. Same mechanics. Different vertical.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 ---
@@ -270,7 +270,7 @@ How it works:
 
 Testnet beta live. First 500 slots.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 
 Not financial advice. But prediction markets did $40B in 2025 for a reason.
 ```
@@ -318,7 +318,7 @@ Founding members (first 1000 users) get 2x allocation multiplier.
 - Base is the consumer chain
 
 ## Join
-Beta: https://foresight.xyz
+Beta: https://ct-foresight.xyz
 First 500 slots for founding members.
 
 ---
@@ -376,7 +376,7 @@ Show them what credible influence looks like.
 
 Come climb the leaderboard. First one to CS 100 wins bragging rights.
 
-https://foresight.xyz
+https://ct-foresight.xyz
 ```
 
 **Effect:** Other influencers see FOMO. "Wait, Vitalik's on this?"
@@ -402,7 +402,7 @@ If you have 50+ users and 10+ influential names on the leaderboard:
      CS 31, Win Rate 58%
 
 [Tap to see full leaderboard]
-https://foresight.xyz
+https://ct-foresight.xyz
 
 Can you beat the influencers?
 ```

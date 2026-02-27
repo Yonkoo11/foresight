@@ -147,7 +147,7 @@
 - [ ] Backend to Railway
 - [ ] Frontend to Vercel
 - [ ] Env vars configured
-- [ ] DNS setup (foresight.gg)
+- [ ] DNS setup (ct-foresight.xyz)
 
 ---
 

@@ -17,7 +17,9 @@
       "Bash(grep:*)",
       "Bash(git add:*)",
       "Bash(tail:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(railway redeploy:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:heaZMNoGAqSxylIKTtNaJypfHrVrtwVv@tramway.proxy.rlwy.net:48955/railway\" NODE_ENV=production NODE_OPTIONS='--import tsx' npx knex:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

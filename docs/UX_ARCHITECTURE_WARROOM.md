@@ -1450,7 +1450,7 @@ Contradiction looks buggy
 - [ ] Record a backup video (in case live demo fails)
 - [ ] Test on judge's internet (slow connection)
 - [ ] Disable CSS animations if they're janky
-- [ ] Have backup DNS (if foresight.xyz is down, have backup IP)
+- [ ] Have backup DNS (if ct-foresight.xyz is down, have backup IP)
 
 **During demo:**
 - [ ] Have backend + frontend running
