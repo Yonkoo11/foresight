@@ -103,6 +103,7 @@ export default function Draft() {
   const [tapestryPublished, setTapestryPublished] = useState(false);
   const [submittedEntryId, setSubmittedEntryId] = useState<number | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showFreeConfirmModal, setShowFreeConfirmModal] = useState(false);
   const [solPrice, setSolPrice] = useState<number>(145);
   const [transferStatus, setTransferStatus] = useState<{ remaining: number; allowed: number; level: string } | null>(null);
   const [userInfo, setUserInfo] = useState<{ username: string; avatarUrl?: string } | null>(null);
@@ -358,9 +359,15 @@ export default function Draft() {
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
-    // Paid contests show a confirmation modal first
+    // Paid contests show a payment confirmation modal first
     if (contest && !contest.isFree) {
       setShowPaymentModal(true);
+      return;
+    }
+
+    // Free contests: show lock warning on first-time entry only
+    if (contest?.isFree && !existingTeam) {
+      setShowFreeConfirmModal(true);
       return;
     }
 
@@ -719,6 +726,82 @@ export default function Draft() {
           </div>
         </div>
       </div>
+
+      {/* ── Free Entry Confirmation Modal ────────────────────────────── */}
+      {showFreeConfirmModal && contest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-gray-900 border border-gray-700 shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-700">
+              <h3 className="text-lg font-bold text-white">Lock In Your Team?</h3>
+              <button
+                onClick={() => setShowFreeConfirmModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5">
+              {/* Contest name */}
+              <p className="text-sm text-gray-400 text-center mb-4">{contest.name}</p>
+
+              {/* Lock time */}
+              <div className="rounded-xl bg-gray-800/80 p-4 mb-4 flex items-center gap-3">
+                <Lock size={20} className="text-gold-400 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Contest locks</p>
+                  <p className="text-sm font-semibold text-white">
+                    {new Date(contest.lockTime).toLocaleDateString('en-US', {
+                      weekday: 'long', month: 'short', day: 'numeric',
+                    })}{' · '}
+                    {new Date(contest.lockTime).toLocaleTimeString('en-US', {
+                      hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Transfer warning */}
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mb-5 flex items-start gap-2.5">
+                <Info size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-200/80 leading-relaxed">
+                  You can update your picks before the contest locks.{' '}
+                  <span className="font-semibold text-amber-300">
+                    New players get 1 update
+                  </span>{' '}
+                  — earn XP to unlock more changes per week.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowFreeConfirmModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-gray-600 text-gray-300 font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={() => { setShowFreeConfirmModal(false); doSubmit(); }}
+                  disabled={submitting}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-gold-500 to-amber-600 hover:opacity-90 text-gray-950 font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <div className="w-5 h-5 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle size={18} weight="fill" />
+                      Enter Contest
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Payment Confirmation Modal ─────────────────────────────────── */}
       {showPaymentModal && contest && (
