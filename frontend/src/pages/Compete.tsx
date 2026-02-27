@@ -1219,6 +1219,96 @@ export default function Compete() {
             </div>
           )}
 
+          {/* ── Creator Leagues — Coming Soon ────────────────────────────── */}
+          {!loading && (
+            <div className="mt-6 pt-6 border-t border-gray-800/50">
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-3">
+                <Crown size={15} weight="fill" className="text-gold-400" />
+                <span className="text-sm font-bold text-white">Creator Leagues</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gold-500/20 text-gold-400 border border-gold-500/30 tracking-wide">
+                  COMING SOON
+                </span>
+              </div>
+              <p className="text-sm text-gray-400 mb-4 max-w-lg">
+                Run your own contest. Your community, your prize — Foresight handles scoring, leaderboards, and payouts automatically.
+              </p>
+
+              {/* Mock preview card with blur overlay */}
+              <div className="relative rounded-2xl border border-gray-800 overflow-hidden">
+                {/* Frosted overlay */}
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-gray-950/60 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gold-500/20 border border-gold-500/40">
+                    <Crown size={16} weight="fill" className="text-gold-400" />
+                    <span className="text-gold-400 font-bold text-sm">Coming Soon</span>
+                  </div>
+                  <p className="text-xs text-gray-400">Be the first to host your own league</p>
+                </div>
+                {/* Blurred mock content */}
+                <div className="p-5 select-none">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-gold-500/50">
+                          <span className="text-xs font-bold text-white">AP</span>
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gold-500 rounded-full flex items-center justify-center">
+                          <Crown size={9} weight="fill" className="text-gray-950" />
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white">Pomp's Weekly Draft</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gold-500/15 text-gold-400 border border-gold-500/30">
+                            ✦ CREATOR LEAGUE
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">
+                            FREE
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Powered by <span className="text-gold-400 font-medium">@APompliano</span>
+                    <span className="text-gray-500"> · 1.5M followers</span>
+                  </p>
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    {[
+                      { label: 'Entry', value: 'FREE', color: 'text-emerald-400' },
+                      { label: 'Prize', value: '$500', color: 'text-white' },
+                      { label: 'Players', value: '247', color: 'text-white' },
+                      { label: 'Left', value: '5d 12h', color: 'text-white' },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="text-center p-2 rounded-lg bg-gray-800/60">
+                        <div className={`text-sm font-semibold ${color}`}>{value}</div>
+                        <div className="text-[10px] text-gray-500">{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="w-full py-2.5 rounded-xl bg-gold-500/20 text-gold-400 font-bold text-sm text-center">
+                    Join @APompliano's League
+                  </div>
+                </div>
+              </div>
+
+              {/* Early access CTA */}
+              <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-xl bg-gray-900/50 border border-gray-800">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">Are you a CT influencer or brand?</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Host your own league — we handle everything. Prizes paid out automatically.</p>
+                </div>
+                <a
+                  href="mailto:gm@foresight.gg?subject=Creator%20League%20Early%20Access"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500/10 border border-gold-500/40 text-gold-400 font-semibold text-sm hover:bg-gold-500/20 transition-colors whitespace-nowrap shrink-0"
+                >
+                  <Crown size={14} weight="fill" />
+                  Apply for early access →
+                </a>
+              </div>
+            </div>
+          )}
+
           {/* ── Past Contests Archive ──────────────────────────────────────── */}
           {!loading && archivedContests.length > 0 && (
             <div className="mt-4">
