@@ -934,25 +934,25 @@ export default function Profile() {
             <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-4">
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-white">{careerStats.totalContests}</div>
+                  <div className="text-2xl font-bold font-mono tabular-nums text-white">{careerStats.totalContests}</div>
                   <div className="text-xs text-gray-500 mt-0.5">Contests</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-gold-400">{careerStats.wins}</div>
+                  <div className="text-2xl font-bold font-mono tabular-nums text-gold-400">{careerStats.wins}</div>
                   <div className="text-xs text-gray-500 mt-0.5">Wins</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-white">{careerStats.bestScore}</div>
+                  <div className="text-2xl font-bold font-mono tabular-nums text-white">{careerStats.bestScore}</div>
                   <div className="text-xs text-gray-500 mt-0.5">Best Score</div>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-gray-800 flex justify-between text-sm">
-                <span className="text-gray-500">Avg score: <span className="text-white font-medium">{careerStats.avgScore} pts</span></span>
+                <span className="text-gray-500">Avg: <span className="text-white font-mono tabular-nums font-medium">{careerStats.avgScore} pts</span></span>
                 {careerStats.bestRank && (
-                  <span className="text-gray-500">Best rank: <span className="text-yellow-400 font-medium">#{careerStats.bestRank}</span></span>
+                  <span className="text-gray-500">Best: <span className="text-gold-400 font-mono tabular-nums font-medium">#{careerStats.bestRank}</span></span>
                 )}
                 {careerStats.topThree > 0 && (
-                  <span className="text-gray-500">Top 3: <span className="text-emerald-400 font-medium">{careerStats.topThree}x</span></span>
+                  <span className="text-gray-500">Top 3: <span className="text-neon-500 font-mono tabular-nums font-medium">{careerStats.topThree}×</span></span>
                 )}
               </div>
             </div>
@@ -992,9 +992,9 @@ export default function Profile() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-white text-sm truncate">{entry.contestName}</span>
                           {entry.tapestryVerified && (
-                            <span className="inline-flex items-center gap-1 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full shrink-0">
+                            <span className="inline-flex items-center gap-1 text-xs bg-neon-500/10 text-neon-500 border border-neon-500/20 px-1.5 py-0.5 rounded-full shrink-0">
                               <img src="/tapestry-icon.png" alt="" className="w-3 h-3 invert opacity-70" />
-                              Tapestry
+                              On-chain
                             </span>
                           )}
                         </div>
@@ -1009,11 +1009,11 @@ export default function Profile() {
                       <div className="flex items-center gap-4 shrink-0 ml-3">
                         <div className="text-right">
                           {entry.rank && (
-                            <div className={`text-base font-bold ${entry.rank === 1 ? 'text-gold-400' : entry.rank <= 3 ? 'text-yellow-400' : 'text-white'}`}>
+                            <div className={`text-base font-bold font-mono tabular-nums ${entry.rank === 1 ? 'text-gold-400' : entry.rank === 2 ? 'text-gray-300' : entry.rank <= 3 ? 'text-emerald-400' : 'text-white'}`}>
                               #{entry.rank}
                             </div>
                           )}
-                          <div className="text-sm text-gray-400">{entry.score} pts</div>
+                          <div className="text-sm font-mono tabular-nums text-gray-400">{entry.score} pts</div>
                         </div>
                         <CaretRight
                           size={16}
@@ -1055,11 +1055,11 @@ export default function Profile() {
                                   <span className="text-xs text-gray-500">@{pick.handle}</span>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <div className={`text-sm font-bold ${pick.isCaptain ? 'text-gold-400' : 'text-white'}`}>
+                                  <div className={`text-sm font-bold font-mono tabular-nums ${pick.isCaptain ? 'text-gold-400' : 'text-white'}`}>
                                     {pick.effectivePoints} pts
                                   </div>
                                   {pick.isCaptain && (
-                                    <div className="text-xs text-gray-600">{pick.points} × 1.5</div>
+                                    <div className="text-xs font-mono text-gray-600">{pick.points} × 1.5</div>
                                   )}
                                 </div>
                               </div>
@@ -1077,7 +1077,7 @@ export default function Profile() {
                           ) : (
                             <div className="grid grid-cols-4 gap-2">
                               <div className="bg-gray-800/40 rounded-lg p-2 text-center">
-                                <div className="text-sm font-bold text-white">{Math.round(entry.scoreBreakdown.activity)}</div>
+                                <div className="text-sm font-bold font-mono tabular-nums text-white">{Math.round(entry.scoreBreakdown.activity)}</div>
                                 <div className="text-xs text-gray-500 mt-0.5">Activity</div>
                               </div>
                               <div className="bg-gray-800/40 rounded-lg p-2 text-center">
@@ -1085,11 +1085,11 @@ export default function Profile() {
                                 <div className="text-xs text-gray-500 mt-0.5">Engage</div>
                               </div>
                               <div className="bg-gray-800/40 rounded-lg p-2 text-center">
-                                <div className="text-sm font-bold text-emerald-400">{Math.round(entry.scoreBreakdown.growth)}</div>
+                                <div className="text-sm font-bold font-mono tabular-nums text-emerald-400">{Math.round(entry.scoreBreakdown.growth)}</div>
                                 <div className="text-xs text-gray-500 mt-0.5">Growth</div>
                               </div>
                               <div className="bg-gray-800/40 rounded-lg p-2 text-center">
-                                <div className="text-sm font-bold text-gold-400">{Math.round(entry.scoreBreakdown.viral)}</div>
+                                <div className="text-sm font-bold font-mono tabular-nums text-gold-400">{Math.round(entry.scoreBreakdown.viral)}</div>
                                 <div className="text-xs text-gray-500 mt-0.5">Viral</div>
                               </div>
                             </div>
@@ -1100,7 +1100,7 @@ export default function Profile() {
                         {entry.prizeWon > 0 && (
                           <div className="flex items-center justify-between pt-2 border-t border-gray-800 text-sm">
                             <span className="text-gray-500">Prize won</span>
-                            <span className="text-emerald-400 font-medium">{entry.prizeWon} SOL {entry.claimed ? '· Claimed' : '· Unclaimed'}</span>
+                            <span className="text-neon-500 font-mono tabular-nums font-medium">{entry.prizeWon} SOL <span className="text-gray-500 font-sans font-normal">{entry.claimed ? '· Claimed' : '· Unclaimed'}</span></span>
                           </div>
                         )}
 
@@ -1108,7 +1108,7 @@ export default function Profile() {
                         {entry.tapestryVerified && (
                           <div className="flex items-center gap-2 pt-2 border-t border-gray-800">
                             <img src="/tapestry-icon.png" alt="Tapestry" className="w-3.5 h-3.5 invert opacity-50" />
-                            <span className="text-xs text-gray-600">Team picks permanently recorded on Solana via Tapestry Protocol</span>
+                            <span className="text-xs text-neon-500/60">Team picks permanently recorded on Solana via Tapestry Protocol</span>
                           </div>
                         )}
                       </div>
