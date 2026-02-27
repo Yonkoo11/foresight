@@ -13,16 +13,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Vercel auth
+      - name: Fix git author for Vercel
         run: |
-          mkdir -p $HOME/.local/share/com.vercel.cli
-          printf '{"token":"%s"}' "${{ secrets.VERCEL_TOKEN }}" > $HOME/.local/share/com.vercel.cli/auth.json
+          git config user.email "mujeebopabode07@gmail.com"
+          git config user.name "hemjay07"
+          git commit --allow-empty --amend --no-edit --reset-author
+
+      - name: Create Vercel project config
+        run: |
           mkdir -p frontend/.vercel
           printf '{"projectId":"%s","orgId":"%s"}' "${{ secrets.VERCEL_PROJECT_ID }}" "${{ secrets.VERCEL_ORG_ID }}" > frontend/.vercel/project.json
 
       - name: Deploy to Vercel
         working-directory: frontend
-        run: npx vercel --prod --yes
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel --prod --token=$VERCEL_TOKEN --yes
 
   deploy-backend:
     name: Backend to Railway
