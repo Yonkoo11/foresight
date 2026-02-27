@@ -55,6 +55,8 @@ interface FsEarnResult {
 
 interface UserFsData {
   userId: string;
+  username: string | null;
+  avatarUrl: string | null;
   totalScore: number;
   seasonScore: number;
   weekScore: number;
@@ -311,6 +313,8 @@ class ForesightScoreService {
         'fs.all_time_rank as allTimeRank',
         'fs.season_rank as seasonRank',
         'fs.rank_change_week as rankChangeWeek',
+        'u.username',
+        'u.avatar_url as avatarUrl',
         'u.is_founding_member as isFoundingMember',
         'u.founding_member_number as foundingMemberNumber',
         'u.early_adopter_tier as earlyAdopterTier',

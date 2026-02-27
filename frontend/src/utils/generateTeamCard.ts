@@ -19,6 +19,8 @@ interface CardOptions {
   contestName?: string;
   totalScore?: number;
   rank?: number;
+  username?: string;
+  userAvatar?: string;
 }
 
 const W = 600;
@@ -172,7 +174,7 @@ function drawPlayer(
  * Generate the full team card as a PNG blob.
  */
 export async function generateTeamCardImage(options: CardOptions): Promise<Blob> {
-  const { picks, contestName, totalScore, rank } = options;
+  const { picks, contestName, totalScore, rank, username, userAvatar } = options;
   const canvas = document.createElement('canvas');
   canvas.width = W * SCALE;
   canvas.height = H * SCALE;
@@ -325,14 +327,60 @@ export async function generateTeamCardImage(options: CardOptions): Promise<Blob>
   // ─── Footer ────────────────────────────────────────────────────────
   ctx.textBaseline = 'bottom';
   ctx.font = '500 10px Inter, system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#52525B';
-  ctx.fillText('foresight.gg', 24, H - 20);
 
+  // User avatar + name (left)
+  if (username) {
+    const avatarR = 10;
+    const avatarX = 24 + avatarR;
+    const avatarY = H - 20 - avatarR;
+
+    let userImg: HTMLImageElement | null = null;
+    if (userAvatar) {
+      userImg = await loadImage(userAvatar, 2000);
+    }
+
+    if (userImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(userImg, avatarX - avatarR, avatarY - avatarR, avatarR * 2, avatarR * 2);
+      ctx.restore();
+    } else {
+      // Initials fallback
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+      ctx.fillStyle = '#F59E0B33';
+      ctx.fill();
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(username.charAt(0).toUpperCase(), avatarX, avatarY);
+    }
+
+    // Thin ring
+    ctx.beginPath();
+    ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+    ctx.strokeStyle = '#F59E0B55';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#9CA3AF';
+    ctx.font = '500 10px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`@${username}`, avatarX + avatarR + 5, H - 20);
+  } else {
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#52525B';
+    ctx.fillText('ct-foresight.xyz', 24, H - 20);
+  }
+
+  // Tapestry (right)
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#06B6D4';
-  ctx.fillText('\u25C6', W - 74, H - 20);
   ctx.fillStyle = '#52525B';
+  ctx.textBaseline = 'bottom';
   ctx.fillText('Tapestry', W - 24, H - 20);
 
   // ─── Convert to blob ──────────────────────────────────────────────

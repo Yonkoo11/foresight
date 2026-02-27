@@ -2,7 +2,7 @@
  * InfluencerDetailModal - Shows detailed stats for an influencer
  */
 
-import { X, TwitterLogo, TrendUp, Users, Fire, ChartLineUp, Crown, Heart, ArrowsClockwise, Coins } from '@phosphor-icons/react';
+import { X, XLogo, TrendUp, Users, Fire, ChartLineUp, Crown, Heart, ArrowsClockwise, Coins } from '@phosphor-icons/react';
 
 interface Influencer {
   id: number;
@@ -96,12 +96,12 @@ export default function InfluencerDetailModal({
               </div>
               <h2 className="text-xl font-bold text-white">{influencer.name || `@${influencer.handle}`}</h2>
               <a
-                href={`https://twitter.com/${influencer.handle}`}
+                href={`https://x.com/${influencer.handle}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-400 hover:underline flex items-center gap-1 text-sm"
               >
-                <TwitterLogo size={14} weight="fill" />
+                <XLogo size={14} weight="fill" />
                 @{influencer.handle}
               </a>
             </div>

@@ -12,12 +12,13 @@ import {
   Users,
   Lightning,
   CurrencyDollar,
-  TwitterLogo,
+  XLogo,
   Warning,
   ArrowClockwise,
   Crown,
   Target,
 } from '@phosphor-icons/react';
+import { getAvatarUrl } from '../../utils/avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -216,13 +217,11 @@ export default function ComparisonTool({ influencerIds, onClose, onRemove }: Com
                 <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 text-center">
                   {/* Avatar */}
                   <div className="relative w-16 h-16 mx-auto mb-3">
-                    {inf.avatar ? (
-                      <img src={inf.avatar} alt="" className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                        <TwitterLogo size={24} weight="fill" className="text-white" />
-                      </div>
-                    )}
+                    <img
+                      src={getAvatarUrl(inf.handle, inf.avatar)}
+                      alt={inf.name}
+                      className="w-full h-full rounded-full object-cover"
+                    />
                     {/* Best value indicator */}
                     {comparison.bestValue === inf.id && (
                       <div className="absolute -top-1 -right-1 p-1 bg-emerald-500 rounded-full">
@@ -236,10 +235,10 @@ export default function ComparisonTool({ influencerIds, onClose, onRemove }: Com
                     {inf.name || `@${inf.handle}`}
                   </h3>
                   <a
-                    href={`https://twitter.com/${inf.handle}`}
+                    href={`https://x.com/${inf.handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-gray-500 hover:text-[#1DA1F2]"
+                    className="text-xs text-gray-500 hover:text-white"
                   >
                     @{inf.handle}
                   </a>

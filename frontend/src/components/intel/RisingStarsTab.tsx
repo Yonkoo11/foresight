@@ -10,7 +10,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   TrendUp,
-  TwitterLogo,
+  XLogo,
   Users,
   Lightning,
   Fire,
@@ -18,6 +18,7 @@ import {
   ArrowClockwise,
   Crown,
 } from '@phosphor-icons/react';
+import { getAvatarUrl } from '../../utils/avatar';
 import { useToast } from '../../contexts/ToastContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -240,13 +241,11 @@ export default function RisingStarsTab() {
 
               {/* Avatar */}
               <div className="flex-shrink-0">
-                {star.avatar ? (
-                  <img src={star.avatar} alt="" className="w-12 h-12 rounded-full" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                    <TwitterLogo size={20} weight="fill" className="text-white" />
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(star.handle, star.avatar)}
+                  alt={star.name || star.handle}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
               </div>
 
               {/* Info */}
@@ -256,10 +255,10 @@ export default function RisingStarsTab() {
                     {star.name || `@${star.handle}`}
                   </h3>
                   <a
-                    href={`https://twitter.com/${star.handle}`}
+                    href={`https://x.com/${star.handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-gray-500 hover:text-[#1DA1F2]"
+                    className="text-xs text-gray-500 hover:text-white"
                   >
                     @{star.handle}
                   </a>

@@ -60,7 +60,7 @@ const AchievementBadge = ({
     e.stopPropagation();
     const text = `just unlocked "${name}" on @ForesightCT ${icon}`;
     const url = 'https://foresight.ct';
-    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    const tweetUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(tweetUrl, '_blank', 'width=550,height=420');
   };
 
@@ -98,10 +98,10 @@ const AchievementBadge = ({
       {showShare && unlocked && (
         <button
           onClick={handleShare}
-          className="absolute -top-2 -right-2 w-6 h-6 bg-[#1DA1F2] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:scale-110 z-10"
-          title="Share on Twitter"
+          className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:scale-110 z-10"
+          title="Share on X"
         >
-          <ShareNetwork size={12} weight="fill" className="text-white" />
+          <ShareNetwork size={12} weight="fill" className="text-gray-950" />
         </button>
       )}
 

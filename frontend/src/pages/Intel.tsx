@@ -19,7 +19,7 @@ import {
   Heart,
   ChatCircle,
   Repeat,
-  TwitterLogo,
+  XLogo,
   Warning,
   ArrowClockwise,
   Binoculars,
@@ -28,6 +28,7 @@ import {
   Rocket,
   UsersFour,
 } from '@phosphor-icons/react';
+import { getAvatarUrl } from '../utils/avatar';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 import { useBrowseTimeTracker } from '../hooks/useBrowseTimeTracker';
@@ -107,13 +108,11 @@ function HighlightCard({
       <div className="p-3">
         {/* Avatar · handle · tier badge */}
         <div className="flex items-center gap-2 mb-2.5">
-          {tweet.influencer.avatar ? (
-            <img src={tweet.influencer.avatar} alt="" className="w-7 h-7 rounded-full flex-shrink-0" />
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
-              <TwitterLogo size={12} className="text-gray-500" />
-            </div>
-          )}
+          <img
+            src={getAvatarUrl(tweet.influencer.handle, tweet.influencer.avatar)}
+            alt={tweet.influencer.name}
+            className="w-7 h-7 rounded-full flex-shrink-0 object-cover"
+          />
           <div className="flex-1 min-w-0">
             <span className="text-xs font-semibold text-white truncate block">
               @{tweet.influencer.handle}
@@ -175,7 +174,7 @@ function HighlightCard({
             rel="noopener noreferrer"
             className={`flex items-center justify-center gap-1 px-2 py-1.5 bg-gray-800/80 hover:bg-gray-700 rounded-lg text-[10px] text-gray-400 transition-colors ${onTeam ? 'flex-1' : ''}`}
           >
-            <TwitterLogo size={10} weight="fill" className="text-[#1DA1F2]" />
+            <XLogo size={10} weight="fill" className="text-white" />
             Open
           </a>
         </div>
@@ -684,10 +683,10 @@ export default function Intel() {
 
                 {/* Main Feed */}
                 <div className="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
-                  <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-[#1DA1F2]/10 to-transparent">
+                  <div className="p-3 border-b border-gray-800 bg-gradient-to-r from-white/10 to-transparent">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <TwitterLogo size={18} weight="fill" className="text-[#1DA1F2]" />
+                        <XLogo size={18} weight="fill" className="text-white" />
                         <span className="font-semibold text-white text-sm">
                           {tierFilter === 'team' ? 'Your Team\'s Tweets' : 'Feed'}
                         </span>
@@ -716,13 +715,11 @@ export default function Intel() {
                         >
                           <div className="flex gap-3">
                             <div className="relative flex-shrink-0">
-                              {tweet.influencer.avatar ? (
-                                <img src={tweet.influencer.avatar} alt="" className="w-10 h-10 rounded-full" />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1DA1F2] to-blue-600 flex items-center justify-center">
-                                  <TwitterLogo size={16} weight="fill" className="text-white" />
-                                </div>
-                              )}
+                              <img
+                                src={getAvatarUrl(tweet.influencer.handle, tweet.influencer.avatar)}
+                                alt={tweet.influencer.name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
                               {onTeam && (
                                 <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gold-500 flex items-center justify-center">
                                   <Trophy size={10} weight="fill" className="text-gray-950" />
@@ -805,9 +802,9 @@ export default function Intel() {
                                   href={tweet.twitterUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="ml-auto flex items-center gap-1 text-xs text-[#1DA1F2] hover:underline"
+                                  className="ml-auto flex items-center gap-1 text-xs text-white hover:underline"
                                 >
-                                  <TwitterLogo size={12} weight="fill" />
+                                  <XLogo size={12} weight="fill" />
                                   Open
                                 </a>
                               </div>

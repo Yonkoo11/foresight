@@ -130,9 +130,9 @@ const Imprint = () => {
               </a>
             </p>
             <p>
-              <strong className="text-white">Twitter/X:</strong>{' '}
+              <strong className="text-white">X:</strong>{' '}
               <a
-                href="https://twitter.com/ForesightCT"
+                href="https://x.com/ForesightCT"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-400 hover:text-cyan-300 transition-colors"

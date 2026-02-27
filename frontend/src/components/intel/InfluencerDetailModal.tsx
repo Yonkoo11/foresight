@@ -11,7 +11,7 @@ import {
   TrendDown,
   Binoculars,
   Check,
-  TwitterLogo,
+  XLogo,
   Users,
   Lightning,
   Star,
@@ -19,6 +19,7 @@ import {
   Warning,
   ArrowClockwise,
 } from '@phosphor-icons/react';
+import { getAvatarUrl } from '../../utils/avatar';
 import { useToast } from '../../contexts/ToastContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -175,17 +176,11 @@ export default function InfluencerDetailModal({
         {/* Header */}
         <div className="flex items-start justify-between p-4 sm:p-6 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-start gap-4 flex-1 min-w-0">
-            {influencer.avatar ? (
-              <img
-                src={influencer.avatar}
-                alt={influencer.name}
-                className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-                <TwitterLogo size={28} weight="fill" className="text-white" />
-              </div>
-            )}
+            <img
+              src={getAvatarUrl(influencer.handle, influencer.avatar)}
+              alt={influencer.name}
+              className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+            />
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -297,7 +292,7 @@ export default function InfluencerDetailModal({
                     {detail.recentTweets.slice(0, 3).map((tweet) => (
                       <a
                         key={tweet.id}
-                        href={`https://twitter.com/${influencer.handle}/status/${tweet.tweetId}`}
+                        href={`https://x.com/${influencer.handle}/status/${tweet.tweetId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block p-2.5 bg-gray-800/40 hover:bg-gray-800/60 border border-gray-800 rounded-lg transition-colors"
@@ -344,12 +339,12 @@ export default function InfluencerDetailModal({
             </button>
 
             <a
-              href={`https://twitter.com/${influencer.handle}`}
+              href={`https://x.com/${influencer.handle}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-12 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <TwitterLogo size={18} weight="fill" className="text-[#1DA1F2]" />
+              <XLogo size={18} weight="fill" className="text-white" />
             </a>
           </div>
         )}

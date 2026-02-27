@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   Target, Trophy, Star, Sparkle, TrendUp, Lightning, Gift,
-  CheckCircle, Sun, CalendarBlank, Users, TwitterLogo, Share,
+  CheckCircle, Sun, CalendarBlank, Users, XLogo, Share,
   Chat, Medal, Crown, Eye, Diamond, Flame, CaretRight, Rocket, Lock,
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
@@ -72,9 +72,17 @@ const TIER_CONFIG = {
   diamond: { color: 'text-gold-400', bg: 'bg-gold-500/20', gradient: 'from-gold-500 to-amber-600' },
 } as const;
 
+const TIER_ICONS: Record<string, React.ElementType> = {
+  bronze: Medal,
+  silver: Star,
+  gold: Trophy,
+  platinum: Crown,
+  diamond: Diamond,
+};
+
 const QUEST_ICONS: Record<string, React.ElementType> = {
   wallet: Lightning, user: Users, users: Users, trophy: Trophy,
-  twitter: TwitterLogo, share: Share, star: Star, sun: Sun,
+  twitter: XLogo, share: Share, star: Star, sun: Sun,
   chart: TrendUp, target: Target, message: Chat, 'check-circle': CheckCircle,
   medal: Medal, fire: Flame, crown: Crown, eye: Eye, diamond: Diamond,
 };
@@ -139,6 +147,13 @@ export default function Progress() {
         setQuests(questsRes.data.data.quests || {});
         setSummary(questsRes.data.data.summary || {});
       }
+
+      // Trigger daily login quest (idempotent — backend dedupes by day)
+      axios.post(
+        `${API_URL}/api/v2/fs/track-activity`,
+        { activityType: 'daily_login', durationSeconds: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => {}); // non-blocking, silent fail
     } catch (error) {
       console.error('Error fetching progress:', error);
     } finally {
@@ -200,6 +215,7 @@ export default function Progress() {
 
   const getQuestIcon = (iconName: string) => QUEST_ICONS[iconName] || Target;
   const tierConfig = fsData ? TIER_CONFIG[fsData.tier as keyof typeof TIER_CONFIG] || TIER_CONFIG.bronze : TIER_CONFIG.bronze;
+  const CurrentTierIcon = fsData ? (TIER_ICONS[fsData.tier] || Medal) : Medal;
 
   const getTierProgress = () => {
     if (!fsData || !fsData.tierProgress?.nextTier) return 100;
@@ -212,7 +228,7 @@ export default function Progress() {
         {/* Hero */}
         <div className="text-center py-8">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center mx-auto mb-4 shadow-gold">
-            <TrendUp size={32} className="text-gray-950" />
+            <Lightning size={32} weight="fill" className="text-gray-950" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Your Foresight Score</h1>
           <p className="text-gray-400 max-w-md mx-auto">Track your progress, complete quests, and climb the rankings</p>
@@ -331,7 +347,7 @@ export default function Progress() {
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center">
-            <TrendUp size={22} weight="fill" className="text-white" />
+            <Lightning size={22} weight="fill" className="text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Progress</h1>
@@ -347,7 +363,7 @@ export default function Progress() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className={`w-16 h-16 rounded-xl ${tierConfig.bg} flex items-center justify-center`}>
-                  <Sparkle size={32} weight="fill" className={tierConfig.color} />
+                  <CurrentTierIcon size={32} weight="fill" className={tierConfig.color} />
                 </div>
                 <div>
                   <div className="text-sm text-gray-400 mb-1 flex items-center gap-2">

@@ -108,7 +108,7 @@ export default function Referrals() {
       ? `I'm Founding Member #${data.foundingMemberNumber} of @ForesightLeague! 👑\n\nJoin the CT Fantasy revolution. Draft influencers, earn points, build your position.\n\n Early supporters will be rewarded 💰`
       : `Just invited ${data.activeReferralCount} players to @ForesightLeague! 🎮\n\nCT Fantasy is heating up. Get in early.\n\nJoin me:`;
 
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+    const twitterUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(twitterUrl, '_blank');
   };
 
@@ -298,10 +298,10 @@ export default function Referrals() {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={handleShareTwitter}
-              className="flex-1 min-w-[200px] flex items-center justify-center gap-2 px-6 py-4 bg-[#1DA1F2] hover:bg-[#1a8cd8] rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+              className="flex-1 min-w-[200px] flex items-center justify-center gap-2 px-6 py-4 bg-white hover:bg-gray-100 rounded-xl text-gray-950 font-bold transition-all shadow-lg hover:shadow-xl hover:scale-105"
             >
               <ShareNetwork size={24} weight="fill" />
-              Share on Twitter
+              Share on X
             </button>
 
             <button

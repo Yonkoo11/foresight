@@ -4,7 +4,7 @@
  */
 
 import {
-  TwitterLogo,
+  XLogo,
   TrendUp,
   TrendDown,
   Users,
@@ -12,7 +12,12 @@ import {
   Binoculars,
   Check,
   Star,
+  Diamond,
+  ThumbsUp,
+  Minus,
+  Fire,
 } from '@phosphor-icons/react';
+import { getAvatarUrl } from '../../utils/avatar';
 
 interface Influencer {
   id: number;
@@ -42,35 +47,25 @@ interface InfluencerProfileCardProps {
   draftCount?: number;
 }
 
-// Tier visual tokens — color accent per tier
+// Tier visual tokens — badge only; color lives here and nowhere else on the card
 const TIER_CONFIG: Record<string, {
-  badge: string;     // badge text + bg
-  bar: string;       // progress bar fill
-  labelText: string; // tier label color
-  label: string;     // human label
+  badge: string;  // badge text + bg
+  label: string;  // human label
 }> = {
   S: {
     badge: 'bg-amber-500/20 text-amber-400 border border-amber-500/40',
-    bar: 'bg-amber-400',
-    labelText: 'text-amber-400',
     label: 'S-Tier',
   },
   A: {
     badge: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40',
-    bar: 'bg-cyan-400',
-    labelText: 'text-cyan-400',
     label: 'A-Tier',
   },
   B: {
     badge: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40',
-    bar: 'bg-emerald-500',
-    labelText: 'text-emerald-400',
     label: 'B-Tier',
   },
   C: {
     badge: 'bg-gray-500/20 text-gray-400 border border-gray-600/40',
-    bar: 'bg-gray-400',
-    labelText: 'text-gray-400',
     label: 'C-Tier',
   },
 };
@@ -83,11 +78,20 @@ const TIER_MAX_POINTS: Record<string, number> = {
   C: 400,
 };
 
-function valueLabel(ptsPerDollar: number): { text: string; className: string } {
-  if (ptsPerDollar >= 45) return { text: '💎 Elite value', className: 'text-amber-400' };
-  if (ptsPerDollar >= 28) return { text: '⭐ Good value', className: 'text-emerald-400' };
-  if (ptsPerDollar >= 15) return { text: '📊 Fair', className: 'text-gray-400' };
-  return { text: '💸 Premium', className: 'text-gray-500' };
+// Bar color encodes performance relative to tier ceiling (not tier identity)
+function getBarColor(pct: number): string {
+  if (pct >= 85) return 'bg-emerald-500';  // elite — filling their tier ceiling
+  if (pct >= 60) return 'bg-amber-400';    // strong performer
+  if (pct >= 30) return 'bg-gray-400';     // average
+  return 'bg-rose-500';                     // underperforming relative to tier
+}
+
+// Value label: icon + text only, no color — supplementary info whispers
+function valueLabel(ptsPerDollar: number): { Icon: React.ElementType; label: string } {
+  if (ptsPerDollar >= 45) return { Icon: Diamond,   label: 'Elite value' };
+  if (ptsPerDollar >= 28) return { Icon: ThumbsUp,  label: 'Good value'  };
+  if (ptsPerDollar >= 15) return { Icon: Minus,     label: 'Fair'        };
+  return                         { Icon: TrendDown, label: 'Expensive'   };
 }
 
 export default function InfluencerProfileCard({
@@ -107,7 +111,7 @@ export default function InfluencerProfileCard({
   const ptsPerDollar = influencer.price > 0
     ? Math.round(influencer.totalPoints / influencer.price)
     : 0;
-  const val = valueLabel(ptsPerDollar);
+  const { Icon: ValIcon, label: valLabel } = valueLabel(ptsPerDollar);
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -145,19 +149,13 @@ export default function InfluencerProfileCard({
       <div className="p-4">
         {/* Header: Avatar · Name · Tier · Price */}
         <div className="flex items-start gap-3 mb-4">
-          {/* Avatar with tier overlay */}
+          {/* Avatar with tier badge overlay */}
           <div className="relative flex-shrink-0">
-            {influencer.avatar ? (
-              <img
-                src={influencer.avatar}
-                alt={influencer.name}
-                className="w-11 h-11 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                <TwitterLogo size={18} weight="fill" className="text-white" />
-              </div>
-            )}
+            <img
+              src={getAvatarUrl(influencer.handle, influencer.avatar)}
+              alt={influencer.name}
+              className="w-11 h-11 rounded-full object-cover"
+            />
             <div className={`absolute -bottom-1 -right-1 px-1 py-0.5 rounded text-[9px] font-bold leading-none ${tc.badge}`}>
               {tier}
             </div>
@@ -170,17 +168,18 @@ export default function InfluencerProfileCard({
             </h3>
             <p className="text-xs text-gray-500 truncate mt-0.5">@{influencer.handle}</p>
             {draftCount > 0 && (
-              <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/25 rounded text-[10px] text-emerald-400 font-medium">
-                🔥 {draftCount} drafted
+              <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-gray-800 border border-gray-700 rounded text-[10px] text-gray-400 font-medium">
+                <Fire size={10} weight="fill" />
+                {draftCount} drafted
               </span>
             )}
           </div>
 
-          {/* Price + value */}
+          {/* Price + pts/$ */}
           <div className="text-right flex-shrink-0">
             <div className="text-xl font-bold text-white leading-tight">${influencer.price}</div>
-            <div className={`text-[10px] font-medium mt-0.5 ${val.className}`}>
-              {ptsPerDollar > 0 ? `${ptsPerDollar} pts/$` : 'price'}
+            <div className="text-[10px] font-medium mt-0.5 text-gray-500">
+              {ptsPerDollar > 0 ? `${ptsPerDollar} pts/$` : ''}
             </div>
           </div>
         </div>
@@ -189,20 +188,23 @@ export default function InfluencerProfileCard({
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5">
-              <Star size={11} weight="fill" className={tc.labelText} />
+              <Star size={11} weight="fill" className="text-gray-400" />
               <span className="text-xs text-gray-400 font-medium">Points</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-bold ${tc.labelText}`}>
+              <span className="text-sm font-bold text-white">
                 {influencer.totalPoints.toLocaleString()}
               </span>
-              <span className={`text-[10px] font-medium ${val.className}`}>{val.text}</span>
+              <span className="flex items-center gap-0.5 text-[10px] font-medium text-gray-500">
+                <ValIcon size={10} weight="fill" />
+                {valLabel}
+              </span>
             </div>
           </div>
-          {/* Bar track */}
+          {/* Bar track — color encodes performance strength, width encodes magnitude */}
           <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${tc.bar}`}
+              className={`h-full rounded-full transition-all ${getBarColor(barPct)}`}
               style={{ width: `${barPct}%` }}
             />
           </div>
@@ -251,13 +253,13 @@ export default function InfluencerProfileCard({
               )}
             </button>
             <a
-              href={`https://twitter.com/${influencer.handle}`}
+              href={`https://x.com/${influencer.handle}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
               className="flex items-center justify-center w-9 h-9 bg-gray-800/80 hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <TwitterLogo size={16} weight="fill" className="text-[#1DA1F2]" />
+              <XLogo size={16} weight="fill" className="text-white" />
             </a>
           </div>
         )}

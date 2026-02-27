@@ -35,11 +35,11 @@ const Footer = () => {
                 <DiscordLogo size={20} weight="fill" className="text-gray-300" />
               </a>
               <a
-                href="https://twitter.com/ForesightCT"
+                href="https://x.com/ForesightCT"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg hover:shadow-gold-500/20"
-                aria-label="Follow us on X/Twitter"
+                aria-label="Follow us on X"
               >
                 <XLogo size={20} weight="fill" className="text-gray-300" />
               </a>

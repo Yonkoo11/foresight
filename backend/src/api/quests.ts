@@ -54,14 +54,13 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       .where({ user_id: userId });
 
     // Helper to normalize date for comparison (handles Date objects and strings)
-    // IMPORTANT: Use local date methods to avoid timezone shifts
+    // Must use UTC methods to match toISOString() — local methods diverge on non-UTC servers
     const normalizeDate = (d: Date | string | null): string | null => {
       if (!d) return null;
       if (typeof d === 'string') return d.split('T')[0];
-      // Use local date methods to get YYYY-MM-DD without timezone conversion
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
 

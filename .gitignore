@@ -57,3 +57,4 @@ temp/
 
 # Archived documentation
 archive_docs/
+.vercel

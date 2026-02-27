@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { TwitterLogo, Export, DownloadSimple, Crown } from '@phosphor-icons/react';
+import { XLogo, Export, DownloadSimple, Crown } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
 import { generateTeamCardImage } from '../utils/generateTeamCard';
 
@@ -31,6 +31,8 @@ interface ShareTeamCardProps {
   contestName?: string;
   totalScore?: number;
   rank?: number;
+  username?: string;
+  userAvatar?: string;
   variant?: 'celebration' | 'compact' | 'share-only';
   className?: string;
 }
@@ -48,6 +50,8 @@ export default function ShareTeamCard({
   contestName,
   totalScore,
   rank,
+  username,
+  userAvatar,
   variant = 'celebration',
   className = '',
 }: ShareTeamCardProps) {
@@ -68,12 +72,14 @@ export default function ShareTeamCard({
       contestName,
       totalScore,
       rank,
+      username,
+      userAvatar,
     })
       .then((blob) => { setCachedBlob(blob); setGenerating(false); })
       .catch(() => setGenerating(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const buildTweetText = () => {
+  const buildPostText = () => {
     const captain = picks.find((p) => p.isCaptain || p.id === captainId);
     const others = picks.filter((p) => !(p.isCaptain || p.id === captainId));
 
@@ -98,8 +104,8 @@ export default function ShareTeamCard({
       return;
     }
 
-    const tweetText = encodeURIComponent(buildTweetText());
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
+    const tweetText = encodeURIComponent(buildPostText());
+    const twitterUrl = `https://x.com/intent/post?text=${tweetText}`;
 
     // Mobile: use Web Share API to share the image file natively
     const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
@@ -107,7 +113,7 @@ export default function ShareTeamCard({
       const file = new File([blob], 'foresight-team.png', { type: 'image/png' });
       if (navigator.canShare({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], text: buildTweetText() });
+          await navigator.share({ files: [file], text: buildPostText() });
           return;
         } catch { /* cancelled */ }
       }
@@ -125,22 +131,37 @@ export default function ShareTeamCard({
   };
 
   const handleDownload = async () => {
+    if (cachedBlob) {
+      downloadBlob(cachedBlob);
+      showToast('Team card saved!', 'success');
+      return;
+    }
     setGenerating(true);
     try {
-      const blob = await generateImage();
-      if (blob) {
-        downloadBlob(blob);
-        showToast('Team card saved!', 'success');
-      } else {
-        showToast('Failed to generate image', 'error');
-      }
+      const blob = await generateTeamCardImage({
+        picks: picks.map((p) => ({
+          name: p.name,
+          handle: p.handle || p.twitter_handle || '',
+          tier: p.tier,
+          isCaptain: !!(p.isCaptain || p.id === captainId),
+        })),
+        contestName,
+        totalScore,
+        rank,
+        username,
+        userAvatar,
+      });
+      downloadBlob(blob);
+      showToast('Team card saved!', 'success');
+    } catch {
+      showToast('Failed to generate image', 'error');
     } finally {
       setGenerating(false);
     }
   };
 
   const handleCopyText = () => {
-    navigator.clipboard.writeText(buildTweetText());
+    navigator.clipboard.writeText(buildPostText());
     showToast('Copied to clipboard!', 'success');
   };
 
@@ -215,16 +236,32 @@ export default function ShareTeamCard({
 
         {/* Footer */}
         <div className="mt-auto flex items-center justify-between">
-          <div className="text-[10px] text-gray-500 font-medium">foresight.gg</div>
+          {/* User identity */}
+          {username ? (
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full overflow-hidden border border-gold-500/40 shrink-0">
+                {userAvatar ? (
+                  <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gold-500/20 flex items-center justify-center">
+                    <span className="text-[7px] font-bold text-gold-400">
+                      {username.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <span className="text-[10px] text-gray-400">@{username}</span>
+            </div>
+          ) : (
+            <div className="text-[10px] text-gray-500 font-medium">ct-foresight.xyz</div>
+          )}
           {(totalScore !== undefined || rank) && (
             <div className="flex items-center gap-3 text-[10px]">
               {totalScore !== undefined && <span className="text-gold-400 font-bold">{totalScore} pts</span>}
               {rank && <span className="text-white font-bold">#{rank}</span>}
             </div>
           )}
-          <div className="flex items-center gap-1 text-[10px] text-gray-500">
-            <span className="text-cyan-400">&#9670;</span> Tapestry
-          </div>
+          <div className="text-[10px] text-gray-500">Tapestry</div>
         </div>
       </div>
     </div>
@@ -239,14 +276,14 @@ export default function ShareTeamCard({
           <button
             onClick={handleShare}
             disabled={generating}
-            className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-xl bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white font-bold text-base transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-xl bg-white hover:bg-gray-100 text-gray-950 font-bold text-base transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
           >
             {generating ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" />
             ) : (
-              <TwitterLogo size={22} weight="fill" />
+              <XLogo size={22} weight="fill" />
             )}
-            {generating ? 'Preparing...' : 'Share on Twitter'}
+            {generating ? 'Preparing...' : 'Share on X'}
           </button>
           <div className="flex gap-2">
             <button
@@ -277,9 +314,9 @@ export default function ShareTeamCard({
         <button
           onClick={handleShare}
           disabled={generating}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1DA1F2]/10 border border-[#1DA1F2]/20 text-[#1DA1F2] text-sm font-medium hover:bg-[#1DA1F2]/20 transition-all disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-all disabled:opacity-60"
         >
-          <TwitterLogo size={14} weight="fill" />
+          <XLogo size={14} weight="fill" />
           Share
         </button>
         <button
@@ -301,14 +338,14 @@ export default function ShareTeamCard({
         <button
           onClick={handleShare}
           disabled={generating}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white font-medium transition-colors disabled:opacity-60"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-gray-100 text-gray-950 font-medium transition-colors disabled:opacity-60"
         >
           {generating ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin" />
           ) : (
-            <TwitterLogo size={18} weight="fill" />
+            <XLogo size={18} weight="fill" />
           )}
-          Share on Twitter
+          Share on X
         </button>
         <button
           onClick={handleCopyText}
@@ -328,7 +365,9 @@ function PlayerNode({ pick, captainId }: { pick: TeamPick; captainId?: number | 
   const isCaptain = pick.isCaptain || pick.id === captainId;
   const tier = TIER_STYLES[pick.tier] || TIER_STYLES.C;
   const handle = pick.handle || pick.twitter_handle || '';
-  const showImg = pick.profile_image_url && !imgError;
+  // Use unavatar.io for reliable live Twitter profile photos — DB avatar_url can be stale
+  const avatarSrc = handle ? `https://unavatar.io/twitter/${handle}` : pick.profile_image_url;
+  const showImg = !!avatarSrc && !imgError;
 
   return (
     <div className="relative flex flex-col items-center w-20">
@@ -345,7 +384,7 @@ function PlayerNode({ pick, captainId }: { pick: TeamPick; captainId?: number | 
         <div className="w-12 h-12 rounded-full bg-gray-900 overflow-hidden border border-gray-800">
           {showImg ? (
             <img
-              src={pick.profile_image_url}
+              src={avatarSrc}
               alt={pick.name}
               className="w-full h-full object-cover"
               onError={() => setImgError(true)}

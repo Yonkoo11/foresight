@@ -22,10 +22,10 @@ const TIERS = [
     threshold: 50000,
     multiplier: 1.2,
     icon: Diamond,
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-500/20',
-    borderColor: 'border-purple-500/40',
-    gradient: 'from-purple-500 to-pink-500'
+    color: 'text-gold-400',
+    bgColor: 'bg-gold-500/20',
+    borderColor: 'border-gold-500/40',
+    ringClass: 'ring-gold-500/50',
   },
   {
     id: 'platinum',
@@ -36,7 +36,7 @@ const TIERS = [
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/20',
     borderColor: 'border-cyan-500/40',
-    gradient: 'from-cyan-400 to-blue-500'
+    ringClass: 'ring-cyan-500/50',
   },
   {
     id: 'gold',
@@ -47,7 +47,7 @@ const TIERS = [
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-500/20',
     borderColor: 'border-yellow-500/40',
-    gradient: 'from-yellow-500 to-amber-500'
+    ringClass: 'ring-yellow-500/50',
   },
   {
     id: 'silver',
@@ -58,7 +58,7 @@ const TIERS = [
     color: 'text-gray-300',
     bgColor: 'bg-gray-400/20',
     borderColor: 'border-gray-400/40',
-    gradient: 'from-gray-400 to-gray-500'
+    ringClass: 'ring-gray-400/50',
   },
   {
     id: 'bronze',
@@ -69,7 +69,7 @@ const TIERS = [
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/20',
     borderColor: 'border-orange-500/40',
-    gradient: 'from-orange-500 to-amber-600'
+    ringClass: 'ring-orange-500/50',
   },
 ];
 
@@ -107,8 +107,8 @@ export default function TierGuide({
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-purple-500 flex items-center justify-center">
-                  <Trophy size={22} weight="fill" className="text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-amber-600 flex items-center justify-center">
+                  <Trophy size={22} weight="fill" className="text-gray-950" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Foresight Tiers</h2>
@@ -126,14 +126,14 @@ export default function TierGuide({
             {/* Content */}
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               {/* Current Status */}
-              <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700">
+              <div className="mb-6 p-4 rounded-xl bg-gray-800/50 border border-gray-700">
                 <div className="text-sm text-gray-400 mb-1">Your Status</div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className={`text-xl font-bold capitalize ${TIERS[currentTierIndex]?.color || 'text-orange-400'}`}>
                       {currentTier}
                     </span>
-                    <span className="text-gray-500">|</span>
+                    <span className="text-gray-600">·</span>
                     <span className="text-white font-mono">{currentScore.toLocaleString()} FS</span>
                   </div>
                   {effectiveMultiplier > 1 && (
@@ -147,7 +147,7 @@ export default function TierGuide({
 
               {/* Tier List */}
               <div className="space-y-2 mb-6">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                   All Tiers
                 </h3>
                 {TIERS.map((tier, index) => {
@@ -160,10 +160,10 @@ export default function TierGuide({
                       key={tier.id}
                       className={`relative flex items-center gap-4 p-3 rounded-xl border transition-all ${
                         isCurrent
-                          ? `${tier.bgColor} ${tier.borderColor} ring-2 ring-offset-2 ring-offset-gray-900 ring-${tier.id === 'diamond' ? 'purple' : tier.id === 'platinum' ? 'cyan' : tier.id === 'gold' ? 'yellow' : tier.id === 'silver' ? 'gray' : 'orange'}-500/50`
+                          ? `${tier.bgColor} ${tier.borderColor} ring-2 ring-offset-2 ring-offset-gray-900 ${tier.ringClass}`
                           : isUnlocked
                           ? `${tier.bgColor} ${tier.borderColor}`
-                          : 'bg-gray-800/30 border-gray-700/50 opacity-60'
+                          : 'bg-gray-800/30 border-gray-700/50 opacity-50'
                       }`}
                     >
                       {/* Icon */}
@@ -176,7 +176,7 @@ export default function TierGuide({
                         <div className="flex items-center gap-2">
                           <span className={`font-bold ${tier.color}`}>{tier.name}</span>
                           {isCurrent && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white uppercase">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white uppercase tracking-wide">
                               You
                             </span>
                           )}
@@ -188,7 +188,7 @@ export default function TierGuide({
 
                       {/* Multiplier */}
                       <div className="text-right shrink-0">
-                        <div className={`text-lg font-bold ${tier.multiplier > 1 ? 'text-green-400' : 'text-gray-400'}`}>
+                        <div className={`text-lg font-bold ${tier.multiplier > 1 ? 'text-green-400' : 'text-gray-500'}`}>
                           {tier.multiplier}x
                         </div>
                         <div className="text-xs text-gray-500">multiplier</div>
@@ -207,7 +207,7 @@ export default function TierGuide({
 
               {/* Early Adopter Bonus Section */}
               <div className="border-t border-gray-800 pt-4">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Fire size={14} weight="fill" className="text-orange-400" />
                   Early Adopter Bonuses
                 </h3>
@@ -217,13 +217,13 @@ export default function TierGuide({
                       key={tier.name}
                       className={`flex items-center justify-between p-2.5 rounded-lg border ${
                         isFoundingMember && tier.name === 'Founding Member'
-                          ? 'bg-yellow-500/10 border-yellow-500/30'
+                          ? 'bg-gold-500/10 border-gold-500/30'
                           : 'bg-gray-800/30 border-gray-700/50'
                       }`}
                     >
                       <div>
                         <div className="font-medium text-white text-sm">{tier.name}</div>
-                        <div className="text-xs text-gray-500">{tier.range} • {tier.duration}</div>
+                        <div className="text-xs text-gray-500">{tier.range} · {tier.duration}</div>
                       </div>
                       <div className="text-green-400 font-bold">{tier.multiplier}x</div>
                     </div>
@@ -236,10 +236,10 @@ export default function TierGuide({
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-800 bg-gray-900/50">
+            <div className="p-4 border-t border-gray-800">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-medium transition-colors"
+                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-gray-950 font-bold transition-colors"
               >
                 Got it
               </button>

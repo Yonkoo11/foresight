@@ -8,9 +8,10 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Users, Trophy, Crown, Sparkle, Star, Fire, TrendUp,
-  CheckCircle, Lock, Lightning, Medal, Gear, PencilSimple,
-  Check, X, CaretRight, ArrowRight, ChartBar, GameController, Share,
-  Copy, UserCircle, Target, Binoculars, Trash, TwitterLogo,
+  CheckCircle, Medal, Gear, PencilSimple,
+  Check, X, CaretRight, ChartBar,
+  Copy, UserCircle, Target, Binoculars, Trash, XLogo,
+  Sun, Newspaper, Eye, Chat, Diamond, Flame,
 } from '@phosphor-icons/react';
 import ForesightScoreDisplay from '../components/ForesightScoreDisplay';
 import { ShareProfileButton } from '../components/ShareableProfileCard';
@@ -18,10 +19,19 @@ import FormationPreview from '../components/FormationPreview';
 import TapestryBadge from '../components/TapestryBadge';
 import ShareTeamCard from '../components/ShareTeamCard';
 import { getXPLevel, formatXP } from '../utils/xp';
+import { getAvatarUrl } from '../utils/avatar';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+const QUEST_ICONS: Record<string, React.ElementType> = {
+  wallet: Fire, user: Users, users: Users, trophy: Trophy,
+  twitter: XLogo, share: Star, star: Star, sun: Sun,
+  chart: TrendUp, target: Target, message: Chat, 'check-circle': CheckCircle,
+  medal: Medal, fire: Flame, crown: Crown, eye: Eye, diamond: Diamond,
+  newspaper: Newspaper, sparkle: Sparkle,
+};
 
 type ProfileTab = 'overview' | 'teams' | 'watchlist' | 'stats' | 'history';
 
@@ -63,6 +73,20 @@ interface CareerStats {
   avgScore: number;
   bestScore: number;
   bestRank: number | null;
+}
+
+interface QuestItem {
+  id: string;
+  name: string;
+  description: string;
+  questType: string;
+  category: string;
+  target: number;
+  fsReward: number;
+  icon: string;
+  progress: number;
+  isCompleted: boolean;
+  isClaimed: boolean;
 }
 
 interface Pick {
@@ -149,6 +173,7 @@ export default function Profile() {
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [expandedEntry, setExpandedEntry] = useState<number | null>(null);
+  const [quests, setQuests] = useState<QuestItem[]>([]);
 
   useEffect(() => {
     setSearchParams({ tab: activeTab }, { replace: true });
@@ -170,27 +195,28 @@ export default function Profile() {
 
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [profileRes, teamRes, actionsRes, watchlistRes] = await Promise.all([
+      const [profileRes, teamRes, actionsRes, watchlistRes, questsRes] = await Promise.all([
         axios.get(`${API_URL}/api/users/me`, { headers }).catch(() => ({ data: null })),
-        axios.get(`${API_URL}/api/league/team/me`, { headers }).catch(() => ({ data: { team: null } })),
+        axios.get(`${API_URL}/api/v2/me/latest-entry`, { headers }).catch(() => ({ data: { entry: null } })),
         axios.get(`${API_URL}/api/v2/quests/summary`, { headers }).catch(() => ({ data: { success: false } })),
         axios.get(`${API_URL}/api/watchlist`, { headers }).catch(() => ({ data: { success: false } })),
+        axios.get(`${API_URL}/api/v2/quests`, { headers }).catch(() => ({ data: { success: false } })),
       ]);
 
-      if (profileRes.data) {
-        setUsername(profileRes.data.username || '');
+      if (profileRes.data?.data) {
+        setUsername(profileRes.data.data.username || '');
         setStats({
-          xp: profileRes.data.xp || 0,
-          voteStreak: profileRes.data.voteStreak || 0,
-          totalVotes: profileRes.data.totalVotes || 0,
-          contestsEntered: profileRes.data.contestsEntered || 0,
-          totalWins: profileRes.data.totalWins || 0,
-          bestRank: profileRes.data.bestRank || null,
+          xp: profileRes.data.data.xp || 0,
+          voteStreak: profileRes.data.data.voteStreak || 0,
+          totalVotes: profileRes.data.data.totalVotes || 0,
+          contestsEntered: profileRes.data.data.contestsEntered || 0,
+          totalWins: profileRes.data.data.totalWins || 0,
+          bestRank: profileRes.data.data.bestRank || null,
         });
       }
 
-      if (teamRes.data?.team) {
-        setMyTeam(teamRes.data.team);
+      if (teamRes.data?.entry) {
+        setMyTeam(teamRes.data.entry);
       }
 
       // Set today's actions data
@@ -206,6 +232,17 @@ export default function Profile() {
       // Set watchlist data
       if (watchlistRes.data?.success && watchlistRes.data?.data?.watchlist) {
         setWatchlist(watchlistRes.data.data.watchlist);
+      }
+
+      // Set quests data (API returns grouped by type, flatten to single array)
+      if (questsRes.data?.success && questsRes.data?.data?.quests) {
+        const g = questsRes.data.data.quests;
+        setQuests([
+          ...(g.onboarding || []),
+          ...(g.daily || []),
+          ...(g.weekly || []),
+          ...(g.achievement || []),
+        ]);
       }
 
       // Fetch Tapestry status + social data (non-blocking)
@@ -526,172 +563,6 @@ export default function Profile() {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Today's Actions */}
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Lightning size={20} weight="fill" className="text-gold-400" />
-              Today's Actions
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Enter Contest Action */}
-              <Link
-                to="/compete?tab=contests"
-                className="group relative overflow-hidden rounded-xl border p-4 transition-all hover:scale-[1.02] bg-gold-500/10 border-gold-500/30 hover:border-gold-500/50"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gold-500/20">
-                    <Trophy size={20} className="text-gold-400" weight="fill" />
-                  </div>
-                  <span className="text-xs bg-gold-500/20 text-gold-400 px-2 py-1 rounded-full">
-                    Free
-                  </span>
-                </div>
-                <h4 className="font-semibold text-white mb-1">Enter Contest</h4>
-                <p className="text-xs text-gray-500">Draft your team & compete</p>
-              </Link>
-
-              {/* Quests Action */}
-              <Link
-                to="/progress"
-                className={`group relative overflow-hidden rounded-xl border p-4 transition-all hover:scale-[1.02] ${
-                  actions.dailyQuestsCompleted >= actions.dailyQuestsTotal
-                    ? 'bg-gray-800/30 border-gray-700'
-                    : 'bg-green-500/10 border-green-500/30 hover:border-green-500/50'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    actions.dailyQuestsCompleted >= actions.dailyQuestsTotal ? 'bg-gray-700' : 'bg-green-500/20'
-                  }`}>
-                    {actions.dailyQuestsCompleted >= actions.dailyQuestsTotal ? (
-                      <CheckCircle size={20} weight="fill" className="text-green-400" />
-                    ) : (
-                      <Fire size={20} className="text-green-400" />
-                    )}
-                  </div>
-                  {actions.claimableRewards > 0 && (
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full animate-pulse">
-                      Claim {actions.claimableRewards} FS
-                    </span>
-                  )}
-                </div>
-                <h4 className="font-semibold text-white mb-1">Daily Quests</h4>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500 rounded-full transition-all"
-                      style={{ width: `${(actions.dailyQuestsCompleted / actions.dailyQuestsTotal) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    {actions.dailyQuestsCompleted}/{actions.dailyQuestsTotal}
-                  </span>
-                </div>
-              </Link>
-
-              {/* Check Standings */}
-              <Link
-                to="/compete"
-                className="group relative overflow-hidden rounded-xl bg-gray-800/30 border border-gray-700 p-4 transition-all hover:scale-[1.02] hover:border-gray-600"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center">
-                    <Trophy size={20} className="text-gold-400" />
-                  </div>
-                </div>
-                <h4 className="font-semibold text-white mb-1">Check Standings</h4>
-                <p className="text-xs text-gray-500">View leaderboards</p>
-              </Link>
-            </div>
-          </div>
-
-          {/* Foresight Score */}
-          <ForesightScoreDisplay variant="full" />
-
-          {/* XP Card */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                  <Crown size={24} className="text-cyan-400" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-400">Experience Level</div>
-                  <div className="text-2xl font-bold text-white">{xpInfo.level}</div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-cyan-400">{formatXP(stats.xp)}</div>
-                <div className="text-sm text-gray-500">Total XP</div>
-              </div>
-            </div>
-
-            {xpInfo.nextLevel && (
-              <div>
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-400">Progress to {xpInfo.nextLevel}</span>
-                  <span className="text-cyan-400">{xpInfo.xpToNext} XP to go</span>
-                </div>
-                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                    style={{ width: `${xpInfo.progress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Quick Links */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link
-              to="/compete?tab=contests"
-              className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gold-500/50 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
-                  <GameController size={20} className="text-gold-400" />
-                </div>
-                <div>
-                  <div className="font-medium text-white">Browse Contests</div>
-                  <div className="text-sm text-gray-500">Join leagues & compete</div>
-                </div>
-              </div>
-              <CaretRight size={20} className="text-gray-600 group-hover:text-gold-400" />
-            </Link>
-
-            <Link
-              to="/progress"
-              className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gold-500/50 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
-                  <Fire size={20} className="text-gold-400" />
-                </div>
-                <div>
-                  <div className="font-medium text-white">Quests</div>
-                  <div className="text-sm text-gray-500">Complete daily tasks</div>
-                </div>
-              </div>
-              <CaretRight size={20} className="text-gray-600 group-hover:text-gold-400" />
-            </Link>
-
-            <Link
-              to="/referrals"
-              className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-800 rounded-xl hover:border-gold-500/50 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
-                  <Share size={20} className="text-gold-400" />
-                </div>
-                <div>
-                  <div className="font-medium text-white">Referrals</div>
-                  <div className="text-sm text-gray-500">Invite friends, earn FS</div>
-                </div>
-              </div>
-              <CaretRight size={20} className="text-gray-600 group-hover:text-gold-400" />
-            </Link>
-          </div>
 
           {/* Tapestry On-Chain Identity */}
           <div className="border border-gray-800 rounded-xl overflow-hidden">
@@ -750,20 +621,11 @@ export default function Profile() {
                 </div>
 
                 {/* Identity footer */}
-                <div className="flex items-center justify-between pt-1 border-t border-gray-800/60">
-                  <div>
-                    <div className="text-xs text-gray-600 mb-0.5">Your Tapestry identity</div>
-                    <span className="font-mono text-xs text-gray-400 select-all">
-                      {tapestryStatus.tapestryUserId?.slice(0, 10)}...{tapestryStatus.tapestryUserId?.slice(-8)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('history')}
-                    className="flex items-center gap-1.5 text-xs text-gold-400 hover:text-gold-300 transition-colors font-medium"
-                  >
-                    View contest history
-                    <ArrowRight size={12} />
-                  </button>
+                <div className="pt-1 border-t border-gray-800/60">
+                  <div className="text-xs text-gray-600 mb-0.5">Your Tapestry identity</div>
+                  <span className="font-mono text-xs text-gray-400 select-all">
+                    {tapestryStatus.tapestryUserId?.slice(0, 10)}...{tapestryStatus.tapestryUserId?.slice(-8)}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -774,6 +636,93 @@ export default function Profile() {
               </div>
             )}
           </div>
+
+          {/* Foresight Score */}
+          <ForesightScoreDisplay variant="full" />
+
+          {/* XP Card */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                  <Crown size={24} className="text-cyan-400" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-400">Experience Level</div>
+                  <div className="text-2xl font-bold text-white">{xpInfo.level}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-cyan-400">{formatXP(stats.xp)}</div>
+                <div className="text-sm text-gray-500">Total XP</div>
+              </div>
+            </div>
+
+            {xpInfo.nextLevel && (
+              <div>
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-gray-400">Progress to {xpInfo.nextLevel}</span>
+                  <span className="text-cyan-400">{xpInfo.xpToNext} XP to go</span>
+                </div>
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                    style={{ width: `${xpInfo.progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Daily Quests — inline */}
+          {quests.filter(q => q.questType === 'daily').length > 0 && (
+            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Fire size={16} weight="fill" className="text-gold-400" />
+                  Daily Quests
+                </h3>
+                <span className="text-xs text-gray-500">
+                  {quests.filter(q => q.questType === 'daily' && q.isCompleted).length}/
+                  {quests.filter(q => q.questType === 'daily').length} done
+                </span>
+              </div>
+              <div className="space-y-3">
+                {quests.filter(q => q.questType === 'daily').map(quest => {
+                  const QIcon = QUEST_ICONS[quest.icon] || Target;
+                  return (
+                  <div key={quest.id} className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      quest.isCompleted ? 'bg-emerald-500/20' : 'bg-gray-800'
+                    }`}>
+                      {quest.isCompleted
+                        ? <CheckCircle size={16} weight="fill" className="text-emerald-400" />
+                        : <QIcon size={16} weight="fill" className="text-gray-400" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-sm font-medium truncate ${quest.isCompleted ? 'text-gray-500 line-through' : 'text-white'}`}>
+                          {quest.name}
+                        </span>
+                        <span className="text-xs text-gold-400 shrink-0">+{quest.fsReward} FS</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${quest.isCompleted ? 'bg-emerald-500' : 'bg-gold-500'}`}
+                            style={{ width: `${Math.min(100, (quest.progress / quest.target) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-600 shrink-0">{quest.progress}/{quest.target}</span>
+                      </div>
+                    </div>
+                  </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -824,6 +773,7 @@ export default function Profile() {
                 }))}
                 totalScore={myTeam.total_score}
                 rank={myTeam.rank}
+                username={username}
                 variant="compact"
               />
 
@@ -886,17 +836,11 @@ export default function Profile() {
                     <div className="flex items-start gap-3">
                       {/* Avatar */}
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 shrink-0">
-                        {item.influencer.avatar ? (
-                          <img
-                            src={item.influencer.avatar}
-                            alt={item.influencer.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Users size={20} className="text-gray-500" />
-                          </div>
-                        )}
+                        <img
+                          src={getAvatarUrl(item.influencer.handle, item.influencer.avatar)}
+                          alt={item.influencer.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
 
                       {/* Info */}
@@ -928,12 +872,12 @@ export default function Profile() {
                       {/* Actions */}
                       <div className="flex items-center gap-2 shrink-0">
                         <a
-                          href={`https://twitter.com/${item.influencer.handle}`}
+                          href={`https://x.com/${item.influencer.handle}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 hover:text-white transition-colors"
                         >
-                          <TwitterLogo size={16} weight="fill" />
+                          <XLogo size={16} weight="fill" />
                         </a>
                         <button
                           onClick={() => removeFromWatchlist(item.influencer.id, item.influencer.handle)}
@@ -1087,13 +1031,11 @@ export default function Profile() {
                               <div key={pick.id} className="flex items-center gap-3 py-1">
                                 <div className="relative shrink-0">
                                   <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
-                                    {pick.avatarUrl ? (
-                                      <img src={pick.avatarUrl} alt={pick.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                        <UserCircle size={20} />
-                                      </div>
-                                    )}
+                                    <img
+                                      src={getAvatarUrl(pick.handle, pick.avatarUrl)}
+                                      alt={pick.name}
+                                      className="w-full h-full object-cover"
+                                    />
                                   </div>
                                   {pick.isCaptain && (
                                     <Crown size={10} weight="fill" className="absolute -top-1 -right-1 text-gold-400" />

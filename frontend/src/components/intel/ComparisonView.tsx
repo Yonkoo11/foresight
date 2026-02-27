@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   X,
-  TwitterLogo,
+  XLogo,
   Users,
   Lightning,
   Star,
@@ -18,6 +18,7 @@ import {
   Warning,
   ArrowClockwise,
 } from '@phosphor-icons/react';
+import { getAvatarUrl } from '../../utils/avatar';
 import MetricsChart from './MetricsChart';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -189,17 +190,11 @@ export default function ComparisonView({ influencerIds, onClose }: ComparisonVie
                 <div key={inf.id} className="text-center">
                   {/* Avatar */}
                   <div className="relative inline-block mb-2">
-                    {inf.avatar ? (
-                      <img
-                        src={inf.avatar}
-                        alt={inf.name}
-                        className="w-16 h-16 rounded-full object-cover mx-auto"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mx-auto">
-                        <TwitterLogo size={24} weight="fill" className="text-white" />
-                      </div>
-                    )}
+                    <img
+                      src={getAvatarUrl(inf.handle, inf.avatar)}
+                      alt={inf.name}
+                      className="w-16 h-16 rounded-full object-cover mx-auto"
+                    />
                     <div className={`absolute -bottom-1 -right-1 px-2 py-0.5 rounded text-xs font-bold ${tierStyle.bg} ${tierStyle.text} border ${tierStyle.border}`}>
                       {inf.tier}
                     </div>

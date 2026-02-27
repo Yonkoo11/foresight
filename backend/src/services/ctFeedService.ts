@@ -129,55 +129,81 @@ export function calculateEngagementScore(tweet: {
 }
 
 /**
+ * Interleave tweets round-robin by influencer so no account appears back-to-back.
+ *
+ * Algorithm:
+ *   1. Group rows by influencer, each group already sorted best→worst (by engagement_score DESC in SQL)
+ *   2. Sort groups by their group's top tweet engagement so the strongest accounts
+ *      lead each round — the overall feed still rewards high-quality content
+ *   3. Round-robin: take slot[0] from every group, then slot[1] from every group
+ *      Result: [A#1, B#1, C#1, ..., A#2, B#2, C#2, ...]
+ */
+function interleaveByInfluencer(rows: any[]): any[] {
+  const groups = new Map<number, any[]>();
+  for (const row of rows) {
+    const id = row.influencer_id;
+    if (!groups.has(id)) groups.set(id, []);
+    groups.get(id)!.push(row);
+  }
+
+  // Sort groups: highest best-tweet engagement first
+  const sorted = Array.from(groups.values()).sort(
+    (a, b) => Number(b[0].engagement_score) - Number(a[0].engagement_score)
+  );
+
+  const result: any[] = [];
+  const maxRound = Math.max(...sorted.map((g) => g.length));
+  for (let round = 0; round < maxRound; round++) {
+    for (const group of sorted) {
+      if (round < group.length) result.push(group[round]);
+    }
+  }
+  return result;
+}
+
+/**
  * Get the main CT feed
+ *
+ * Two mechanisms prevent any single account dominating the feed:
+ * 1. Per-account cap (MAX_PER_INFLUENCER = 2) via SQL window function
+ * 2. Round-robin interleaving in JS — tweets are mixed across accounts,
+ *    not sorted purely by engagement (which clusters the same account)
+ *
+ * Pool size: ≤100 influencers × 2 tweets = ≤200 rows fetched per request.
+ * Pagination is applied after interleaving for consistent page boundaries.
  */
 export async function getFeed(options: FeedOptions): Promise<FeedResult> {
   const { limit, offset } = options;
   const cappedLimit = Math.min(limit, 50);
+  const MAX_PER_INFLUENCER = 2;
 
   try {
-    // Get total count (excluding spam)
-    const countResult = await db('ct_tweets')
-      .whereRaw("text !~ '抽選|リポスト|フォロー.*無料|follow.*retweet.*win'")
-      .andWhere(function() {
-        this.where('engagement_score', '>', 0).orWhere('views', '>', 1000);
-      })
-      .count('* as count')
-      .first();
-    const total = Number(countResult?.count) || 0;
-
-    // Get tweets with influencer data (quality filtered)
-    const rows = await db('ct_tweets as t')
-      .join('influencers as i', 't.influencer_id', 'i.id')
-      .select(
-        't.id',
-        't.tweet_id',
-        't.text',
-        't.created_at',
-        't.likes',
-        't.retweets',
-        't.replies',
-        't.quotes',
-        't.views',
-        't.bookmarks',
-        't.engagement_score',
-        'i.id as influencer_id',
-        'i.twitter_handle',
-        'i.display_name as influencer_name',
-        'i.avatar_url',
-        'i.tier',
-        'i.price',
-        'i.total_points'
+    // Fetch the full capped pool — no SQL LIMIT/OFFSET yet so interleaving is consistent
+    const result = await db.raw(`
+      WITH deduped AS (
+        SELECT
+          t.id, t.tweet_id, t.text, t.created_at,
+          t.likes, t.retweets, t.replies, t.quotes, t.views, t.bookmarks,
+          t.engagement_score,
+          i.id AS influencer_id, i.twitter_handle,
+          i.display_name AS influencer_name, i.avatar_url,
+          i.tier, i.price, i.total_points,
+          ROW_NUMBER() OVER (PARTITION BY t.influencer_id ORDER BY t.engagement_score DESC) AS rn
+        FROM ct_tweets t
+        JOIN influencers i ON t.influencer_id = i.id
+        WHERE t.text !~ '抽選|リポスト|フォロー.*無料|follow.*retweet.*win'
+          AND (t.engagement_score > 0 OR t.views > 1000)
       )
-      .whereRaw("t.text !~ '抽選|リポスト|フォロー.*無料|follow.*retweet.*win'")
-      .andWhere(function() {
-        this.where('t.engagement_score', '>', 0).orWhere('t.views', '>', 1000);
-      })
-      .orderBy('t.engagement_score', 'desc')
-      .limit(cappedLimit)
-      .offset(offset);
+      SELECT * FROM deduped WHERE rn <= :maxPer
+      ORDER BY influencer_id, rn
+    `, { maxPer: MAX_PER_INFLUENCER });
 
-    const tweets: Tweet[] = rows.map((row) => ({
+    // Interleave by influencer then paginate
+    const interleaved = interleaveByInfluencer(result.rows);
+    const total = interleaved.length;
+    const pageRows = interleaved.slice(offset, offset + cappedLimit);
+
+    const tweets: Tweet[] = pageRows.map((row) => ({
       id: row.id,
       tweetId: row.tweet_id,
       text: row.text,
@@ -189,7 +215,7 @@ export async function getFeed(options: FeedOptions): Promise<FeedResult> {
       views: row.views,
       bookmarks: row.bookmarks,
       engagementScore: Number(row.engagement_score),
-      twitterUrl: `https://twitter.com/${row.twitter_handle}/status/${row.tweet_id}`,
+      twitterUrl: `https://x.com/${row.twitter_handle}/status/${row.tweet_id}`,
       influencer: {
         id: row.influencer_id,
         handle: row.twitter_handle,

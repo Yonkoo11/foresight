@@ -10,7 +10,7 @@ import {
   Trophy, Users, Clock, Coins, Crown, ArrowLeft,
   Timer, ChartLineUp, Medal, Gift, Lock, Play, Lightning,
   CheckCircle, Star, Fire, CaretRight, Wallet, ArrowSquareOut,
-  TwitterLogo, X, CalendarBlank
+  XLogo, X, CalendarBlank
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
@@ -1082,11 +1082,11 @@ export default function ContestDetail() {
                       const prizeUsd = (parseFloat(String(myEntry.prizeAmount)) * solPrice).toFixed(2);
                       const prizeSol = parseFloat(String(myEntry.prizeAmount)).toFixed(3);
                       const tweet = `Just won $${prizeUsd} (${prizeSol} SOL) on @ForesightGame! 🏆\n\nFantasy sports for Crypto Twitter — pick your CT influencer team and compete for real SOL.\n\nFree to play 👇`;
-                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`, '_blank');
+                      window.open(`https://x.com/intent/post?text=${encodeURIComponent(tweet)}`, '_blank');
                     }}
-                    className="flex-1 py-3 rounded-xl bg-[#1DA1F2] hover:bg-[#1a91da] text-white font-bold transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl bg-white hover:bg-gray-100 text-gray-950 font-bold transition-colors flex items-center justify-center gap-2"
                   >
-                    <TwitterLogo size={18} weight="fill" />
+                    <XLogo size={18} weight="fill" />
                     Share Win
                   </button>
                   <button

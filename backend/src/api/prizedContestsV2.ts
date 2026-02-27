@@ -985,6 +985,104 @@ router.get('/me/entries', authenticate, async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/v2/me/latest-entry
+ * Get user's most recent contest entry with hydrated team picks (for Profile Teams tab)
+ */
+router.get('/me/latest-entry', authenticate, async (req: Request, res: Response) => {
+  try {
+    const walletAddress = req.user!.walletAddress;
+
+    if (!walletAddress) {
+      return res.json({ entry: null });
+    }
+
+    // Get most recent free entry
+    const freeEntry = await db('free_league_entries')
+      .join('prized_contests', 'free_league_entries.contest_id', 'prized_contests.id')
+      .where('free_league_entries.wallet_address', walletAddress.toLowerCase())
+      .select(
+        'free_league_entries.*',
+        'prized_contests.name as contest_name',
+        'prized_contests.status as contest_status',
+        'prized_contests.player_count',
+        'prized_contests.end_time',
+      )
+      .orderBy('free_league_entries.created_at', 'desc')
+      .first();
+
+    // Get most recent paid entry
+    const paidEntry = await db('prized_entries')
+      .join('prized_contests', 'prized_entries.contest_id', 'prized_contests.id')
+      .where('prized_entries.wallet_address', walletAddress.toLowerCase())
+      .select(
+        'prized_entries.*',
+        'prized_contests.name as contest_name',
+        'prized_contests.status as contest_status',
+        'prized_contests.player_count',
+        'prized_contests.end_time',
+      )
+      .orderBy('prized_entries.created_at', 'desc')
+      .first();
+
+    // Pick the most recent
+    let entry: any = null;
+    if (freeEntry && paidEntry) {
+      entry = new Date(freeEntry.created_at) > new Date(paidEntry.created_at) ? freeEntry : paidEntry;
+    } else {
+      entry = freeEntry || paidEntry;
+    }
+
+    if (!entry) {
+      return res.json({ entry: null });
+    }
+
+    // Hydrate team_ids with influencer details
+    const teamIds: number[] = Array.isArray(entry.team_ids) ? entry.team_ids : [];
+    const influencers = teamIds.length > 0
+      ? await db('influencers').whereIn('id', teamIds)
+      : [];
+    const influencerMap = new Map(influencers.map((i: any) => [i.id, i]));
+
+    const picks = teamIds.map((infId: number) => {
+      const inf = influencerMap.get(infId);
+      if (!inf) return null;
+      return {
+        id: inf.id,
+        influencer_name: inf.display_name,
+        influencer_handle: inf.twitter_handle,
+        influencer_tier: inf.tier,
+        profile_image_url: inf.avatar_url,
+        total_points: 0,
+        isCaptain: infId === entry.captain_id,
+        price: parseFloat(inf.price || 0),
+      };
+    }).filter(Boolean);
+
+    const totalBudgetUsed = picks.reduce((sum: number, p: any) => sum + (p?.price || 0), 0);
+
+    res.json({
+      entry: {
+        id: entry.id,
+        team_name: entry.team_name || 'My Team',
+        contest_id: entry.contest_id,
+        contest_name: entry.contest_name,
+        contest_status: entry.contest_status,
+        player_count: entry.player_count,
+        rank: entry.rank,
+        total_score: parseFloat(entry.score || 0),
+        captain_id: entry.captain_id,
+        picks,
+        total_budget_used: totalBudgetUsed,
+        max_budget: 150,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching latest entry:', error);
+    res.status(500).json({ error: 'Failed to fetch latest entry' });
+  }
+});
+
+/**
  * GET /api/v2/me/free-entries-remaining
  * Check how many free league entries user has remaining this week
  */

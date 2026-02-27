@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   User, SignOut, CheckCircle, Warning, Sparkle, Crown, Image,
-  PencilSimple, X, TwitterLogo, Link as LinkIcon, LinkBreak,
+  PencilSimple, X, XLogo, Link as LinkIcon, LinkBreak,
   ShieldCheck, ArrowSquareOut, Spinner
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
@@ -246,10 +246,11 @@ export default function Settings() {
       const profileResponse = await axios.get(`${API_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProfile(profileResponse.data);
-      setUsernameInput(profileResponse.data.username || '');
-      setAvatarUrlInput(profileResponse.data.avatarUrl || '');
-      setTwitterHandleInput(profileResponse.data.twitterHandle || '');
+      const profileData = profileResponse.data?.data || profileResponse.data;
+      setProfile(profileData);
+      setUsernameInput(profileData.username || '');
+      setAvatarUrlInput(profileData.avatarUrl || '');
+      setTwitterHandleInput(profileData.twitterHandle || '');
 
       // Fetch Twitter status
       await fetchTwitterStatus();
@@ -617,7 +618,7 @@ export default function Settings() {
         {/* Twitter Connection Section */}
         <div className="card p-8 mb-6">
           <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-800">
-            <TwitterLogo size={28} weight="bold" className="text-cyan-400" />
+            <XLogo size={28} weight="bold" className="text-white" />
             <h2 className="text-2xl font-bold text-white">Twitter Connection</h2>
             {twitterStatus?.connected && (
               <span className="ml-auto flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-sm font-medium">
@@ -630,7 +631,7 @@ export default function Settings() {
           {!twitterStatus?.configured ? (
             // Twitter not configured on backend
             <div className="text-center py-8">
-              <TwitterLogo size={48} className="mx-auto mb-4 text-gray-600" />
+              <XLogo size={48} className="mx-auto mb-4 text-gray-600" />
               <h3 className="text-lg font-semibold text-white mb-2">Coming Soon</h3>
               <p className="text-gray-400 max-w-md mx-auto">
                 Twitter integration is being set up. Connect your Twitter to verify follows and complete quests.
@@ -642,13 +643,13 @@ export default function Settings() {
               {/* Connected Twitter Info */}
               <div className="flex items-center gap-4 mb-6 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
                 <div className="w-14 h-14 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                  <TwitterLogo size={28} weight="bold" className="text-cyan-400" />
+                  <XLogo size={28} weight="bold" className="text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-white">@{twitterStatus.handle}</span>
                     <a
-                      href={`https://twitter.com/${twitterStatus.handle}`}
+                      href={`https://x.com/${twitterStatus.handle}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-400 hover:text-cyan-400"
@@ -681,12 +682,12 @@ export default function Settings() {
                   ) : (
                     <div className="flex items-center gap-2">
                       <a
-                        href="https://twitter.com/intent/follow?screen_name=ForesightCT"
+                        href="https://x.com/intent/follow?screen_name=ForesightCT"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-lg text-cyan-400 font-medium flex items-center gap-2"
                       >
-                        <TwitterLogo size={18} weight="bold" />
+                        <XLogo size={18} weight="bold" />
                         Follow
                       </a>
                       <button
@@ -717,7 +718,7 @@ export default function Settings() {
                     type="text"
                     value={tweetUrl}
                     onChange={(e) => setTweetUrl(e.target.value)}
-                    placeholder="https://twitter.com/you/status/123..."
+                    placeholder="https://x.com/you/status/123..."
                     className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
                   />
                   <button
@@ -756,7 +757,7 @@ export default function Settings() {
             // Not connected state
             <div className="text-center py-6">
               <div className="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
-                <TwitterLogo size={40} weight="bold" className="text-cyan-400" />
+                <XLogo size={40} weight="bold" className="text-white" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Connect Your Twitter</h3>
               <p className="text-gray-400 max-w-md mx-auto mb-6">
