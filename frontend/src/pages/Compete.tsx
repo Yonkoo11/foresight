@@ -323,7 +323,8 @@ export default function Compete() {
 
   const filteredContests = useMemo(() => {
     // Regular contests only (no signature leagues — they have their own section)
-    let filtered = contests.filter(c => c.status === 'open' && !c.isSignatureLeague);
+    // Include open + locked + scoring so users can still see/view their entry after lock
+    let filtered = contests.filter(c => ['open', 'locked', 'scoring'].includes(c.status) && !c.isSignatureLeague);
     switch (contestFilter) {
       case 'free': filtered = filtered.filter(c => c.isFree); break;
       case 'weekly': filtered = filtered.filter(c => c.typeCode?.includes('WEEKLY')); break;
