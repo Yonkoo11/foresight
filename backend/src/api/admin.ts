@@ -9,6 +9,9 @@ import {
   triggerEndOfWeekSnapshot,
   triggerWeeklyScoring,
   getSnapshotStatus,
+  triggerPrizedContestLock,
+  triggerPrizedContestScoring,
+  triggerContestFinalization,
 } from '../services/cronJobs';
 import twitterApiService from '../services/twitterApiService';
 import twitterApiIoService from '../services/twitterApiIoService';
@@ -329,6 +332,131 @@ router.post('/test-twitterapi-io', authenticate, async (req: Request, res: Respo
     });
   } catch (error: any) {
     sendError(res, 'Failed to test TwitterAPI.io', 500, error.message);
+  }
+});
+
+// ============================================
+// PRIZED CONTEST LIFECYCLE ENDPOINTS
+// ============================================
+
+/**
+ * @route GET /api/admin/contests/:id/raw
+ * @desc Get raw DB row for a prized contest (ADMIN ONLY)
+ */
+router.get('/contests/:id/raw', authenticate, async (req: Request, res: Response) => {
+  try {
+    const contestId = parseInt(req.params.id);
+    if (isNaN(contestId)) {
+      return sendError(res, 'Invalid contest ID', 400);
+    }
+
+    const contest = await db('prized_contests').where('id', contestId).first();
+    if (!contest) {
+      return sendError(res, 'Contest not found', 404);
+    }
+
+    // Also fetch entries
+    const entriesTable = contest.is_free ? 'free_league_entries' : 'prized_entries';
+    const entries = await db(entriesTable).where('contest_id', contestId).select('*');
+
+    sendSuccess(res, { contest, entries, entriesTable });
+  } catch (error: any) {
+    sendError(res, 'Failed to get contest details', 500, error.message);
+  }
+});
+
+/**
+ * @route PATCH /api/admin/contests/:id
+ * @desc Update prized contest settings for testing (ADMIN ONLY)
+ *       Allows changing lock_time, end_time, min_players, status, etc.
+ */
+router.patch('/contests/:id', authenticate, async (req: Request, res: Response) => {
+  try {
+    const contestId = parseInt(req.params.id);
+    if (isNaN(contestId)) {
+      return sendError(res, 'Invalid contest ID', 400);
+    }
+
+    const contest = await db('prized_contests').where('id', contestId).first();
+    if (!contest) {
+      return sendError(res, 'Contest not found', 404);
+    }
+
+    const allowedFields = [
+      'min_players', 'max_players', 'lock_time', 'end_time',
+      'status', 'prize_pool', 'distributable_pool', 'name', 'description',
+    ];
+    const updates: Record<string, any> = {};
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return sendError(res, 'No valid fields to update', 400);
+    }
+
+    updates.updated_at = new Date();
+
+    await db('prized_contests').where('id', contestId).update(updates);
+
+    const updated = await db('prized_contests').where('id', contestId).first();
+    sendSuccess(res, {
+      message: `Contest ${contestId} updated`,
+      contest: updated,
+    });
+  } catch (error: any) {
+    sendError(res, 'Failed to update contest', 500, error.message);
+  }
+});
+
+/**
+ * @route POST /api/admin/trigger-prized-lock
+ * @desc Manually lock prized contests past their lock_time (ADMIN ONLY)
+ */
+router.post('/trigger-prized-lock', authenticate, async (req: Request, res: Response) => {
+  try {
+    const result = await triggerPrizedContestLock();
+    sendSuccess(res, {
+      message: 'Prized contest lock check completed',
+      result,
+    });
+  } catch (error: any) {
+    sendError(res, 'Failed to trigger prized contest lock', 500, error.message);
+  }
+});
+
+/**
+ * @route POST /api/admin/trigger-prized-scoring
+ * @desc Manually score locked prized contests past their end_time (ADMIN ONLY)
+ */
+router.post('/trigger-prized-scoring', authenticate, async (req: Request, res: Response) => {
+  try {
+    const result = await triggerPrizedContestScoring();
+    sendSuccess(res, {
+      message: 'Prized contest scoring completed',
+      result,
+    });
+  } catch (error: any) {
+    sendError(res, 'Failed to trigger prized contest scoring', 500, error.message);
+  }
+});
+
+/**
+ * @route POST /api/admin/trigger-contest-finalization
+ * @desc Manually finalize ended fantasy contests and trigger quest achievements (ADMIN ONLY)
+ */
+router.post('/trigger-contest-finalization', authenticate, async (req: Request, res: Response) => {
+  try {
+    const result = await triggerContestFinalization();
+    sendSuccess(res, {
+      message: 'Contest finalization completed',
+      result,
+    });
+  } catch (error: any) {
+    sendError(res, 'Failed to trigger contest finalization', 500, error.message);
   }
 });
 
