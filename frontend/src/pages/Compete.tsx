@@ -1319,43 +1319,27 @@ export default function Compete() {
                         </ul>
                       </div>
 
-                      {/* Prize Breakdown — compact: top 3 + summary */}
+                      {/* Prize Breakdown — single row */}
                       {prizeRules.length > 0 && (() => {
                         const sorted = [...prizeRules].sort((a, b) => (a.rank || 999) - (b.rank || 999));
                         const top3 = sorted.filter(r => r.rank >= 1 && r.rank <= 3);
                         const rest = sorted.filter(r => r.rank > 3 || r.rank === 0);
-                        const restPct = rest.reduce((s, r) => s + r.percentage, 0);
-                        const pool = selectedContest.prizePool || 0;
                         return (
-                          <div className="px-6 py-4 border-b border-gray-800/60">
-                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Prizes</h4>
-                            <div className="space-y-1">
-                              {top3.map((rule) => {
-                                const amt = pool * rule.percentage / 100;
-                                return (
-                                  <div key={rule.rank} className="flex items-center justify-between text-xs">
-                                    <div className="flex items-center gap-1.5">
-                                      {rule.rank === 1 && <Medal size={12} weight="fill" className="text-gold-400" />}
-                                      {rule.rank === 2 && <Medal size={12} weight="fill" className="text-gray-400" />}
-                                      {rule.rank === 3 && <Medal size={12} weight="fill" className="text-amber-700" />}
-                                      <span className={rule.rank === 1 ? 'text-gold-400 font-medium' : 'text-gray-400'}>
-                                        {rule.label}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-gray-600">{rule.percentage}%</span>
-                                      <span className={`font-mono tabular-nums ${rule.rank === 1 ? 'text-gold-400' : 'text-gray-500'}`}>
-                                        {amt.toFixed(3)} SOL
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                          <div className="px-6 py-3 border-b border-gray-800/60">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Prizes</span>
+                              {top3.map((rule) => (
+                                <span key={rule.rank} className="flex items-center gap-1 text-xs">
+                                  {rule.rank === 1 && <Medal size={11} weight="fill" className="text-gold-400" />}
+                                  {rule.rank === 2 && <Medal size={11} weight="fill" className="text-gray-400" />}
+                                  {rule.rank === 3 && <Medal size={11} weight="fill" className="text-amber-700" />}
+                                  <span className={rule.rank === 1 ? 'text-gold-400 font-medium' : 'text-gray-400'}>
+                                    {rule.percentage}%
+                                  </span>
+                                </span>
+                              ))}
                               {rest.length > 0 && (
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-500 pl-[18px]">4th–{sorted[sorted.length - 1].rank === 0 ? `${rest.length + 3}th+` : `${sorted[sorted.length - 1].rank}th`}</span>
-                                  <span className="text-gray-600">{restPct}% split</span>
-                                </div>
+                                <span className="text-[10px] text-gray-600">+{rest.length} more</span>
                               )}
                             </div>
                           </div>
