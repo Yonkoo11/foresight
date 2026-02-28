@@ -582,7 +582,7 @@ export default function ContestDetail() {
                 <h3 className="text-sm font-semibold text-gray-300">Prize Distribution</h3>
               </div>
               <div className="space-y-1.5">
-                {prizeRules.map((rule) => {
+                {[...prizeRules].sort((a, b) => (a.rank || 999) - (b.rank || 999)).map((rule) => {
                   const prizePool = contest.prizePool || 0;
                   const amount = (prizePool * rule.percentage / 100);
                   const isRest = rule.rank === 0;
