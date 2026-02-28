@@ -800,11 +800,11 @@ async function scoreEndedPrizedContests(): Promise<void> {
               influencerScore *= 2.0;
             }
 
-            // Accumulate category totals (captain bonus applies proportionally)
-            totalActivity += activityScore * multiplier;
-            totalEngagement += engagementScore * multiplier;
-            totalGrowth += growthScore * multiplier;
-            totalViral += viralScore * multiplier;
+            // Accumulate category totals (base scores only — captain bonus shown separately on frontend)
+            totalActivity += activityScore;
+            totalEngagement += engagementScore;
+            totalGrowth += growthScore;
+            totalViral += viralScore;
 
             totalScore += influencerScore;
           }
