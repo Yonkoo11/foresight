@@ -672,7 +672,7 @@ async function scoreEndedPrizedContests(): Promise<void> {
         }
 
         // Calculate scores for each entry
-        const scoredEntries: Array<{ id: number; score: number; userId: string }> = [];
+        const scoredEntries: Array<{ id: number; score: number; userId: string; breakdown: { activity: number; engagement: number; growth: number; viral: number } }> = [];
 
         for (const entry of entries) {
           const teamIds = entry.team_ids;
@@ -680,7 +680,11 @@ async function scoreEndedPrizedContests(): Promise<void> {
 
           // Get weekly deltas for team influencers
           let totalScore = 0;
-          const scoreBreakdown: Record<number, any> = {};
+          // Aggregate category scores across all team members (for frontend display)
+          let totalActivity = 0;
+          let totalEngagement = 0;
+          let totalGrowth = 0;
+          let totalViral = 0;
 
           for (const influencerId of teamIds) {
             // Get the influencer's weekly snapshot data
@@ -697,6 +701,11 @@ async function scoreEndedPrizedContests(): Promise<void> {
               .first();
 
             let influencerScore = 0;
+            let activityScore = 0;
+            let engagementScore = 0;
+            let growthScore = 0;
+            let viralScore = 0;
+
             if (startSnapshot && endSnapshot) {
               // Use the canonical V2 scoring formula from fantasyScoringService
               const delta = {
@@ -719,6 +728,10 @@ async function scoreEndedPrizedContests(): Promise<void> {
               };
               const scoreResult = calculateInfluencerWeeklyScore(delta, startSnapshot.follower_count);
               influencerScore = scoreResult.baseTotal;
+              activityScore = scoreResult.activityScore;
+              engagementScore = scoreResult.engagementScore;
+              growthScore = scoreResult.growthScore;
+              viralScore = scoreResult.viralScore;
             } else {
               // Fallback: compute deterministic score from stored influencer metrics
               const influencer = await db('influencers').where('id', influencerId).first();
@@ -726,38 +739,48 @@ async function scoreEndedPrizedContests(): Promise<void> {
                 const followers = influencer.follower_count || 0;
                 const engagementRate = parseFloat(influencer.engagement_rate || '0');
                 const tierScores: Record<string, number> = { S: 30, A: 25, B: 18, C: 12 };
-                const activityScore = tierScores[influencer.tier] || 15;
-                const engagementScore = Math.min(60, engagementRate * 10);
-                const growthScore = Math.min(40, Math.log10(Math.max(followers, 1)) * 5);
+                activityScore = tierScores[influencer.tier] || 15;
+                engagementScore = Math.min(60, engagementRate * 10);
+                growthScore = Math.min(40, Math.log10(Math.max(followers, 1)) * 5);
+                viralScore = 0; // No viral data in fallback
                 influencerScore = activityScore + engagementScore + growthScore;
               }
             }
 
             // Apply captain bonus (2.0x)
             const isCaptain = captainId === influencerId;
+            const multiplier = isCaptain ? 2.0 : 1;
             if (isCaptain) {
               influencerScore *= 2.0;
             }
 
-            scoreBreakdown[influencerId] = {
-              baseScore: influencerScore / (isCaptain ? 2.0 : 1),
-              isCaptain,
-              finalScore: influencerScore,
-            };
+            // Accumulate category totals (captain bonus applies proportionally)
+            totalActivity += activityScore * multiplier;
+            totalEngagement += engagementScore * multiplier;
+            totalGrowth += growthScore * multiplier;
+            totalViral += viralScore * multiplier;
 
             totalScore += influencerScore;
           }
+
+          // Store both per-influencer detail and flat category aggregate for frontend
+          const breakdown = {
+            activity: Math.round(totalActivity * 10) / 10,
+            engagement: Math.round(totalEngagement * 10) / 10,
+            growth: Math.round(totalGrowth * 10) / 10,
+            viral: Math.round(totalViral * 10) / 10,
+          };
 
           // Update entry with score
           await db(entriesTable)
             .where('id', entry.id)
             .update({
               score: totalScore,
-              score_breakdown: JSON.stringify(scoreBreakdown),
+              score_breakdown: JSON.stringify(breakdown),
               updated_at: now,
             });
 
-          scoredEntries.push({ id: entry.id, score: totalScore, userId: entry.user_id });
+          scoredEntries.push({ id: entry.id, score: totalScore, userId: entry.user_id, breakdown });
         }
 
         // Calculate rankings
@@ -816,7 +839,7 @@ async function scoreEndedPrizedContests(): Promise<void> {
                 contestId: String(contest.id),
                 totalScore: entry.score,
                 rank,
-                breakdown: { activity: 0, engagement: 0, growth: 0, viral: 0 },
+                breakdown: entry.breakdown,
               }).catch((err) => console.error(`[CRON] Tapestry storeScore error for user ${entry.userId}:`, err));
             }
           } catch (tapestryError) {
