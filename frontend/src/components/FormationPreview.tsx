@@ -204,51 +204,70 @@ export default function FormationPreview({
 
       {/* Pitch Background */}
       <div className={`relative rounded-2xl overflow-hidden ${containerHeight}`}>
-        {/* Gradient Background — rich emerald pitch feel */}
-        <div className="absolute inset-0 bg-gray-900"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.02)_0%,transparent_70%)]"></div>
+        {/* Grass texture base */}
+        <div className="absolute inset-0 bg-[#0C1414]"></div>
+        {/* Vertical grass blades */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(90deg, rgba(34,197,94,0.05) 0px, rgba(34,197,94,0.02) 1px, transparent 2px, transparent 4px)',
+            backgroundSize: '4px 100%',
+          }}
+        ></div>
+        {/* Horizontal mowing stripes */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(0deg, rgba(34,197,94,0.03) 0px, transparent 1px, transparent 24px, rgba(34,197,94,0.03) 24px, transparent 25px, transparent 48px)',
+            backgroundSize: '100% 48px',
+          }}
+        ></div>
+        {/* Gold light wash */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(135deg, transparent 0px, rgba(245,158,11,0.03) 40px, transparent 80px)',
+          }}
+        ></div>
+        {/* Stadium vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.35)_100%)]"></div>
 
-        {/* Pitch Lines */}
+        {/* Gold pitch lines */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Center Circle */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-52 h-36 md:h-52 border border-white/[0.07] rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white/10 rounded-full"></div>
-
-          {/* Horizontal Line */}
-          <div className="absolute top-1/2 left-8 right-8 h-px bg-white/[0.05]"></div>
-
-          {/* Top & Bottom Arcs */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 md:w-56 h-16 border-b border-l border-r border-white/[0.05] rounded-b-full"></div>
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 md:w-56 h-16 border-t border-l border-r border-white/[0.05] rounded-t-full"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-52 h-36 md:h-52 border border-yellow-400/25 rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-400/40 rounded-full"></div>
+          <div className="absolute top-1/2 left-8 right-8 h-px bg-gradient-to-r from-transparent via-yellow-400/25 to-transparent"></div>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 md:w-56 h-16 border-b border-l border-r border-yellow-400/12 rounded-b-full"></div>
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 md:w-56 h-16 border-t border-l border-r border-yellow-400/12 rounded-t-full"></div>
         </div>
 
-        {/* Formation: 1-2-2 Pyramid */}
+        {/* Formation: Diamond — 1 top, 2 wide mid, 2 narrow bottom */}
         <div className="relative z-10 h-full flex items-center justify-center py-8">
-          <div className="space-y-8 md:space-y-10">
-            {/* Top Row — Captain */}
+          <div className={isHero || isTeamView ? 'space-y-6 md:space-y-8' : 'space-y-5'}>
+            {/* Top — Captain (solo) */}
             <div className="flex justify-center">
               {renderPlayerCard(influencers[0], 0, true)}
             </div>
 
-            {/* Mid Row — 2 */}
-            <div className={`flex justify-center ${gap}`}>
+            {/* Mid — 2 players, wide spread */}
+            <div className={`flex justify-center ${isHero || isTeamView ? 'gap-24 md:gap-36' : 'gap-16'}`}>
               {renderPlayerCard(influencers[1], 1)}
               {renderPlayerCard(influencers[2], 2)}
             </div>
 
-            {/* Bottom Row — 2 */}
-            <div className={`flex justify-center ${gap}`}>
+            {/* Bottom — 2 players, tighter (inverted triangle) */}
+            <div className={`flex justify-center ${isHero || isTeamView ? 'gap-8 md:gap-12' : 'gap-6'}`}>
               {renderPlayerCard(influencers[3], 3)}
               {renderPlayerCard(influencers[4], 4)}
             </div>
           </div>
         </div>
 
-        {/* Corner brackets */}
-        <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-white/[0.08] rounded-tl"></div>
-        <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-white/[0.08] rounded-tr"></div>
-        <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-white/[0.08] rounded-bl"></div>
-        <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-white/[0.08] rounded-br"></div>
+        {/* Corner brackets — gold tint */}
+        <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-gold-500/20 rounded-tl"></div>
+        <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-gold-500/20 rounded-tr"></div>
+        <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-gold-500/20 rounded-bl"></div>
+        <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-gold-500/20 rounded-br"></div>
       </div>
     </div>
   );

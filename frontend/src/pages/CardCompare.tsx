@@ -1,400 +1,315 @@
 /**
- * Card Design Comparison — pick your profile share card style
+ * Pitch Background Compare — pick your formation background style
  * Route: /card-compare
  */
 
-const DEMO = {
-  username: 'Hemjay',
-  subtitle: 'Founding Member #18',
-  score: '1,151',
-  rank: '#2',
-  tier: 'SILVER',
-  tierColor: '#D1D5DB',
-  mult: '1.58×',
-  allTime: 'All-time #8',
-  week: '+1,151 this week',
+import { useState } from 'react';
+import { Crown, Users } from '@phosphor-icons/react';
+
+interface Influencer {
+  id: number;
+  name: string;
+  handle: string;
+  tier: string;
+  total_points: number;
+}
+
+const SAMPLE_TEAM: Influencer[] = [
+  { id: 1, name: 'Michael', handle: 'saylor', tier: 'S', total_points: 48 },
+  { id: 2, name: 'Ansem', handle: 'blknoiz06', tier: 'A', total_points: 35 },
+  { id: 3, name: 'ZachXBT', handle: 'zachxbt', tier: 'A', total_points: 34 },
+  { id: 4, name: 'Brian', handle: 'brian_armstrong', tier: 'B', total_points: 25 },
+  { id: 5, name: 'Kaleo', handle: 'CryptoKaleo', tier: 'C', total_points: 17 },
+];
+
+const getTierColors = (tier: string) => {
+  switch (tier) {
+    case 'S': return { border: 'border-gold-500', badge: 'bg-gold-500 text-gray-950' };
+    case 'A': return { border: 'border-cyan-500', badge: 'bg-cyan-500 text-white' };
+    case 'B': return { border: 'border-emerald-500', badge: 'bg-emerald-500 text-white' };
+    default: return { border: 'border-gray-600', badge: 'bg-gray-500 text-white' };
+  }
 };
 
-// ─── Card 1: The Field (current) ───────────────────────────────────────────
-
-function CardField() {
+function PlayerCard({ influencer, isCaptain }: { influencer: Influencer; isCaptain?: boolean }) {
+  const colors = getTierColors(influencer.tier);
   return (
-    <div
-      className="rounded-2xl overflow-hidden relative"
-      style={{
-        width: 240,
-        background: 'linear-gradient(to bottom, rgba(6,78,59,0.28) 0%, rgba(17,24,39,0.32) 30%, #09090B 58%)',
-        border: '1px solid #1C1C1E',
-      }}
-    >
-      {/* Pitch SVG — subtle center circle */}
-      <svg className="absolute" style={{ top: 0, right: 0, width: 170, height: 160, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 170 160">
-        <circle cx="110" cy="76" r="52" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-        <circle cx="110" cy="76" r="2.5" fill="rgba(255,255,255,0.06)" />
-      </svg>
-      {/* Diagonal trajectory */}
-      <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
-        <line x1="18" y1="300" x2="230" y2="30" stroke="rgba(245,158,11,0.09)" strokeWidth="1" strokeDasharray="4 8" />
-      </svg>
-
-      {/* Gold bar */}
-      <div style={{ height: 3, background: 'linear-gradient(to right, #F59E0B, #FBBF24, #F59E0B)' }} />
-
-      <div className="relative px-4 pt-2.5 pb-4">
-        {/* Brand */}
-        <div className="flex items-center justify-between mb-3">
-          <span style={{ color: '#F59E0B', fontSize: 9, fontWeight: 700, letterSpacing: 2 }}>⚡ FORESIGHT</span>
-          <span style={{ color: '#3F3F46', fontSize: 8 }}>ct-foresight.xyz</span>
-        </div>
-
-        {/* Split: name left, avatar right */}
-        <div className="flex items-start gap-2 mb-4">
-          <div className="flex-1 pt-0.5">
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>{DEMO.username}</div>
-            <div style={{ color: '#71717A', fontSize: 9, marginTop: 2, marginBottom: 8 }}>{DEMO.subtitle}</div>
-            {/* Tier badge */}
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '3px 8px', borderRadius: 999,
-              background: 'rgba(209,213,219,0.08)',
-              border: '1px solid rgba(209,213,219,0.3)',
-              color: '#D1D5DB', fontSize: 9, fontWeight: 700,
-            }}>
-              ★ {DEMO.tier}
-            </span>
-          </div>
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <div style={{
-              position: 'absolute', inset: 0, borderRadius: '50%',
-              boxShadow: `0 0 16px ${DEMO.tierColor}44, 0 0 32px ${DEMO.tierColor}22`,
-            }} />
-            <div style={{
-              width: 68, height: 68, borderRadius: '50%',
-              border: `2.5px solid ${DEMO.tierColor}EE`,
-              background: `radial-gradient(circle, ${DEMO.tierColor}40, ${DEMO.tierColor}15)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: DEMO.tierColor, fontSize: 28, fontWeight: 700,
-            }}>H</div>
+    <div className="relative">
+      {isCaptain && (
+        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20">
+          <div className="bg-gold-500 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-gold">
+            <Crown size={12} weight="fill" className="text-gray-950" />
+            <span className="text-[10px] font-bold text-gray-950">CPT</span>
           </div>
         </div>
-
-        {/* Divider */}
-        <div style={{ height: 1, background: '#1C1C1E', marginBottom: 12 }} />
-
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', textAlign: 'center' }}>
-          <div style={{ paddingRight: 12, borderRight: '1px solid #1C1C1E' }}>
-            <div style={{ color: '#F59E0B', fontSize: 28, fontWeight: 900, lineHeight: 1 }}>{DEMO.score}</div>
-            <div style={{ color: '#3F3F46', fontSize: 7, letterSpacing: 2, marginTop: 4 }}>SCORE</div>
-          </div>
-          <div style={{ paddingLeft: 12 }}>
-            <div style={{ color: '#fff', fontSize: 28, fontWeight: 900, lineHeight: 1 }}>{DEMO.rank}</div>
-            <div style={{ color: '#3F3F46', fontSize: 7, letterSpacing: 2, marginTop: 4 }}>SEASON</div>
-          </div>
-        </div>
-        <div style={{ textAlign: 'center', color: '#27272A', fontSize: 8, marginTop: 6 }}>{DEMO.allTime} · {DEMO.week}</div>
-
-        {/* Footer */}
-        <div style={{ color: '#27272A', fontSize: 8, marginTop: 12 }}>Tapestry · Solana verified</div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Card 2: The Badge ──────────────────────────────────────────────────────
-
-function CardBadge() {
-  return (
-    <div
-      style={{
-        width: 240,
-        background: '#0A1628',
-        border: '2px solid #F59E0B',
-        borderRadius: '10px 10px 18px 18px',
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-    >
-      {/* Inner bevel border */}
-      <div style={{ position: 'absolute', inset: 4, border: '1px solid rgba(245,158,11,0.2)', borderRadius: '7px 7px 14px 14px', pointerEvents: 'none' }} />
-
-      {/* Gold top bar */}
-      <div style={{ height: 3, background: 'linear-gradient(to right, #F59E0B, #FBBF24, #F59E0B)' }} />
-
-      {/* Agency header */}
-      <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(245,158,11,0.15)', textAlign: 'center' }}>
-        <div style={{ color: '#F59E0B', fontSize: 8, fontWeight: 700, letterSpacing: 3, fontFamily: 'monospace' }}>
-          FORESIGHT INTELLIGENCE DIVISION
-        </div>
-        <div style={{ color: '#3A3A5A', fontSize: 7, fontFamily: 'monospace', marginTop: 2, letterSpacing: 1 }}>
-          CRYPTO TWITTER ANALYST CREDENTIAL
-        </div>
-      </div>
-
-      {/* Photo + data grid */}
-      <div style={{ display: 'flex', gap: 10, padding: '12px 12px 8px' }}>
-        {/* Square photo (Polaroid style) */}
-        <div style={{ flexShrink: 0 }}>
-          <div style={{
-            width: 68, height: 74,
-            border: '1px solid rgba(245,158,11,0.5)',
-            background: '#0F1F38',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            borderRadius: 2,
-          }}>
-            <div style={{ height: 56, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: '50%',
-                background: `radial-gradient(circle, ${DEMO.tierColor}40, ${DEMO.tierColor}15)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: DEMO.tierColor, fontSize: 20, fontWeight: 700,
-              }}>H</div>
+      )}
+      <div className={`relative border-2 ${colors.border} rounded-xl`}>
+        <div className="bg-gray-900 rounded-xl p-3 w-28">
+          <div className="relative mx-auto mb-2 w-14 h-14">
+            <div className={`w-full h-full rounded-full border-2 ${colors.border} overflow-hidden bg-gray-800`}>
+              <div className="w-full h-full flex items-center justify-center">
+                <Users size={24} className="text-gray-500" />
+              </div>
             </div>
-            {/* Polaroid strip */}
-            <div style={{ background: '#F5F5F0', width: '100%', padding: '2px 4px', textAlign: 'center' }}>
-              <div style={{ color: '#555', fontSize: 6, fontFamily: 'monospace' }}>FST-0042117</div>
+            <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 ${colors.badge} px-1.5 py-0.5 rounded-full text-[10px] font-bold`}>
+              {influencer.tier}
             </div>
           </div>
-        </div>
-
-        {/* Monospace data fields */}
-        <div style={{ flex: 1 }}>
-          {[
-            ['NAME', DEMO.username.toUpperCase()],
-            ['TIER', `★ ${DEMO.tier}`],
-            ['SCORE', DEMO.score],
-            ['SEASON', DEMO.rank],
-            ['MULT', DEMO.mult],
-            ['STATUS', 'VERIFIED'],
-          ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
-              <span style={{ color: '#3A3A5A', fontFamily: 'monospace', fontSize: 8, width: 44, flexShrink: 0 }}>
-                {label}:
-              </span>
-              <span style={{ color: '#E2E8F0', fontFamily: 'monospace', fontSize: 8, fontWeight: label === 'SEASON' || label === 'SCORE' ? 700 : 400 }}>
-                {value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Hologram strip */}
-      <div style={{
-        height: 14,
-        background: 'linear-gradient(to right, rgba(255,0,127,0.12), rgba(0,127,255,0.12), rgba(0,255,127,0.10), rgba(255,200,0,0.12), rgba(255,0,127,0.10))',
-        borderTop: '1px solid rgba(245,158,11,0.15)',
-        borderBottom: '1px solid rgba(245,158,11,0.15)',
-        margin: '0 12px',
-      }} />
-
-      {/* Footer */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px 10px' }}>
-        <span style={{ color: '#1E2A3A', fontFamily: 'monospace', fontSize: 7 }}>TAPESTRY · SOLANA VERIFIED</span>
-        <span style={{ color: 'rgba(245,158,11,0.4)', fontSize: 8 }}>⚡</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Card 3: The Certificate ────────────────────────────────────────────────
-
-function CardCertificate() {
-  return (
-    <div
-      style={{
-        width: 240,
-        background: '#F5F1E8',
-        borderRadius: 10,
-        border: '5px solid #F59E0B',
-        boxShadow: 'inset 0 0 0 2px rgba(245,158,11,0.25)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Paper texture overlay */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0,0,0,0.012) 3px, rgba(0,0,0,0.012) 4px)',
-      }} />
-
-      {/* Corner ornaments */}
-      {[
-        { top: 8, left: 8, borderWidth: '2px 0 0 2px' },
-        { top: 8, right: 8, borderWidth: '2px 2px 0 0' },
-        { bottom: 8, left: 8, borderWidth: '0 0 2px 2px' },
-        { bottom: 8, right: 8, borderWidth: '0 2px 2px 0' },
-      ].map((pos, i) => (
-        <div key={i} style={{
-          position: 'absolute', width: 14, height: 14,
-          borderColor: 'rgba(245,158,11,0.5)',
-          borderStyle: 'solid',
-          ...pos,
-        }} />
-      ))}
-
-      <div style={{ padding: '14px 14px 12px', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-
-        {/* Zone 1: Brand header — minimal */}
-        <div style={{ textAlign: 'center', width: '100%', marginBottom: 10 }}>
-          <div style={{ color: '#92400E', fontSize: 8, fontWeight: 700, letterSpacing: '3px', fontFamily: 'Inter, sans-serif' }}>
-            FORESIGHT
+          <h4 className="text-center font-bold text-white truncate text-xs">{influencer.name}</h4>
+          <p className="text-center text-gray-400 truncate text-[10px]">@{influencer.handle}</p>
+          <div className="mt-2 pt-2 border-t border-gray-800 flex justify-center">
+            <span className="text-[10px] text-gold-400 font-semibold">{influencer.total_points} pts</span>
           </div>
-          <div style={{ height: '0.5px', background: 'rgba(245,158,11,0.45)', margin: '5px 16px 0' }} />
-        </div>
-
-        {/* Zone 2: Avatar */}
-        <div style={{
-          width: 68, height: 68, borderRadius: '50%',
-          border: '3.5px solid #F59E0B',
-          boxShadow: '0 0 0 1px rgba(245,158,11,0.3), 0 3px 10px rgba(0,0,0,0.1)',
-          background: 'radial-gradient(circle, rgba(209,213,219,0.3), rgba(209,213,219,0.1))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#92400E', fontSize: 28, fontWeight: 700, fontFamily: 'Georgia, serif',
-          marginBottom: 8,
-        }}>H</div>
-
-        {/* Name */}
-        <div style={{ color: '#1A1A1A', fontSize: 20, fontWeight: 700, fontFamily: 'Georgia, serif', textAlign: 'center', lineHeight: 1 }}>
-          {DEMO.username}
-        </div>
-
-        {/* Founding member italic */}
-        <div style={{ color: '#A16207', fontSize: 8, fontStyle: 'italic', fontFamily: 'Georgia, serif', marginTop: 4, textAlign: 'center' }}>
-          {DEMO.subtitle}
-        </div>
-
-        {/* Separator */}
-        <div style={{ height: '0.5px', background: 'rgba(245,158,11,0.45)', width: '100%', margin: '10px 0 8px' }} />
-
-        {/* Zone 3: THE number — dominates */}
-        <div style={{ textAlign: 'center', lineHeight: 1 }}>
-          <div style={{ color: '#A16207', fontSize: 7, letterSpacing: '2px', fontFamily: 'Georgia, serif', marginBottom: 3 }}>
-            SEASON RANK
-          </div>
-          <div style={{ color: '#92400E', fontSize: 56, fontWeight: 700, fontFamily: 'Georgia, "Times New Roman", serif', lineHeight: 1 }}>
-            {DEMO.rank}
-          </div>
-          <div style={{ color: '#7C5C2E', fontSize: 8, fontFamily: 'Georgia, serif', marginTop: 4 }}>
-            {DEMO.score} FS  ·  {DEMO.mult}  ·  {DEMO.allTime}
-          </div>
-        </div>
-
-        {/* Separator */}
-        <div style={{ height: '0.5px', background: 'rgba(245,158,11,0.45)', width: '100%', margin: '10px 0 8px' }} />
-
-        {/* Zone 4: Signature + wax seal */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', width: '100%', gap: 6 }}>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ height: '0.5px', background: 'rgba(245,158,11,0.4)', marginBottom: 3 }} />
-            <div style={{ color: '#7C5C2E', fontSize: 7, fontFamily: 'Georgia, serif' }}>Tapestry Protocol</div>
-          </div>
-
-          {/* Wax seal */}
-          <div style={{
-            flexShrink: 0,
-            width: 40, height: 40, borderRadius: '50%',
-            border: '2px solid #F59E0B',
-            outline: '1.5px dashed rgba(245,158,11,0.55)',
-            outlineOffset: 3,
-            background: DEMO.tierColor,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#0A0A0F', fontSize: 16, fontWeight: 700,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-          }}>★</div>
-
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ height: '0.5px', background: 'rgba(245,158,11,0.4)', marginBottom: 3 }} />
-            <div style={{ color: '#7C5C2E', fontSize: 7, fontFamily: 'Georgia, serif' }}>ct-foresight.xyz</div>
-          </div>
-        </div>
-
-        {/* License */}
-        <div style={{ color: '#7C5C2E', fontSize: 7, fontFamily: 'monospace', marginTop: 7, textAlign: 'center' }}>
-          LICENSE #FST-0042117 · SOLANA VERIFIED
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────
+function Formation() {
+  return (
+    <div className="relative z-10 h-full flex items-center justify-center py-8">
+      <div className="space-y-8">
+        <div className="flex justify-center">
+          <PlayerCard influencer={SAMPLE_TEAM[0]} isCaptain />
+        </div>
+        <div className="flex justify-center gap-14">
+          <PlayerCard influencer={SAMPLE_TEAM[1]} />
+          <PlayerCard influencer={SAMPLE_TEAM[2]} />
+        </div>
+        <div className="flex justify-center gap-14">
+          <PlayerCard influencer={SAMPLE_TEAM[3]} />
+          <PlayerCard influencer={SAMPLE_TEAM[4]} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CornerBrackets({ color = 'white' }: { color?: 'white' | 'gold' }) {
+  const c = color === 'gold' ? 'border-gold-500/20' : 'border-white/[0.08]';
+  return (
+    <>
+      <div className={`absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 ${c} rounded-tl`} />
+      <div className={`absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 ${c} rounded-tr`} />
+      <div className={`absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 ${c} rounded-bl`} />
+      <div className={`absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 ${c} rounded-br`} />
+    </>
+  );
+}
+
+/* ── Option 1: Stadium Spotlight ──────────────────────────────────── */
+
+function Option1() {
+  return (
+    <div className="relative rounded-2xl overflow-hidden min-h-[440px]">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0D0D14] via-[#0A0A0F] to-[#0D0D14]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_40%,rgba(245,158,11,0.10)_0%,transparent_70%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.35)_0%,transparent_20%,transparent_80%,rgba(0,0,0,0.35)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,transparent_15%,transparent_85%,rgba(0,0,0,0.25)_100%)]" />
+      {/* Gold pitch lines */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-52 h-36 md:h-52 border border-yellow-500/30 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50" />
+        <div className="absolute top-1/2 left-8 right-8 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-16 border-b border-l border-r border-yellow-500/15 rounded-b-full" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-16 border-t border-l border-r border-yellow-500/15 rounded-t-full" />
+      </div>
+      <CornerBrackets color="gold" />
+      <Formation />
+    </div>
+  );
+}
+
+/* ── Option 2: Tactical Chalkboard ────────────────────────────────── */
+
+function Option2() {
+  return (
+    <div className="relative rounded-2xl overflow-hidden min-h-[440px]">
+      <div className="absolute inset-0 bg-gray-900" />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px',
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(245,158,11,0.03) 35px, rgba(245,158,11,0.03) 70px)`,
+        }}
+      />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.2)_100%)]" />
+      {/* White pitch lines */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-52 h-36 md:h-52 border border-white/10 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/20 rounded-full" />
+        <div className="absolute top-1/2 left-8 right-8 h-px bg-white/[0.06]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-16 border-b border-l border-r border-white/[0.06] rounded-b-full" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-16 border-t border-l border-r border-white/[0.06] rounded-t-full" />
+      </div>
+      <CornerBrackets />
+      <Formation />
+    </div>
+  );
+}
+
+/* ── Option 3: Grass Texture ──────────────────────────────────────── */
+
+function Option3() {
+  return (
+    <div className="relative rounded-2xl overflow-hidden min-h-[440px]">
+      <div className="absolute inset-0 bg-[#0C1414]" />
+      {/* Vertical grass blades */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(90deg, rgba(34,197,94,0.05) 0px, rgba(34,197,94,0.02) 1px, transparent 2px, transparent 4px)`,
+          backgroundSize: '4px 100%',
+        }}
+      />
+      {/* Horizontal mowing stripes */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(0deg, rgba(34,197,94,0.03) 0px, transparent 1px, transparent 24px, rgba(34,197,94,0.03) 24px, transparent 25px, transparent 48px)`,
+          backgroundSize: '100% 48px',
+        }}
+      />
+      {/* Gold light wash */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(135deg, transparent 0px, rgba(245,158,11,0.03) 40px, transparent 80px)`,
+        }}
+      />
+      {/* Stadium vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.35)_100%)]" />
+      {/* Gold pitch lines */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-52 h-36 md:h-52 border border-yellow-400/30 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-400/50 rounded-full" />
+        <div className="absolute top-1/2 left-8 right-8 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-16 border-b border-l border-r border-yellow-400/15 rounded-b-full" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-16 border-t border-l border-r border-yellow-400/15 rounded-t-full" />
+      </div>
+      <CornerBrackets color="gold" />
+      <Formation />
+    </div>
+  );
+}
+
+/* ── Option 4: Digital Holo Grid ──────────────────────────────────── */
+
+function Option4() {
+  return (
+    <div className="relative rounded-2xl overflow-hidden min-h-[440px]">
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-[#0A0A0F] to-[#0E0E16]" />
+      {/* Cyan fine grid */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(34,211,238,0.07) 0.5px, transparent 0.5px),
+            linear-gradient(rgba(34,211,238,0.07) 0.5px, transparent 0.5px)
+          `,
+          backgroundSize: '50px 50px',
+        }}
+      />
+      {/* Gold larger grid */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(90deg, rgba(245,158,11,0.06) 1px, transparent 1px),
+            linear-gradient(rgba(245,158,11,0.06) 1px, transparent 1px)
+          `,
+          backgroundSize: '200px 200px',
+        }}
+      />
+      {/* Diagonal shatter */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(135deg, transparent calc(50% - 1px), rgba(34,211,238,0.04) calc(50% - 0.5px), rgba(34,211,238,0.04) calc(50% + 0.5px), transparent calc(50% + 1px))`,
+          backgroundSize: '120px 120px',
+        }}
+      />
+      {/* Cyan center glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.08)_0%,transparent_55%)]" />
+      {/* Cyan + gold pitch lines */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-52 h-36 md:h-52 border border-cyan-400/30 rounded-full"
+          style={{ boxShadow: '0 0 20px rgba(34,211,238,0.10)' }}
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 md:w-40 h-28 md:h-40 border border-yellow-400/15 rounded-full" />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-400 rounded-full"
+          style={{ boxShadow: '0 0 12px rgba(250,204,21,0.8)' }}
+        />
+        <div className="absolute top-1/2 left-8 right-8 h-px bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-cyan-400/0" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-16 border-b border-l border-r border-cyan-400/12 rounded-b-full" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-16 border-t border-l border-r border-cyan-400/12 rounded-t-full" />
+      </div>
+      <CornerBrackets />
+      <Formation />
+    </div>
+  );
+}
+
+/* ── Page ──────────────────────────────────────────────────────────── */
 
 export default function CardCompare() {
-  const cards = [
-    {
-      id: 'field',
-      label: 'The Field',
-      description: 'Off-center composition, pitch texture, diagonal trajectory line. Sports card DNA.',
-      component: <CardField />,
-      tag: 'Current',
-    },
-    {
-      id: 'badge',
-      label: 'The Badge',
-      description: 'FBI/Agency credential. Monospace data grid, Polaroid photo, hologram strip. CT spy humor.',
-      component: <CardBadge />,
-      tag: 'Radical',
-    },
-    {
-      id: 'certificate',
-      label: 'The Certificate',
-      description: 'Vintage parchment diploma. Cream background pops on dark Twitter feeds. Most human touch.',
-      component: <CardCertificate />,
-      tag: 'Radical',
-    },
+  const [selected, setSelected] = useState<number | null>(null);
+
+  const options = [
+    { id: 1, name: 'Stadium Spotlight', desc: 'Gold spotlight from above, dark stadium shadows on edges. Cinematic.', Component: Option1 },
+    { id: 2, name: 'Tactical Chalkboard', desc: 'Subtle grid pattern with gold diagonal accents. Clean, strategic.', Component: Option2 },
+    { id: 3, name: 'Grass Texture', desc: 'Dark green grass blades with mowing stripes, gold pitch lines. Stadium at night.', Component: Option3 },
+    { id: 4, name: 'Digital Holo Grid', desc: 'Cyan + gold grid lines, glowing center. Futuristic, crypto-native.', Component: Option4 },
   ];
 
   return (
-    <div className="min-h-screen bg-[#09090B] px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-950">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <div className="text-[10px] text-zinc-600 tracking-widest uppercase mb-1">Profile Card Design</div>
-          <h1 className="text-2xl font-bold text-white">Pick your style</h1>
-          <p className="text-zinc-500 text-sm mt-1">3 directions — pick 1, we'll make it the real card</p>
+          <h1 className="text-2xl font-bold text-white mb-1">Pitch Background Compare</h1>
+          <p className="text-gray-500 text-sm">Click to select. All pure CSS — no images.</p>
         </div>
 
-        {/* Cards grid — horizontal scroll on mobile, 3 col on desktop */}
-        <div
-          className="flex gap-6 overflow-x-auto pb-4"
-          style={{ scrollSnapType: 'x mandatory' }}
-        >
-          {cards.map((card) => (
-            <div
-              key={card.id}
-              className="flex-shrink-0"
-              style={{ scrollSnapAlign: 'start' }}
-            >
-              {/* Card render */}
-              {card.component}
-
-              {/* Label */}
-              <div className="mt-4" style={{ width: 240 }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-white font-bold text-sm">{card.label}</span>
-                  <span
-                    className="text-[9px] px-2 py-0.5 rounded-full font-medium"
-                    style={card.tag === 'Current'
-                      ? { background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }
-                      : { background: 'rgba(139,92,246,0.12)', color: '#A78BFA' }}
-                  >
-                    {card.tag}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {options.map(({ id, name, desc, Component }) => (
+            <div key={id}>
+              <button
+                onClick={() => setSelected(id)}
+                className={`w-full text-left rounded-2xl transition-all ${
+                  selected === id
+                    ? 'ring-2 ring-gold-500 ring-offset-2 ring-offset-gray-950'
+                    : 'hover:ring-1 hover:ring-gray-700'
+                }`}
+              >
+                <Component />
+              </button>
+              <div className="mt-3 px-1">
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-bold ${selected === id ? 'text-gold-400' : 'text-white'}`}>
+                    #{id} — {name}
                   </span>
+                  {selected === id && (
+                    <span className="text-[10px] font-bold text-gold-400 bg-gold-500/15 px-2 py-0.5 rounded-full">
+                      SELECTED
+                    </span>
+                  )}
                 </div>
-                <p className="text-zinc-500 text-xs leading-relaxed">{card.description}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Instructions */}
-        <div className="mt-10 p-4 rounded-xl" style={{ background: '#0F0F14', border: '1px solid #1C1C1E' }}>
-          <p className="text-zinc-400 text-sm">
-            Look at all 3 and tell me which one you want. I'll implement it as the real share card with full canvas PNG generation, real avatar, and correct data.
-          </p>
         </div>
       </div>
     </div>
