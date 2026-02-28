@@ -405,22 +405,45 @@ router.get(
 
 /**
  * GET /api/auth/tapestry-status
- * Get user's Tapestry integration status
+ * Get user's Tapestry integration status.
+ * Auto-links if user has a wallet but no tapestry_user_id yet (backfill).
  */
 router.get(
   '/tapestry-status',
   authenticate,
   asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.userId;
-    const user = await db('users').where({ id: userId }).first();
+    let user = await db('users').where({ id: userId }).first();
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
 
-    const tapestryProfile = user.tapestry_user_id
-      ? await tapestryService.getProfile(user.tapestry_user_id)
-      : null;
+    // Auto-backfill: if user has a wallet but no Tapestry profile, create one now
+    if (!user.tapestry_user_id && user.wallet_address) {
+      try {
+        const profile = await tapestryService.findOrCreateProfile(
+          user.wallet_address,
+          user.username || `Trader_${user.wallet_address.slice(2, 8)}`
+        );
+        if (profile) {
+          await db('users').where({ id: userId }).update({ tapestry_user_id: profile.id });
+          user = { ...user, tapestry_user_id: profile.id };
+          logger.info(`Tapestry profile auto-linked for user ${userId}: ${profile.id}`, { context: 'Auth API' });
+        }
+      } catch (err) {
+        logger.error('Tapestry auto-link failed:', err, { context: 'Auth API' });
+      }
+    }
+
+    let tapestryProfile = null;
+    if (user.tapestry_user_id) {
+      try {
+        tapestryProfile = await tapestryService.getProfile(user.tapestry_user_id);
+      } catch {
+        // Tapestry API unreachable — still report connected from our DB
+      }
+    }
 
     sendSuccess(res, {
       connected: !!user.tapestry_user_id,
