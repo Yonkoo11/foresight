@@ -38,12 +38,12 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 | 1A: Dependency Scanning | ✅ Complete | 4 | 1 critical, 10+ high, 8+ moderate across packages |
 | 1B: SAST (Static Analysis) | ✅ Complete | 1 | Semgrep: XSS in image proxy (server.ts:127) |
 | 1C: Secret Scanning | ✅ Complete | 1 | JWT secrets found in git history (2 distinct values) |
-| 1D: Smart Contract Audit | ⬜ Pending | 0 | Solidity contracts — needs TokenFi Shield / manual review |
+| 1D: Smart Contract Audit | ✅ Complete | 14 | 3 critical, 5 high, 6 medium across 10 contracts |
 | 1E: Solana Tx Security Scan | ✅ Complete | 4 | Race condition, simulated tx, commitment level, finalization |
 | 1F: Frontend Security Scan | ✅ Complete | 3 | localStorage JWT, no CSRF, no dangerouslySetInnerHTML (good) |
 | 2A: Auth & Authorization | ✅ Complete | 7 | Admin no role check, JWT algo, token storage, logout, refresh |
 | 2B: SOL Transaction Security | ✅ Complete | 4 | TOCTOU race, simulated fallback, commitment, finalization race |
-| 2C: EVM Contract Security | ⬜ Pending | 0 | CTDraftPrizedV2.sol deep review still needed |
+| 2C: EVM Contract Security | ✅ Complete | 14 | Double finalization, reentrancy, rake math, rug-pull vector |
 | 2D: API Input Validation | ✅ Complete | 3 | Duplicate influencers, limit/offset, admin batch |
 | 2E: Frontend Security | ✅ Complete | 3 | localStorage, CSRF, VITE_ prefix clean |
 | 2F: Database Security | ✅ Complete | 2 | No SSL, plaintext refresh tokens. SQL injection: SAFE (Knex) |
@@ -56,7 +56,7 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 
 ## Findings Summary
 
-**Totals: 6 Critical, 12 High, 13 Medium = 31 findings**
+**Totals: 9 Critical, 17 High, 19 Medium = 45 findings**
 
 | # | Severity | Category | Short Description | Status |
 |---|----------|----------|-------------------|--------|
@@ -91,6 +91,20 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 | 029 | Medium | Logging | No audit trail for admin/sensitive actions | Open |
 | 030 | Medium | Auth | Expired sessions never garbage-collected | Open |
 | 031 | Medium | Auth | Auth rate limiter too lenient (50-100/15min) | Open |
+| 032 | **Critical** | Smart Contract | Double finalization — prizes redistributed | Open |
+| 033 | **Critical** | Smart Contract | Reentrancy on prize claims | Open |
+| 034 | **Critical** | Smart Contract | Rake calculation integer arithmetic bug | Open |
+| 035 | High | Smart Contract | No duplicate validation in rankings array | Open |
+| 036 | High | Smart Contract | emergencyWithdraw() rug-pull vector | Open |
+| 037 | High | Smart Contract | Unsafe .transfer() in 3 contracts | Open |
+| 038 | High | Smart Contract | Prize pool underflow on small contests | Open |
+| 039 | High | Smart Contract | Contest finalized before end time | Open |
+| 040 | Medium | Smart Contract | No min duration lock→end | Open |
+| 041 | Medium | Smart Contract | Single-step ownership transfer | Open |
+| 042 | Medium | Smart Contract | Unbounded allPlayers array DoS | Open |
+| 043 | Medium | Smart Contract | ReputationEngine division-by-zero | Open |
+| 044 | Medium | Smart Contract | Treasury zero-fee distribution | Open |
+| 045 | Medium | Smart Contract | QuestRewards budget exceeds balance | Open |
 
 See `AUDIT_FINDINGS.md` for full details on each finding.
 

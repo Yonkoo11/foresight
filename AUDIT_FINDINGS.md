@@ -450,6 +450,199 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 
 ---
 
+## FINDING-032: Double Finalization — Contest Can Be Finalized Twice
+
+- **Severity:** Critical
+- **Category:** Smart Contract / Financial
+- **Phase:** 1D + 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:382-439` (also `CTDraftPrized.sol:220-258`)
+- **Description:** `finalizeContest()` checks `contest.status != ContestStatus.LOCKED` but does not prevent a second call after status is set to FINALIZED. Owner can call it again with different rankings to redistribute prizes.
+- **Impact:** Owner (or compromised owner key) can redistribute prizes to different addresses. Complete prize pool theft.
+- **Recommended Fix:** Add `if (contest.status == ContestStatus.FINALIZED) revert ContestAlreadyFinalized();` or use a `prizesClaimed` flag checked before any transfers.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-033: Reentrancy on Prize Claims
+
+- **Severity:** Critical
+- **Category:** Smart Contract / Reentrancy
+- **Phase:** 1D + 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:554-569` (also `CTDraftPrized.sol:375-391`)
+- **Description:** `claimPrize()` sets `entry.claimed = true` before the ETH transfer via `.call{value:}()`, which is the correct Checks-Effects-Interactions pattern. However, `entry.prizeAmount` is NOT zeroed before the transfer. A reentrant contract could potentially exploit other functions that read `prizeAmount` during the callback.
+- **Impact:** Potential fund drain via reentrancy if any other function path reads the non-zeroed `prizeAmount`.
+- **Recommended Fix:** Zero out `entry.prizeAmount` before transfer. Add OpenZeppelin `ReentrancyGuard` to all financial functions.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-034: Rake Calculation Integer Arithmetic Bug
+
+- **Severity:** Critical
+- **Category:** Smart Contract / Financial Math
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:393`
+- **Description:** Platform fee calculation: `(contest.prizePool * contest.rakePercent * 100) / BPS_DENOMINATOR`. The extra `* 100` creates confusion. With `rakePercent = 12` and `BPS_DENOMINATOR = 10000`: `(1e18 * 12 * 100) / 10000 = 0.12 ETH` — happens to be correct. But if `rakePercent` is stored as basis points (e.g., 1200 for 12%), the calculation breaks entirely.
+- **Impact:** Incorrect rake splitting — platform either takes too much or too little from the prize pool.
+- **Recommended Fix:** Standardize to either percentage (divide by 100) or basis points (divide by 10000), not a hybrid. Add unit tests with known values.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-035: No Duplicate Validation in Rankings Array
+
+- **Severity:** High
+- **Category:** Smart Contract / Logic
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:410` (also `CTDraftPrized.sol:242-254`)
+- **Description:** `finalizeContest()` iterates `rankedPlayers` and assigns prizes by rank, but only checks `entry.exists`. Does not check for duplicate addresses. Owner could submit `[alice, alice, bob]` — alice gets rank 1 AND rank 2 prizes.
+- **Impact:** Manipulated prize distribution. One player receives multiple rank prizes.
+- **Recommended Fix:** Track `alreadyRanked[player]` in a mapping during the loop. Revert on duplicates.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-036: emergencyWithdraw() Owner Rug-Pull Vector
+
+- **Severity:** High
+- **Category:** Smart Contract / Access Control
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:724-727` (also `CTDraftPrized.sol:552-555`)
+- **Description:** `emergencyWithdraw()` sends entire contract balance to owner with no restrictions. No timelock, no multi-sig requirement, no validation that only platform fees (not user entry fees) are withdrawn.
+- **Impact:** Compromised owner key = complete fund drain of all prize pools and entry fees.
+- **Recommended Fix:** Limit withdrawal to accrued platform fees only. Implement timelock (48h delay). Require multi-sig for emergency operations.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-037: Unsafe .transfer() in Multiple Contracts
+
+- **Severity:** High
+- **Category:** Smart Contract / Transfer Pattern
+- **Phase:** 2C
+- **File:** `contracts/src/QuestRewards.sol:232`, `DailyGauntlet.sol:278-283`, `TimecasterArena.sol:296,430,449,452`
+- **Description:** Multiple contracts use deprecated `.transfer()` which forwards only 2300 gas. This will fail for smart contract wallets (Safe, Argent) that need more gas in their receive/fallback functions.
+- **Impact:** Users with smart contract wallets cannot claim rewards. Funds locked permanently.
+- **Recommended Fix:** Replace all `.transfer()` with `.call{value:}()` and check return value.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-038: Prize Pool Underflow on Small Contests
+
+- **Severity:** High
+- **Category:** Smart Contract / Financial Math
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:210-249, 420-431`
+- **Description:** Prize tier system designed for larger contests (10+ players). With fewer players, the tier BPS allocations mean a significant portion of the pool goes undistributed and remains locked in the contract.
+- **Impact:** Protocol leaks funds on edge cases. 1-player contests lose up to 60% of prize pool.
+- **Recommended Fix:** Add special handling for contests with fewer players than tier slots. Distribute remainder to top ranks or return to treasury.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-039: Contest Can Be Finalized Before End Time
+
+- **Severity:** High
+- **Category:** Smart Contract / Logic
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:389`
+- **Description:** Uses `<` comparison (`block.timestamp < contest.endTime`), allowing finalization exactly at `endTime`. The contest lock is also manual (owner calls `lockContest()`), so if backend submits rankings early, scores may be incomplete.
+- **Impact:** Premature finalization with incomplete scoring data.
+- **Recommended Fix:** Add buffer period. Consider Chainlink Keepers for automated, trustless locking.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-040: No Minimum Duration Between Lock and End Time
+
+- **Severity:** Medium
+- **Category:** Smart Contract / Validation
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:262-272`
+- **Description:** `createContest()` only validates `lockTime <= endTime` but doesn't enforce a minimum gap. A contest could have lockTime and endTime 1 second apart — insufficient time for scoring.
+- **Recommended Fix:** `require(endTime >= lockTime + 1 days)`.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-041: Single-Step Ownership Transfer
+
+- **Severity:** Medium
+- **Category:** Smart Contract / Access Control
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraftPrizedV2.sol:719-722` (all contracts)
+- **Description:** Ownership transfer is single-step. If transferred to wrong address, ownership is permanently lost along with all admin capabilities.
+- **Recommended Fix:** Use OpenZeppelin's `Ownable2Step` (propose → accept pattern).
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-042: Unbounded allPlayers Array DoS
+
+- **Severity:** Medium
+- **Category:** Smart Contract / Gas
+- **Phase:** 2C
+- **File:** `contracts/src/CTDraft.sol:79,127-148`, `CTDraftV2.sol:24-25,136`
+- **Description:** `allPlayers` array grows without bound. `getAllPlayers()` reads from storage in a loop, which will exceed gas limits once enough users have entered.
+- **Impact:** DoS on `getAllPlayers()`. Off-chain reads still work, but any on-chain function calling this will fail.
+- **Recommended Fix:** Implement pagination or remove on-chain iteration.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-043: ReputationEngine Division-by-Zero Risk
+
+- **Severity:** Medium
+- **Category:** Smart Contract / Math
+- **Phase:** 2C
+- **File:** `contracts/src/ReputationEngine.sol:246`
+- **Description:** `_calculateMasteryScore()` divides by `totalPlayers` without checking for zero: `((totalPlayers - rep.draftRank) * 30) / totalPlayers`.
+- **Impact:** Revert on division by zero if called before any players exist.
+- **Recommended Fix:** Add `if (totalPlayers == 0) return 0;` guard.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-044: Treasury Allows Zero-Fee Distribution
+
+- **Severity:** Medium
+- **Category:** Smart Contract / Logic
+- **Phase:** 2C
+- **File:** `contracts/src/Treasury.sol:69-124`
+- **Description:** `distributeMonthly()` doesn't check if `currentMonthFees == 0`. Calling it with zero fees wastes gas and resets the month counter without distributing anything.
+- **Recommended Fix:** `if (currentMonthFees == 0) revert InsufficientFunds();`
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
+## FINDING-045: QuestRewards Budget Can Exceed Contract Balance
+
+- **Severity:** Medium
+- **Category:** Smart Contract / Validation
+- **Phase:** 2C
+- **File:** `contracts/src/QuestRewards.sol:131-143`
+- **Description:** `allocateMonthlyBudget()` allows setting budget up to `MONTHLY_BUDGET_CAP` without checking if the contract actually holds that much ETH. Users could vest rewards that can never be claimed.
+- **Impact:** Phantom rewards — users see vested amounts but claims revert due to insufficient balance.
+- **Recommended Fix:** `require(amount <= address(this).balance)`.
+- **Commit:** N/A
+- **Status:** Open
+
+---
+
 ## OWASP Top 10 (2021) Assessment
 
 | Category | Verdict | Key Findings |
@@ -502,5 +695,19 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 | 029 | Medium | Logging | No audit trail for admin/sensitive actions | Open |
 | 030 | Medium | Auth | Expired sessions never garbage-collected | Open |
 | 031 | Medium | Auth | Auth rate limiter too lenient (50-100/15min) | Open |
+| 032 | **Critical** | Smart Contract | Double finalization — contest can be finalized twice | Open |
+| 033 | **Critical** | Smart Contract | Reentrancy on prize claims (flag set after transfer) | Open |
+| 034 | **Critical** | Smart Contract | Rake calculation integer arithmetic bug | Open |
+| 035 | High | Smart Contract | No duplicate validation in rankings array | Open |
+| 036 | High | Smart Contract | emergencyWithdraw() = owner rug-pull vector | Open |
+| 037 | High | Smart Contract | Unsafe .transfer() in QuestRewards/DailyGauntlet/Arena | Open |
+| 038 | High | Smart Contract | Prize pool underflow on small contests (<10 players) | Open |
+| 039 | High | Smart Contract | Contest can be finalized before end time | Open |
+| 040 | Medium | Smart Contract | No min duration between lock and end time | Open |
+| 041 | Medium | Smart Contract | Single-step ownership transfer (no 2-step) | Open |
+| 042 | Medium | Smart Contract | Unbounded allPlayers array DoS in CTDraft/V2 | Open |
+| 043 | Medium | Smart Contract | ReputationEngine division-by-zero risk | Open |
+| 044 | Medium | Smart Contract | Treasury distributeMonthly allows 0-fee distribution | Open |
+| 045 | Medium | Smart Contract | QuestRewards budget allocation can exceed balance | Open |
 
-**Totals: 6 Critical, 12 High, 13 Medium = 31 findings**
+**Totals: 9 Critical, 17 High, 19 Medium = 45 findings**
