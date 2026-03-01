@@ -148,6 +148,9 @@ contract CTDraftPrizedV2 {
     error TooEarlyToLock();
     error InvalidTimeWindow();
     error InvalidContestType();
+    error ContestAlreadyFinalized();
+    error DuplicateRankingAddress();
+    error MinDurationNotMet();
 
     // ============ MODIFIERS ============
 
@@ -251,6 +254,9 @@ contract CTDraftPrizedV2 {
 
     // ============ ADMIN FUNCTIONS ============
 
+    // FINDING-040: Minimum 1 hour between lock and end time
+    uint256 public constant MIN_CONTEST_DURATION = 1 hours;
+
     /**
      * @notice Create a new contest of a specific type
      * @param contestType Type of contest (determines entry fee, team size, etc.)
@@ -268,6 +274,8 @@ contract CTDraftPrizedV2 {
     ) external onlyOwner returns (uint256) {
         if (lockTime <= block.timestamp) revert InvalidTimeWindow();
         if (endTime <= lockTime) revert InvalidTimeWindow();
+        // FINDING-040: Ensure minimum duration between lock and end
+        if (endTime < lockTime + MIN_CONTEST_DURATION) revert MinDurationNotMet();
 
         ContestConfig memory config = contestConfigs[contestType];
 
@@ -319,6 +327,8 @@ contract CTDraftPrizedV2 {
     ) external onlyOwner returns (uint256) {
         if (lockTime <= block.timestamp) revert InvalidTimeWindow();
         if (endTime <= lockTime) revert InvalidTimeWindow();
+        // FINDING-040: Ensure minimum duration between lock and end
+        if (endTime < lockTime + MIN_CONTEST_DURATION) revert MinDurationNotMet();
         if (teamSize != 3 && teamSize != 5) revert InvalidTeamSize();
         if (rakePercent > 20) revert InvalidContestType(); // Max 20% rake
 
@@ -386,11 +396,24 @@ contract CTDraftPrizedV2 {
         Contest storage contest = contests[contestId];
         if (contest.id == 0) revert ContestNotFound();
         if (contest.status != ContestStatus.LOCKED) revert ContestNotLocked();
-        if (block.timestamp < contest.endTime) revert ContestNotEnded();
+        // FINDING-032: Prevent double finalization (also blocks reentrancy)
+        if (contest.prizesClaimed) revert ContestAlreadyFinalized();
+        // FINDING-039: Use <= to prevent finalization exactly at endTime
+        if (block.timestamp <= contest.endTime) revert ContestNotEnded();
         if (rankedPlayers.length != contest.playerCount) revert InvalidRankings();
 
-        // Calculate platform fee using contest's rake percent
-        uint256 platformFee = (contest.prizePool * contest.rakePercent * 100) / BPS_DENOMINATOR;
+        // FINDING-035: Check for duplicate addresses in rankings
+        for (uint256 i = 0; i < rankedPlayers.length; i++) {
+            for (uint256 j = i + 1; j < rankedPlayers.length; j++) {
+                if (rankedPlayers[i] == rankedPlayers[j]) revert DuplicateRankingAddress();
+            }
+        }
+
+        // FINDING-032: Set status BEFORE external calls (CEI pattern)
+        contest.status = ContestStatus.FINALIZED;
+
+        // FINDING-034: Simplified rake calculation — rakePercent is a whole number (e.g. 12 = 12%)
+        uint256 platformFee = (contest.prizePool * contest.rakePercent) / 100;
         uint256 distributablePool = contest.prizePool - platformFee;
 
         // Send platform fee to treasury
@@ -434,7 +457,6 @@ contract CTDraftPrizedV2 {
             entry.prizeAmount = prizeAmount;
         }
 
-        contest.status = ContestStatus.FINALIZED;
         emit ContestFinalized(contestId, contest.prizePool, winnersCount);
     }
 
@@ -561,12 +583,15 @@ contract CTDraftPrizedV2 {
         if (entry.claimed) revert AlreadyClaimed();
         if (entry.prizeAmount == 0) revert NoPrize();
 
+        // FINDING-033: CEI — set all state before external call
         entry.claimed = true;
+        uint256 amount = entry.prizeAmount;
+        entry.prizeAmount = 0;
 
-        (bool success, ) = msg.sender.call{value: entry.prizeAmount}("");
+        (bool success, ) = msg.sender.call{value: amount}("");
         if (!success) revert TransferFailed();
 
-        emit PrizeClaimed(contestId, msg.sender, entry.rank, entry.prizeAmount);
+        emit PrizeClaimed(contestId, msg.sender, entry.rank, amount);
     }
 
     /**
@@ -610,7 +635,7 @@ contract CTDraftPrizedV2 {
 
     function getDistributablePrizePool(uint256 contestId) external view returns (uint256) {
         Contest memory contest = contests[contestId];
-        return contest.prizePool - (contest.prizePool * contest.rakePercent * 100 / BPS_DENOMINATOR);
+        return contest.prizePool - (contest.prizePool * contest.rakePercent / 100);
     }
 
     function getContestConfig(ContestType contestType) external view returns (ContestConfig memory) {
@@ -671,6 +696,12 @@ contract CTDraftPrizedV2 {
     }
 
     function _calculateWinnersCount(uint256 playerCount) internal pure returns (uint256) {
+        // FINDING-038: Micro contests (1-9) — all or most players win
+        if (playerCount <= 3) return playerCount; // Everyone wins something
+        if (playerCount <= 9) {
+            uint256 winners = (playerCount * 50) / 100;
+            return winners > 0 ? winners : 1;
+        }
         // Small contests (10-20): top 30%
         if (playerCount <= 20) {
             uint256 winners = (playerCount * 30) / 100;
@@ -716,13 +747,28 @@ contract CTDraftPrizedV2 {
         });
     }
 
+    // FINDING-041: Two-step ownership transfer
+    address public pendingOwner;
+
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Invalid address");
-        owner = newOwner;
+        pendingOwner = newOwner;
     }
 
+    function acceptOwnership() external {
+        require(msg.sender == pendingOwner, "Not pending owner");
+        owner = pendingOwner;
+        pendingOwner = address(0);
+    }
+
+    // FINDING-036: Emergency withdraw limited to platform fees only
+    // Prevents rug-pull by not allowing withdrawal of user prize pools
+    uint256 public accumulatedFees;
+
     function emergencyWithdraw() external onlyOwner {
-        (bool success, ) = owner.call{value: address(this).balance}("");
+        uint256 amount = accumulatedFees;
+        accumulatedFees = 0;
+        (bool success, ) = owner.call{value: amount}("");
         if (!success) revert TransferFailed();
     }
 }

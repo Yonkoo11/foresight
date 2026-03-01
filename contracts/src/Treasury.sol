@@ -73,6 +73,8 @@ contract Treasury {
     ) external onlyOwner {
         if (monthlyPools[month].distributed) revert AlreadyDistributed();
         if (arenaChampion == address(0)) revert InvalidAddress();
+        // FINDING-044: Prevent zero-fee distribution
+        require(currentMonthFees > 0, "No fees to distribute");
 
         // Validate gauntlet winners
         for (uint256 i = 0; i < 10; i++) {

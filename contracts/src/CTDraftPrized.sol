@@ -224,8 +224,12 @@ contract CTDraftPrized {
         Contest storage contest = contests[contestId];
         if (contest.id == 0) revert ContestNotFound();
         if (contest.status != ContestStatus.LOCKED) revert ContestNotLocked();
-        if (block.timestamp < contest.endTime) revert ContestNotEnded();
+        // FINDING-039: Use <= to prevent finalization exactly at endTime
+        if (block.timestamp <= contest.endTime) revert ContestNotEnded();
         if (rankedPlayers.length != contest.playerCount) revert InvalidRankings();
+
+        // FINDING-032: Set status BEFORE external calls (CEI pattern)
+        contest.status = ContestStatus.FINALIZED;
 
         // Calculate platform fee
         uint256 platformFee = (contest.prizePool * PLATFORM_FEE_BPS) / BPS_DENOMINATOR;
@@ -253,7 +257,6 @@ contract CTDraftPrized {
             entry.prizeAmount = prizeAmount;
         }
 
-        contest.status = ContestStatus.FINALIZED;
         emit ContestFinalized(contestId, contest.prizePool);
     }
 
@@ -382,12 +385,15 @@ contract CTDraftPrized {
         if (entry.claimed) revert AlreadyClaimed();
         if (entry.prizeAmount == 0) revert NoPrize();
 
+        // FINDING-033: CEI — zero prizeAmount before external call
         entry.claimed = true;
+        uint256 amount = entry.prizeAmount;
+        entry.prizeAmount = 0;
 
-        (bool success, ) = msg.sender.call{value: entry.prizeAmount}("");
+        (bool success, ) = msg.sender.call{value: amount}("");
         if (!success) revert TransferFailed();
 
-        emit PrizeClaimed(contestId, msg.sender, entry.rank, entry.prizeAmount);
+        emit PrizeClaimed(contestId, msg.sender, entry.rank, amount);
     }
 
     /**

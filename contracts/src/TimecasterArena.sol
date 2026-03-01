@@ -292,8 +292,9 @@ contract TimecasterArena {
 
         duel.status = DuelStatus.CANCELLED;
 
-        // Refund creator
-        payable(duel.creator).transfer(duel.stake);
+        // FINDING-037: Use .call instead of .transfer
+        (bool refundSuccess, ) = duel.creator.call{value: duel.stake}("");
+        require(refundSuccess, "Refund failed");
 
         emit DuelCancelled(duelId);
     }
@@ -425,9 +426,10 @@ contract TimecasterArena {
 
         votes[voterIndex].claimed = true;
 
-        // Payout: original stake + share of incorrect stakes
+        // FINDING-037: Use .call instead of .transfer
         uint256 reward = VOTE_STAKE + (incorrectStakePool / correctVotes);
-        payable(msg.sender).transfer(reward);
+        (bool rewardSuccess, ) = msg.sender.call{value: reward}("");
+        require(rewardSuccess, "Reward transfer failed");
 
         emit VoteRewardClaimed(duelId, msg.sender, reward);
     }
@@ -445,11 +447,12 @@ contract TimecasterArena {
             duel.winner == duel.creator ? duel.opponent : duel.creator,
             duel.stake);
 
-        // Transfer winnings
-        payable(duel.winner).transfer(winnerPayout);
+        // FINDING-037: Use .call instead of .transfer
+        (bool winSuccess, ) = duel.winner.call{value: winnerPayout}("");
+        require(winSuccess, "Winner transfer failed");
 
-        // Transfer fee to treasury
-        payable(address(treasury)).transfer(protocolFee);
+        (bool feeSuccess, ) = address(treasury).call{value: protocolFee}("");
+        require(feeSuccess, "Fee transfer failed");
 
         emit DuelResolved(duel.id, duel.winner, winnerPayout);
     }

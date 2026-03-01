@@ -273,14 +273,15 @@ contract DailyGauntlet {
 
         uint256 payout = _calculatePayout(day, entry.correctCount, rewardPool);
 
-        // Transfer protocol fee to treasury
+        // FINDING-037: Use .call instead of .transfer (supports smart contract wallets)
         if (protocolFee > 0) {
-            payable(address(treasury)).transfer(protocolFee);
+            (bool feeSuccess, ) = address(treasury).call{value: protocolFee}("");
+            require(feeSuccess, "Fee transfer failed");
         }
 
-        // Transfer payout to user
         if (payout > 0) {
-            payable(msg.sender).transfer(payout);
+            (bool payoutSuccess, ) = msg.sender.call{value: payout}("");
+            require(payoutSuccess, "Payout transfer failed");
         }
 
         emit RewardClaimed(msg.sender, day, payout, entry.correctCount);

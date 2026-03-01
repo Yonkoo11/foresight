@@ -131,6 +131,8 @@ contract QuestRewards {
     function allocateMonthlyBudget(uint256 month, uint256 amount) external onlyOwner {
         if (amount > MONTHLY_BUDGET_CAP) revert BudgetExceeded();
         if (month < 202501) revert InvalidMonth();
+        // FINDING-045: Prevent allocating more than contract balance
+        require(amount <= address(this).balance, "Budget exceeds balance");
 
         monthlyBudgets[month] = MonthlyBudget({
             month: month,
@@ -227,9 +229,10 @@ contract QuestRewards {
 
         dailyWithdrawals[msg.sender] += totalClaim;
 
-        // Transfer
+        // FINDING-037: Use .call instead of .transfer (supports smart contract wallets)
         if (address(this).balance < totalClaim) revert InsufficientBalance();
-        payable(msg.sender).transfer(totalClaim);
+        (bool success, ) = msg.sender.call{value: totalClaim}("");
+        require(success, "Transfer failed");
 
         emit RewardClaimed(msg.sender, totalClaim, claimCount);
     }
@@ -326,7 +329,9 @@ contract QuestRewards {
      * @notice Emergency withdraw (owner only)
      */
     function emergencyWithdraw(uint256 amount) external onlyOwner {
-        payable(owner).transfer(amount);
+        // FINDING-037: Use .call instead of .transfer
+        (bool success, ) = owner.call{value: amount}("");
+        require(success, "Transfer failed");
     }
 
     /**
