@@ -2,8 +2,8 @@ import crypto from 'crypto';
 
 /**
  * FINDING-028: AES-256-GCM encryption for sensitive tokens at rest.
- * Uses ENCRYPTION_KEY env var (32-byte hex string).
- * Falls back to JWT_SECRET-derived key if ENCRYPTION_KEY not set.
+ * Uses ENCRYPTION_KEY env var. This MUST be set independently of JWT_SECRET
+ * so that rotating JWT_SECRET doesn't break encrypted data.
  */
 
 const ALGORITHM = 'aes-256-gcm';
@@ -11,11 +11,14 @@ const IV_LENGTH = 12; // GCM recommended IV length
 const TAG_LENGTH = 16;
 
 function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET;
+  const key = process.env.ENCRYPTION_KEY;
   if (!key) {
-    throw new Error('No ENCRYPTION_KEY or JWT_SECRET available for token encryption');
+    throw new Error(
+      'ENCRYPTION_KEY environment variable is not set. ' +
+      'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))" ' +
+      'This must be independent of JWT_SECRET so key rotation doesn\'t break encrypted data.'
+    );
   }
-  // Derive a 32-byte key from whatever string we have
   return crypto.createHash('sha256').update(key).digest();
 }
 
