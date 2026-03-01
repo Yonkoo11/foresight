@@ -440,7 +440,7 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
     const userId = req.user!.userId;
     const walletAddress = req.user!.walletAddress;
 
-    console.log('📥 enter-free request:', { id, teamIds, captainId, userId, walletAddress, body: req.body });
+    logger.debug('enter-free request', { data: { id, teamSize: teamIds?.length } });
 
     if (!walletAddress) {
       return res.status(400).json({ error: 'No wallet connected' });
@@ -654,7 +654,7 @@ router.put('/contests/:id/update-free-team', authenticate, async (req: Request, 
     const { teamIds, captainId } = req.body;
     const walletAddress = req.user!.walletAddress;
 
-    console.log('📝 update-free-team request:', { id, teamIds, captainId, walletAddress });
+    logger.debug('update-free-team request', { data: { id, teamSize: teamIds?.length } });
 
     if (!walletAddress) {
       return res.status(400).json({ error: 'No wallet connected' });
@@ -754,7 +754,7 @@ router.post('/contests/:id/enter-test', authenticate, async (req: Request, res: 
     const userId = req.user!.userId;
     const walletAddress = req.user!.walletAddress;
 
-    console.log('📥 enter-test request:', { id, influencer_ids, captain_id, userId, walletAddress });
+    logger.debug('enter-test request', { data: { id, teamSize: influencer_ids?.length } });
 
     if (!walletAddress) {
       return res.status(400).json({ error: 'No wallet connected' });
@@ -1156,33 +1156,34 @@ router.post('/contests/:id/claim-prize', authenticate, strictLimiter, async (req
     const entriesTable = contest.is_free ? 'free_league_entries' : 'prized_entries';
     const prizeColumn = contest.is_free ? 'prize_won' : 'prize_amount';
 
-    const entry = await db(entriesTable)
+    // FINDING-002: Use atomic UPDATE ... WHERE claimed=false RETURNING *
+    // This eliminates the TOCTOU race condition by combining check + update
+    const [entry] = await db(entriesTable)
       .where('contest_id', id)
       .where('wallet_address', walletAddress.toLowerCase())
-      .first();
+      .where('claimed', false)
+      .update({ claimed: true, updated_at: new Date() })
+      .returning('*');
 
     if (!entry) {
-      return res.status(404).json({ error: 'No entry found for this contest' });
+      // Either no entry exists or already claimed — check which
+      const existing = await db(entriesTable)
+        .where('contest_id', id)
+        .where('wallet_address', walletAddress.toLowerCase())
+        .first();
+
+      if (!existing) {
+        return res.status(404).json({ error: 'No entry found for this contest' });
+      }
+      return res.status(400).json({ error: 'Prize has already been claimed' });
     }
 
     const prizeAmount = parseFloat(entry[prizeColumn] || 0);
 
     if (prizeAmount <= 0) {
+      // Rollback — no prize to claim
+      await db(entriesTable).where('id', entry.id).update({ claimed: false, updated_at: new Date() });
       return res.status(400).json({ error: 'No prize to claim for this entry' });
-    }
-
-    if (entry.claimed) {
-      return res.status(400).json({ error: 'Prize has already been claimed' });
-    }
-
-    // Mark as claimed optimistically (prevent double-claim race)
-    const updated = await db(entriesTable)
-      .where('id', entry.id)
-      .where('claimed', false)
-      .update({ claimed: true, updated_at: new Date() });
-
-    if (!updated) {
-      return res.status(400).json({ error: 'Prize has already been claimed' });
     }
 
     // Load treasury keypair from env
