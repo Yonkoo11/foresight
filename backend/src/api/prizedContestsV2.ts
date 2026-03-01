@@ -6,6 +6,7 @@ import foresightScoreService from '../services/foresightScoreService';
 import questService from '../services/questService';
 import tapestryService from '../services/tapestryService';
 import logger from '../utils/logger';
+import { logAuditEvent } from '../utils/auditLog';
 import { getXPLevel } from '../utils/xp';
 import {
   Connection,
@@ -1203,7 +1204,9 @@ router.post('/contests/:id/claim-prize', authenticate, strictLimiter, async (req
       const secretKeyBytes = Buffer.from(secretKeyBase64, 'base64');
       const treasuryKeypair = Keypair.fromSecretKey(secretKeyBytes);
 
-      const connection = new Connection(rpcUrl, 'confirmed');
+      // FINDING-019: Use 'finalized' commitment for prize distribution
+      // 'confirmed' can be rolled back on network fork; 'finalized' is irreversible
+      const connection = new Connection(rpcUrl, 'finalized');
       const recipientPubkey = new PublicKey(walletAddress);
 
       // Check treasury has enough funds before attempting transfer
@@ -1232,7 +1235,7 @@ router.post('/contests/:id/claim-prize', authenticate, strictLimiter, async (req
         );
 
         txSignature = await sendAndConfirmTransaction(connection, transaction, [treasuryKeypair], {
-          commitment: 'confirmed',
+          commitment: 'finalized',
         });
       }
 
@@ -1243,6 +1246,14 @@ router.post('/contests/:id/claim-prize', authenticate, strictLimiter, async (req
 
       logger.info(`Prize ${simulated ? 'simulated' : 'claimed'}: ${prizeAmount} SOL to ${walletAddress}, tx: ${txSignature}`, {
         context: 'ClaimPrize',
+      });
+
+      // FINDING-029: Audit trail for prize claims
+      await logAuditEvent(req, 'claim-prize', 'contest', String(id), {
+        amount: prizeAmount,
+        wallet: walletAddress,
+        txSignature,
+        simulated,
       });
     } catch (transferError: any) {
       // Rollback claimed flag so user can retry

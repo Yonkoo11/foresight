@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth';
 import { sendSuccess, sendError } from '../utils/response';
 import db from '../utils/db';
+import { logAuditEvent } from '../utils/auditLog';
 import {
   triggerFantasyScoring,
   getCronJobsStatus,
@@ -51,6 +52,7 @@ router.get('/stats', authenticate, requireAdmin, async (req: Request, res: Respo
  */
 router.post('/trigger-scoring', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
+    await logAuditEvent(req, 'trigger-scoring', 'system');
     await triggerFantasyScoring();
     sendSuccess(res, {
       message: 'Fantasy scoring cycle triggered successfully',
@@ -400,6 +402,9 @@ router.patch('/contests/:id', authenticate, requireAdmin, async (req: Request, r
 
     updates.updated_at = new Date();
 
+    // FINDING-029: Audit log for contest modifications
+    await logAuditEvent(req, 'update-contest', 'contest', String(contestId), { updates });
+
     await db('prized_contests').where('id', contestId).update(updates);
 
     const updated = await db('prized_contests').where('id', contestId).first();
@@ -418,6 +423,7 @@ router.patch('/contests/:id', authenticate, requireAdmin, async (req: Request, r
  */
 router.post('/trigger-prized-lock', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
+    await logAuditEvent(req, 'trigger-prized-lock', 'system');
     const result = await triggerPrizedContestLock();
     sendSuccess(res, {
       message: 'Prized contest lock check completed',
@@ -434,6 +440,7 @@ router.post('/trigger-prized-lock', authenticate, requireAdmin, async (req: Requ
  */
 router.post('/trigger-prized-scoring', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
+    await logAuditEvent(req, 'trigger-prized-scoring', 'system');
     const result = await triggerPrizedContestScoring();
     sendSuccess(res, {
       message: 'Prized contest scoring completed',
@@ -450,6 +457,7 @@ router.post('/trigger-prized-scoring', authenticate, requireAdmin, async (req: R
  */
 router.post('/trigger-contest-finalization', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
+    await logAuditEvent(req, 'trigger-contest-finalization', 'system');
     const result = await triggerContestFinalization();
     sendSuccess(res, {
       message: 'Contest finalization completed',

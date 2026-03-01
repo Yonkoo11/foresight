@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import db from '../utils/db';
 import {
   createAccessToken,
@@ -17,6 +18,12 @@ import { sendSuccess } from '../utils/response';
 import logger from '../utils/logger';
 
 const router: Router = Router();
+
+// FINDING-015: Hash refresh tokens before storing in DB
+// If DB is breached, hashed tokens are not directly usable
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 // ─── Shared Auth Logic ─────────────────────────────────────────────────────
 
@@ -223,7 +230,7 @@ async function createSessionAndRespond(
     role: user.role,
   });
 
-  // Store session
+  // Store session — FINDING-015: hash refresh token before storing
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
@@ -231,7 +238,7 @@ async function createSessionAndRespond(
     id: uuidv4(),
     user_id: user.id,
     access_token: accessToken,
-    refresh_token: refreshToken,
+    refresh_token: hashToken(refreshToken),
     expires_at: expiresAt,
     ip_address: req.ip,
     user_agent: req.get('user-agent'),
@@ -388,8 +395,9 @@ router.post(
       throw new AppError('Invalid or expired refresh token', 401);
     }
 
+    // FINDING-015: Compare against hashed refresh token
     const session = await db('sessions')
-      .where({ refresh_token: refreshToken })
+      .where({ refresh_token: hashToken(refreshToken) })
       .first();
 
     if (!session) {

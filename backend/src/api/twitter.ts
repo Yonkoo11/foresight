@@ -12,6 +12,7 @@ import crypto from 'crypto';
 import db from '../utils/db';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { encrypt, decrypt } from '../utils/encryption';
 import questService from '../services/questService';
 
 const router: Router = Router();
@@ -247,8 +248,9 @@ router.get(
           twitter_id: twitterUser.id,
           twitter_handle: twitterUser.username,
           twitter_followers: twitterUser.public_metrics?.followers_count || 0,
-          twitter_access_token: tokens.access_token, // In production, encrypt this
-          twitter_refresh_token: tokens.refresh_token || null,
+          // FINDING-028: Encrypt tokens at rest
+          twitter_access_token: encrypt(tokens.access_token),
+          twitter_refresh_token: tokens.refresh_token ? encrypt(tokens.refresh_token) : null,
           twitter_connected_at: db.fn.now(),
           twitter_token_expires_at: expiresAt,
         });
@@ -286,13 +288,13 @@ router.post(
       throw new AppError('Twitter not connected', 400);
     }
 
-    // Check if token needs refresh
-    let accessToken = user.twitter_access_token;
+    // FINDING-028: Decrypt tokens from DB
+    let accessToken = decrypt(user.twitter_access_token);
     if (user.twitter_token_expires_at && new Date(user.twitter_token_expires_at) < new Date()) {
       if (!user.twitter_refresh_token) {
         throw new AppError('Twitter session expired, please reconnect', 401);
       }
-      accessToken = await refreshAccessToken(userId, user.twitter_refresh_token);
+      accessToken = await refreshAccessToken(userId, decrypt(user.twitter_refresh_token));
     }
 
     const followsUs = await verifyFollow(userId, accessToken);
@@ -372,13 +374,13 @@ router.post(
       throw new AppError('Twitter not connected', 400);
     }
 
-    // Check if token needs refresh
-    let accessToken = user.twitter_access_token;
+    // FINDING-028: Decrypt tokens from DB
+    let accessToken = decrypt(user.twitter_access_token);
     if (user.twitter_token_expires_at && new Date(user.twitter_token_expires_at) < new Date()) {
       if (!user.twitter_refresh_token) {
         throw new AppError('Twitter session expired, please reconnect', 401);
       }
-      accessToken = await refreshAccessToken(userId, user.twitter_refresh_token);
+      accessToken = await refreshAccessToken(userId, decrypt(user.twitter_refresh_token));
     }
 
     // Fetch the tweet
@@ -547,12 +549,12 @@ async function refreshAccessToken(userId: string, refreshToken: string): Promise
   const tokens = await response.json() as TwitterTokenResponse;
   const expiresAt = new Date(Date.now() + (tokens.expires_in || 7200) * 1000);
 
-  // Update stored tokens
+  // FINDING-028: Encrypt refreshed tokens before storing
   await db('users')
     .where({ id: userId })
     .update({
-      twitter_access_token: tokens.access_token,
-      twitter_refresh_token: tokens.refresh_token || refreshToken,
+      twitter_access_token: encrypt(tokens.access_token),
+      twitter_refresh_token: encrypt(tokens.refresh_token || refreshToken),
       twitter_token_expires_at: expiresAt,
     });
 

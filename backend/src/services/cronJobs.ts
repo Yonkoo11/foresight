@@ -264,11 +264,19 @@ async function cleanupExpiredSessions(): Promise<void> {
   const db = (await import('../utils/db')).default;
 
   try {
-    const result = await db('auth_sessions')
+    // FINDING-030: Clean up expired sessions from both tables
+    const authResult = await db('auth_sessions')
       .where('expires_at', '<', db.fn.now())
       .del();
 
-    console.log(`🧹 Cleaned up ${result} expired sessions`);
+    // Clean up refresh token sessions older than 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sessionsResult = await db('sessions')
+      .where('created_at', '<', thirtyDaysAgo)
+      .del();
+
+    console.log(`Cleaned up ${authResult} expired auth sessions, ${sessionsResult} stale refresh sessions`);
   } catch (error) {
     console.error('Failed to cleanup sessions:', error);
   }
@@ -695,10 +703,17 @@ async function scoreEndedPrizedContests(): Promise<void> {
     for (const contest of contestsToScore) {
       console.log(`[CRON] Scoring prized contest ${contest.id} "${contest.name}"...`);
 
-      // Mark as scoring
-      await db('prized_contests')
+      // FINDING-014: Atomic status transition to prevent race condition
+      // If another cron instance already claimed this contest, the UPDATE returns 0 rows
+      const claimedRows = await db('prized_contests')
         .where('id', contest.id)
+        .where('status', 'locked')
         .update({ status: 'scoring', updated_at: now });
+
+      if (claimedRows === 0) {
+        console.log(`[CRON] Contest ${contest.id} already claimed by another process, skipping`);
+        continue;
+      }
 
       try {
         // Get entries table based on contest type
