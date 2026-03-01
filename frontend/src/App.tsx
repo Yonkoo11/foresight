@@ -52,8 +52,8 @@ const queryClient = new QueryClient();
  * Privy auth bridge — populates AuthContext from Privy state
  */
 function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
-  const { ready, authenticated, user, login, logout: privyLogout } = usePrivy();
-  const { syncError, retrySync, isBackendAuthed: backendAuthed } = usePrivyAuth();
+  const { ready, authenticated, user, login } = usePrivy();
+  const { syncError, retrySync, isBackendAuthed: backendAuthed, logout: backendLogout } = usePrivyAuth();
 
   const { address, email, twitterHandle } = useMemo(() => {
     if (!user) return { address: undefined, email: undefined, twitterHandle: undefined };
@@ -86,8 +86,8 @@ function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const handleLogout = useCallback(async () => {
-    await privyLogout();
-  }, [privyLogout]);
+    await backendLogout();
+  }, [backendLogout]);
 
   const authState: AuthState = useMemo(() => {
     // Best available display name: @handle > email prefix > truncated wallet > empty

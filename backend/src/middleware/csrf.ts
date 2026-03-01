@@ -17,8 +17,8 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction):
     return next();
   }
 
-  // Auth login/verify endpoints are exempt (user has no session cookie yet)
-  if (req.path === '/api/auth/verify') {
+  // Auth endpoints exempt: verify (no session yet), logout (must always work)
+  if (req.path === '/api/auth/verify' || req.path === '/api/auth/logout') {
     return next();
   }
 

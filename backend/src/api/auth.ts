@@ -472,12 +472,17 @@ router.post(
  */
 router.post(
   '/logout',
-  authenticate,
   asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId;
-    await db('sessions').where({ user_id: userId }).del();
+    // Try to delete session if token is valid, but always clear cookies
+    const token = req.cookies?.accessToken;
+    if (token) {
+      const payload = verifyToken(token);
+      if (payload) {
+        await db('sessions').where({ user_id: payload.userId }).del();
+      }
+    }
 
-    // FINDING-007: Clear httpOnly cookies
+    // FINDING-007: Always clear httpOnly cookies, even if token is expired
     res.clearCookie('accessToken', { path: '/' });
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.clearCookie('csrf-token', { path: '/' });
