@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import db from '../utils/db';
 import { authenticate } from '../middleware/auth';
+import { strictLimiter } from '../middleware/rateLimiter';
 import foresightScoreService from '../services/foresightScoreService';
 import questService from '../services/questService';
 import tapestryService from '../services/tapestryService';
@@ -1121,7 +1122,7 @@ router.get('/me/free-entries-remaining', authenticate, async (req: Request, res:
  * POST /api/v2/contests/:id/claim-prize
  * Transfer SOL prize from treasury to winner's wallet (devnet)
  */
-router.post('/contests/:id/claim-prize', authenticate, async (req: Request, res: Response) => {
+router.post('/contests/:id/claim-prize', authenticate, strictLimiter, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;

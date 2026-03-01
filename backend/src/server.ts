@@ -63,8 +63,8 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Allow ngrok URLs for sharing
-    if (origin.includes('.ngrok-free.app')) {
+    // Allow ngrok URLs for sharing (development only — FINDING-012)
+    if (NODE_ENV === 'development' && origin.includes('.ngrok-free.app')) {
       return callback(null, true);
     }
 
@@ -111,13 +111,85 @@ app.get('/health', (req, res) => {
 });
 
 // Image proxy for canvas CORS — allows frontend to draw external images
+// SECURITY: Whitelist + private IP blocking to prevent SSRF (FINDING-003)
+const PROXY_ALLOWED_DOMAINS = [
+  'pbs.twimg.com',
+  'abs.twimg.com',
+  'platform-lookaside.fbsbx.com',
+  'avatars.githubusercontent.com',
+  'cdn.stamp.fyi',
+  'arweave.net',
+  'i.imgur.com',
+];
+
+function isPrivateOrReservedHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
+    hostname === '0.0.0.0' ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('172.16.') ||
+    hostname.startsWith('172.17.') ||
+    hostname.startsWith('172.18.') ||
+    hostname.startsWith('172.19.') ||
+    hostname.startsWith('172.2') ||
+    hostname.startsWith('172.30.') ||
+    hostname.startsWith('172.31.') ||
+    hostname.startsWith('169.254.') ||
+    hostname.endsWith('.internal') ||
+    hostname.endsWith('.local')
+  );
+}
+
 app.get('/api/proxy-image', async (req, res) => {
-  const url = req.query.url as string;
-  if (!url) return res.status(400).send('Missing url param');
+  const urlParam = req.query.url as string;
+  if (!urlParam) return res.status(400).send('Missing url param');
+
+  let parsed: URL;
   try {
-    const response = await fetch(url);
+    parsed = new URL(urlParam);
+  } catch {
+    return res.status(400).send('Invalid URL');
+  }
+
+  // Block non-HTTP(S) schemes
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return res.status(403).send('Only HTTP(S) URLs allowed');
+  }
+
+  // Block private/reserved IPs
+  if (isPrivateOrReservedHost(parsed.hostname)) {
+    return res.status(403).send('Access denied');
+  }
+
+  // Whitelist domains
+  if (!PROXY_ALLOWED_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d))) {
+    return res.status(403).send('Domain not allowed');
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(parsed.toString(), { signal: controller.signal });
+    clearTimeout(timeout);
+
     if (!response.ok) return res.status(response.status).send('Upstream error');
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    // Validate content type is an image
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/')) {
+      return res.status(403).send('Only image content allowed');
+    }
+
+    // Reject responses over 10MB
+    const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+    if (contentLength > 10 * 1024 * 1024) {
+      return res.status(413).send('Image too large');
+    }
+
     res.set({
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=86400',

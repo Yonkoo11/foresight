@@ -63,17 +63,17 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 
 ---
 
-## FINDING-005: Dev Mode Simulated Transfers Can Leak to Production
+## FINDING-005: Dev Mode Simulated Transfers (Accepted Risk)
 
-- **Severity:** Critical
+- **Severity:** ~~Critical~~ Low (Downgraded)
 - **Category:** SOL Transaction Security
 - **Phase:** 2B
 - **File:** `backend/src/api/prizedContestsV2.ts:1201-1212`
-- **Description:** When the treasury wallet is underfunded, the prize claim endpoint falls back to generating a `SIMULATED_*` transaction hash instead of actually sending SOL. This fallback is not gated by `NODE_ENV` — it triggers based on balance, meaning it can activate in production if the treasury runs low.
-- **Impact:** Users told they received SOL but got fake transfers. Broken trust, potential fraud liability.
-- **Recommended Fix:** In production: never simulate. If treasury balance is insufficient, return an error and alert the team. Simulation should only be allowed when `NODE_ENV === 'development'`.
+- **Description:** When the treasury wallet is underfunded, the prize claim endpoint falls back to generating a `SIMULATED_*` transaction hash instead of actually sending SOL. This is intentionally gated by `NODE_ENV !== 'production'` — in production, it returns a 503 error and rolls back the claim. The simulation exists for dev/staging testing without needing a funded treasury.
+- **Impact:** Low — production is already protected by the NODE_ENV check. Only risk is if NODE_ENV is misconfigured in production.
+- **Recommended Fix:** No code change needed. Document that NODE_ENV must be set to `'production'` in all production deployments. Consider adding a startup warning if NODE_ENV is not `'production'` and TREASURY_SECRET_KEY_BASE64 is set.
 - **Commit:** N/A
-- **Status:** Open
+- **Status:** Accepted — intentional design for testing
 
 ---
 
@@ -668,7 +668,7 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 | 002 | **Critical** | SOL Transactions | Race condition in prize claim | Open |
 | 003 | **Critical** | SSRF | Image proxy unvalidated URL | Open |
 | 004 | **Critical** | Authorization | Admin endpoints no role check | Open |
-| 005 | **Critical** | SOL Transactions | Simulated transfers in prod | Open |
+| 005 | Low | SOL Transactions | Simulated transfers (gated by NODE_ENV) | Accepted |
 | 006 | **Critical** | Secrets | JWT secrets in git history | Open |
 | 007 | High | Auth / Frontend | JWT in localStorage | Open |
 | 008 | High | API / DoS | No rate limit on prize claim | Open |
@@ -710,4 +710,4 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 | 044 | Medium | Smart Contract | Treasury distributeMonthly allows 0-fee distribution | Open |
 | 045 | Medium | Smart Contract | QuestRewards budget allocation can exceed balance | Open |
 
-**Totals: 9 Critical, 17 High, 19 Medium = 45 findings**
+**Totals: 8 Critical, 17 High, 19 Medium, 1 Low (Accepted) = 45 findings**

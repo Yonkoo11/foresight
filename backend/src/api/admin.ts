@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { authenticate } from '../middleware/auth';
+import { authenticate, requireAdmin } from '../middleware/auth';
 import { sendSuccess, sendError } from '../utils/response';
 import db from '../utils/db';
 import {
@@ -23,7 +23,7 @@ const router = Router();
  * @route GET /api/admin/stats
  * @desc Get system statistics
  */
-router.get('/stats', authenticate, async (req: Request, res: Response) => {
+router.get('/stats', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const [users, teams, leagues, influencers] = await Promise.all([
       db('users').count('* as count').first(),
@@ -49,7 +49,7 @@ router.get('/stats', authenticate, async (req: Request, res: Response) => {
  * @route POST /api/admin/trigger-scoring
  * @desc Manually trigger fantasy league scoring (ADMIN ONLY)
  */
-router.post('/trigger-scoring', authenticate, async (req: Request, res: Response) => {
+router.post('/trigger-scoring', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     await triggerFantasyScoring();
     sendSuccess(res, {
@@ -64,7 +64,7 @@ router.post('/trigger-scoring', authenticate, async (req: Request, res: Response
  * @route GET /api/admin/cron-status
  * @desc Get cron job status (ADMIN ONLY)
  */
-router.get('/cron-status', authenticate, async (req: Request, res: Response) => {
+router.get('/cron-status', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const jobs = getCronJobsStatus();
     sendSuccess(res, { jobs });
@@ -77,7 +77,7 @@ router.get('/cron-status', authenticate, async (req: Request, res: Response) => 
  * @route POST /api/admin/update-metrics
  * @desc Manually trigger influencer metrics update (ADMIN ONLY)
  */
-router.post('/update-metrics', authenticate, async (req: Request, res: Response) => {
+router.post('/update-metrics', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { limit = 50 } = req.body;
 
@@ -99,7 +99,7 @@ router.post('/update-metrics', authenticate, async (req: Request, res: Response)
  * @route GET /api/admin/metrics-status
  * @desc Get Twitter API configuration status and usage info
  */
-router.get('/metrics-status', authenticate, async (req: Request, res: Response) => {
+router.get('/metrics-status', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const isConfigured = twitterApiService.isConfigured();
     const rateLimitInfo = twitterApiService.getRateLimitInfo();
@@ -139,7 +139,7 @@ router.get('/metrics-status', authenticate, async (req: Request, res: Response) 
  * @route GET /api/admin/influencer-metrics/:id
  * @desc Get metrics history for an influencer (ADMIN ONLY)
  */
-router.get('/influencer-metrics/:id', authenticate, async (req: Request, res: Response) => {
+router.get('/influencer-metrics/:id', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { days = 30 } = req.query;
@@ -166,7 +166,7 @@ router.get('/influencer-metrics/:id', authenticate, async (req: Request, res: Re
  * @route GET /api/admin/snapshot-status
  * @desc Get weekly snapshot status for current contest
  */
-router.get('/snapshot-status', authenticate, async (req: Request, res: Response) => {
+router.get('/snapshot-status', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { contestId, status } = await getSnapshotStatus();
 
@@ -187,7 +187,7 @@ router.get('/snapshot-status', authenticate, async (req: Request, res: Response)
  * @route POST /api/admin/trigger-start-snapshot
  * @desc Manually trigger start-of-week snapshot capture
  */
-router.post('/trigger-start-snapshot', authenticate, async (req: Request, res: Response) => {
+router.post('/trigger-start-snapshot', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const result = await triggerStartOfWeekSnapshot();
 
@@ -204,7 +204,7 @@ router.post('/trigger-start-snapshot', authenticate, async (req: Request, res: R
  * @route POST /api/admin/trigger-end-snapshot
  * @desc Manually trigger end-of-week snapshot capture
  */
-router.post('/trigger-end-snapshot', authenticate, async (req: Request, res: Response) => {
+router.post('/trigger-end-snapshot', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const result = await triggerEndOfWeekSnapshot();
 
@@ -221,7 +221,7 @@ router.post('/trigger-end-snapshot', authenticate, async (req: Request, res: Res
  * @route POST /api/admin/trigger-weekly-scoring
  * @desc Manually trigger weekly scoring cycle
  */
-router.post('/trigger-weekly-scoring', authenticate, async (req: Request, res: Response) => {
+router.post('/trigger-weekly-scoring', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const result = await triggerWeeklyScoring();
 
@@ -238,7 +238,7 @@ router.post('/trigger-weekly-scoring', authenticate, async (req: Request, res: R
  * @route GET /api/admin/weekly-deltas/:contestId
  * @desc Get weekly delta calculations for a contest (preview before scoring)
  */
-router.get('/weekly-deltas/:contestId', authenticate, async (req: Request, res: Response) => {
+router.get('/weekly-deltas/:contestId', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const contestId = parseInt(req.params.contestId);
 
@@ -266,7 +266,7 @@ router.get('/weekly-deltas/:contestId', authenticate, async (req: Request, res: 
  * @route GET /api/admin/api-fetch-logs
  * @desc Get recent API fetch logs for monitoring/debugging
  */
-router.get('/api-fetch-logs', authenticate, async (req: Request, res: Response) => {
+router.get('/api-fetch-logs', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { limit = 100, success } = req.query;
 
@@ -306,7 +306,7 @@ router.get('/api-fetch-logs', authenticate, async (req: Request, res: Response) 
  * @route POST /api/admin/test-twitterapi-io
  * @desc Test TwitterAPI.io connection with a single handle
  */
-router.post('/test-twitterapi-io', authenticate, async (req: Request, res: Response) => {
+router.post('/test-twitterapi-io', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { handle = 'VitalikButerin' } = req.body;
 
@@ -343,7 +343,7 @@ router.post('/test-twitterapi-io', authenticate, async (req: Request, res: Respo
  * @route GET /api/admin/contests/:id/raw
  * @desc Get raw DB row for a prized contest (ADMIN ONLY)
  */
-router.get('/contests/:id/raw', authenticate, async (req: Request, res: Response) => {
+router.get('/contests/:id/raw', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const contestId = parseInt(req.params.id);
     if (isNaN(contestId)) {
@@ -370,7 +370,7 @@ router.get('/contests/:id/raw', authenticate, async (req: Request, res: Response
  * @desc Update prized contest settings for testing (ADMIN ONLY)
  *       Allows changing lock_time, end_time, min_players, status, etc.
  */
-router.patch('/contests/:id', authenticate, async (req: Request, res: Response) => {
+router.patch('/contests/:id', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const contestId = parseInt(req.params.id);
     if (isNaN(contestId)) {
@@ -416,7 +416,7 @@ router.patch('/contests/:id', authenticate, async (req: Request, res: Response) 
  * @route POST /api/admin/trigger-prized-lock
  * @desc Manually lock prized contests past their lock_time (ADMIN ONLY)
  */
-router.post('/trigger-prized-lock', authenticate, async (req: Request, res: Response) => {
+router.post('/trigger-prized-lock', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const result = await triggerPrizedContestLock();
     sendSuccess(res, {
@@ -432,7 +432,7 @@ router.post('/trigger-prized-lock', authenticate, async (req: Request, res: Resp
  * @route POST /api/admin/trigger-prized-scoring
  * @desc Manually score locked prized contests past their end_time (ADMIN ONLY)
  */
-router.post('/trigger-prized-scoring', authenticate, async (req: Request, res: Response) => {
+router.post('/trigger-prized-scoring', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const result = await triggerPrizedContestScoring();
     sendSuccess(res, {
@@ -448,7 +448,7 @@ router.post('/trigger-prized-scoring', authenticate, async (req: Request, res: R
  * @route POST /api/admin/trigger-contest-finalization
  * @desc Manually finalize ended fantasy contests and trigger quest achievements (ADMIN ONLY)
  */
-router.post('/trigger-contest-finalization', authenticate, async (req: Request, res: Response) => {
+router.post('/trigger-contest-finalization', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const result = await triggerContestFinalization();
     sendSuccess(res, {

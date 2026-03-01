@@ -56,7 +56,7 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 
 ## Findings Summary
 
-**Totals: 9 Critical, 17 High, 19 Medium = 45 findings**
+**Totals: 8 Critical, 17 High, 19 Medium, 1 Low (Accepted) = 45 findings**
 
 | # | Severity | Category | Short Description | Status |
 |---|----------|----------|-------------------|--------|
@@ -64,7 +64,7 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 | 002 | **Critical** | SOL Transactions | Race condition in prize claim (TOCTOU) | Open |
 | 003 | **Critical** | SSRF | Image proxy unvalidated URL | Open |
 | 004 | **Critical** | Authorization | Admin endpoints no role check | Open |
-| 005 | **Critical** | SOL Transactions | Simulated transfers can trigger in prod | Open |
+| 005 | Low | SOL Transactions | Simulated transfers (gated by NODE_ENV) | Accepted |
 | 006 | **Critical** | Secrets | JWT secrets in git history | Open |
 | 007 | High | Auth / Frontend | JWT in localStorage | Open |
 | 008 | High | API / DoS | No rate limit on prize claim | Open |

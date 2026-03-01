@@ -27,6 +27,7 @@ export interface JWTPayload {
  */
 export function createAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, JWT_SECRET, {
+    algorithm: 'HS256',
     expiresIn: JWT_EXPIRES_IN as any,
   });
 }
@@ -36,6 +37,7 @@ export function createAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): str
  */
 export function createRefreshToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, JWT_SECRET, {
+    algorithm: 'HS256',
     expiresIn: REFRESH_TOKEN_EXPIRES_IN as any,
   });
 }
@@ -45,7 +47,7 @@ export function createRefreshToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): st
  */
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as JWTPayload;
     return decoded;
   } catch (error) {
     return null;
