@@ -49,48 +49,48 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 | 2F: Database Security | ✅ Complete | 2 | No SSL, plaintext refresh tokens. SQL injection: SAFE (Knex) |
 | 2G: Infrastructure & Config | ✅ Complete | 5 | SSRF proxy, ngrok CORS, HTTPS, CSP, console.log PII |
 | 3: OWASP Top 10 | ✅ Complete | 5 | 6 FAIL, 3 PARTIAL, 1 PASS. 5 new findings (027-031) |
-| 4: Fix & Harden | ⬜ Not Started | 0 | All fixes with individual commits |
+| 4: Fix & Harden | 🔄 In Progress | 18 | 18 findings fixed, 1 accepted, 26 remain (smart contracts + complex arch) |
 | 5: Verify & Document | ⬜ Not Started | 0 | Re-scan, smoke test, SECURITY.md |
 
 ---
 
 ## Findings Summary
 
-**Totals: 8 Critical, 17 High, 19 Medium, 1 Low (Accepted) = 45 findings**
+**Totals: 18 Fixed, 1 Accepted, 26 Open out of 45 findings**
 
 | # | Severity | Category | Short Description | Status |
 |---|----------|----------|-------------------|--------|
 | 001 | **Critical** | Architecture | Free leagues off-chain | Open |
-| 002 | **Critical** | SOL Transactions | Race condition in prize claim (TOCTOU) | Open |
-| 003 | **Critical** | SSRF | Image proxy unvalidated URL | Open |
-| 004 | **Critical** | Authorization | Admin endpoints no role check | Open |
+| 002 | **Critical** | SOL Transactions | Race condition in prize claim (TOCTOU) | Fixed ✅ |
+| 003 | **Critical** | SSRF | Image proxy unvalidated URL | Fixed ✅ |
+| 004 | **Critical** | Authorization | Admin endpoints no role check | Fixed ✅ |
 | 005 | Low | SOL Transactions | Simulated transfers (gated by NODE_ENV) | Accepted |
 | 006 | **Critical** | Secrets | JWT secrets in git history | Open |
 | 007 | High | Auth / Frontend | JWT in localStorage | Open |
-| 008 | High | API / DoS | No rate limit on prize claim | Open |
-| 009 | High | Auth | No rate limit on token refresh | Open |
+| 008 | High | API / DoS | No rate limit on prize claim | Fixed ✅ |
+| 009 | High | Auth | No rate limit on token refresh | Fixed ✅ |
 | 010 | High | Auth | Stolen tokens valid post-logout (7 days) | Open |
-| 011 | High | Database | No SSL on DB connection | Open |
-| 012 | High | CORS | ngrok allowed in production | Open |
-| 013 | High | Infrastructure | No HTTPS enforcement | Open |
+| 011 | High | Database | No SSL on DB connection | Fixed ✅ |
+| 012 | High | CORS | ngrok allowed in production | Fixed ✅ |
+| 013 | High | Infrastructure | No HTTPS enforcement | Fixed ✅ |
 | 014 | High | SOL Transactions | Contest finalization race condition | Open |
 | 015 | High | Auth / Database | Refresh tokens stored plaintext | Open |
-| 016 | Medium | Auth | JWT algorithm not pinned | Open |
-| 017 | Medium | Input Validation | Duplicate influencers in teams | Open |
-| 018 | Medium | Info Disclosure | Console.log leaks PII/wallets | Open |
+| 016 | Medium | Auth | JWT algorithm not pinned | Fixed ✅ |
+| 017 | Medium | Input Validation | Duplicate influencers in teams | Fixed ✅ |
+| 018 | Medium | Info Disclosure | Console.log leaks PII/wallets | Fixed ✅ |
 | 019 | Medium | SOL Transactions | 'confirmed' not 'finalized' commitment | Open |
-| 020 | Medium | Headers | Helmet CSP not configured | Open |
+| 020 | Medium | Headers | Helmet CSP not configured | Fixed ✅ |
 | 021 | Medium | Frontend | Missing CSRF protection | Open |
-| 022 | Medium | Input Validation | Unvalidated limit/offset params | Open |
+| 022 | Medium | Input Validation | Unvalidated limit/offset params | Fixed ✅ |
 | 023 | High | Dependencies | jws HMAC signature bypass (via jsonwebtoken) | Open |
-| 024 | High | Dependencies | axios DoS via __proto__ | Open |
-| 025 | High | Dependencies | react-router XSS + CSRF | Open |
+| 024 | High | Dependencies | axios DoS via __proto__ | Fixed ✅ |
+| 025 | High | Dependencies | react-router XSS + CSRF | Fixed ✅ |
 | 026 | Medium | Dependencies | Multiple transitive vulns (hono, h3, minimatch, etc.) | Open |
-| 027 | Medium | Injection | Twitter OAuth redirect unsanitized error param | Open |
+| 027 | Medium | Injection | Twitter OAuth redirect unsanitized error param | Fixed ✅ |
 | 028 | Medium | Cryptographic | Twitter access tokens unencrypted in DB | Open |
 | 029 | Medium | Logging | No audit trail for admin/sensitive actions | Open |
 | 030 | Medium | Auth | Expired sessions never garbage-collected | Open |
-| 031 | Medium | Auth | Auth rate limiter too lenient (50-100/15min) | Open |
+| 031 | Medium | Auth | Auth rate limiter too lenient (50-100/15min) | Fixed ✅ |
 | 032 | **Critical** | Smart Contract | Double finalization — prizes redistributed | Open |
 | 033 | **Critical** | Smart Contract | Reentrancy on prize claims | Open |
 | 034 | **Critical** | Smart Contract | Rake calculation integer arithmetic bug | Open |

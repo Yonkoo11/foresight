@@ -30,8 +30,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** Double-claim prevention uses optimistic locking with a SELECT then UPDATE pattern, not a true atomic operation. Two concurrent requests can both read `claimed=false` before either writes, allowing the same prize to be paid twice.
 - **Impact:** Treasury drained. Attacker submits two simultaneous claim requests, both succeed, prize paid twice.
 - **Recommended Fix:** Use `UPDATE ... SET claimed=true WHERE claimed=false RETURNING *` as a single atomic statement, or use PostgreSQL advisory locks (`pg_advisory_xact_lock`). Add a unique constraint on `(contest_id, user_id, claimed)`.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-002 — atomic UPDATE RETURNING
+- **Status:** Fixed ✅
 
 ---
 
@@ -44,8 +44,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** The `/api/proxy-image` endpoint accepts an unvalidated `url` query parameter and fetches it server-side. No domain whitelist, no private IP blocking, no size limit. Semgrep also flagged this as XSS via `res.send(Buffer.from(buffer))`.
 - **Impact:** Attacker can access internal services (`http://localhost:3001/api/admin/stats`), cloud metadata (`http://169.254.169.254/`), scan internal networks, or cause DoS via large files.
 - **Recommended Fix:** Whitelist allowed domains (pbs.twimg.com, etc.), block private IP ranges, add request timeout (5s), add response size limit (10MB), validate Content-Type is an image.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-003 — SSRF whitelist + IP blocking
+- **Status:** Fixed ✅
 
 ---
 
@@ -58,8 +58,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** All admin endpoints use `authenticate` middleware only but do NOT check for admin role. The `requireAdmin` middleware exists but is never applied. Any authenticated user can access admin functionality.
 - **Impact:** Any logged-in user can: view system stats, trigger scoring cycles, update influencer metrics, manually finalize contests, modify contest parameters (prize_pool, status, lock_time), manipulate the entire platform.
 - **Recommended Fix:** Add `requireAdmin` middleware to ALL admin routes. Verify `is_admin` flag in database is properly gated.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-004 — requireAdmin on all admin endpoints
+- **Status:** Fixed ✅
 
 ---
 
@@ -114,8 +114,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** The `POST /contests/:id/claim-prize` endpoint has no rate limiting middleware. Combined with FINDING-002 (race condition), this makes automated double-claim attacks trivial.
 - **Impact:** DoS on prize distribution, amplifies race condition exploits.
 - **Recommended Fix:** Apply `strictLimiter` (3 requests/hour) to claim endpoint.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-008 — strictLimiter on prize claim
+- **Status:** Fixed ✅
 
 ---
 
@@ -128,8 +128,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** The `/api/auth/refresh` endpoint has no rate limiter, unlike `/verify` which uses `authLimiter`.
 - **Impact:** Brute-force refresh token attacks, token replay, DoS on auth system.
 - **Recommended Fix:** Apply `authLimiter` to refresh endpoint.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-009 — authLimiter on refresh
+- **Status:** Fixed ✅
 
 ---
 
@@ -156,8 +156,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** Knex database configuration has no SSL/TLS settings. All database traffic is unencrypted.
 - **Impact:** Man-in-the-middle can intercept database credentials and all query data.
 - **Recommended Fix:** Add `ssl: { rejectUnauthorized: process.env.NODE_ENV === 'production' }` to Knex config.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-011 — DB SSL in production
+- **Status:** Fixed ✅
 
 ---
 
@@ -170,8 +170,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** Any `.ngrok-free.app` domain is whitelisted regardless of NODE_ENV. In production, any attacker can create an ngrok tunnel and bypass CORS.
 - **Impact:** Cross-origin requests from attacker-controlled domains.
 - **Recommended Fix:** Gate ngrok allowance behind `NODE_ENV === 'development'`.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-012 — ngrok gated behind dev
+- **Status:** Fixed ✅
 
 ---
 
@@ -184,8 +184,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** No middleware to redirect HTTP to HTTPS in production. Tokens and data can transit unencrypted.
 - **Impact:** Session hijacking via network sniffing.
 - **Recommended Fix:** Add HTTPS redirect middleware checking `x-forwarded-proto` header in production.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-013 — HTTPS redirect in production
+- **Status:** Fixed ✅
 
 ---
 
@@ -226,8 +226,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** `jwt.sign()` and `jwt.verify()` don't specify `algorithm: 'HS256'` / `algorithms: ['HS256']`. Relies on library defaults (which are secure, but best practice is explicit).
 - **Impact:** Low currently, but prevents algorithm confusion attacks if library behavior changes.
 - **Recommended Fix:** Add `{ algorithm: 'HS256' }` to sign and `{ algorithms: ['HS256'] }` to verify.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-016 — JWT HS256 pinned
+- **Status:** Fixed ✅
 
 ---
 
@@ -240,8 +240,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** No validation preventing duplicate influencer IDs in team array. `[1, 1, 1, 1, 2]` passes all checks, concentrating score on one influencer.
 - **Impact:** Game mechanic bypass, unfair advantage.
 - **Recommended Fix:** Add `new Set(teamIds).size === teamIds.length` check.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-017 — duplicate influencer check
+- **Status:** Fixed ✅
 
 ---
 
@@ -254,8 +254,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** Console.log statements output wallet addresses, user IDs, and full request bodies to stdout.
 - **Impact:** PII/wallet data in logs, accessible in hosting provider log dashboards.
 - **Recommended Fix:** Replace with structured logger (pino), disable sensitive fields in production.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-018 — console.log replaced with logger.debug
+- **Status:** Fixed ✅
 
 ---
 
@@ -282,8 +282,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** `app.use(helmet())` uses defaults. No explicit Content-Security-Policy configured. Missing fine-grained control over script-src, frame-src, etc.
 - **Impact:** Weaker XSS protection. Third-party scripts can load unchecked.
 - **Recommended Fix:** Configure CSP directives explicitly for the frontend.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-020 — Helmet CSP configured
+- **Status:** Fixed ✅
 
 ---
 
@@ -310,8 +310,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** Offset parameter can be negative, triggering expensive database scans.
 - **Impact:** DoS via crafted query parameters.
 - **Recommended Fix:** `Math.max(0, parseInt(offset))` and cap limit.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-022 — offset Math.max(0,...)
+- **Status:** Fixed ✅
 
 ---
 
@@ -338,8 +338,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** `axios >=1.0.0 <=1.13.4` is vulnerable to DoS via `__proto__` key in mergeConfig (GHSA-43fc-jf86-j433).
 - **Impact:** Denial of service.
 - **Recommended Fix:** Update axios to `>=1.13.5`.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-024 — axios updated to 1.13.6
+- **Status:** Fixed ✅
 
 ---
 
@@ -352,8 +352,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** `react-router >=7.0.0 <=7.11.0` has XSS via open redirects and CSRF in actions (GHSA-* multiple).
 - **Impact:** XSS, CSRF, open redirect attacks.
 - **Recommended Fix:** Update react-router to `>7.11.0`.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-025 — react-router-dom updated to 7.13.1
+- **Status:** Fixed ✅
 
 ---
 
@@ -389,8 +389,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** Twitter OAuth callback interpolates error messages directly into redirect URLs without sanitization: `res.redirect(\`${FRONTEND_URL}/settings?twitter=error&message=${error}\`)`. While FRONTEND_URL is controlled, the error content from Twitter is not sanitized.
 - **Impact:** Potential for reflected content injection in the redirect URL.
 - **Recommended Fix:** URL-encode the error parameter: `encodeURIComponent(error.message)`.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-027 — encodeURIComponent on error param
+- **Status:** Fixed ✅
 
 ---
 
@@ -445,8 +445,8 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 - **Description:** `authLimiter` allows 50 attempts per 15 minutes in production (100 in dev). Best practice for login endpoints is 5-10 attempts per 15 minutes. Current config allows brute-force of weak credentials.
 - **Impact:** Brute-force attacks feasible at 50 attempts/15min.
 - **Recommended Fix:** Reduce to 10/15min in production. Add exponential backoff after 5 failures. Consider account lockout after 10 consecutive failures.
-- **Commit:** N/A
-- **Status:** Open
+- **Commit:** audit: fix FINDING-031 — auth rate limit tightened to 15/15min
+- **Status:** Fixed ✅
 
 ---
 
@@ -665,36 +665,36 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 | # | Severity | Category | Short Description | Status |
 |---|----------|----------|-------------------|--------|
 | 001 | **Critical** | Architecture | Free leagues off-chain | Open |
-| 002 | **Critical** | SOL Transactions | Race condition in prize claim | Open |
-| 003 | **Critical** | SSRF | Image proxy unvalidated URL | Open |
-| 004 | **Critical** | Authorization | Admin endpoints no role check | Open |
+| 002 | **Critical** | SOL Transactions | Race condition in prize claim | Fixed ✅ |
+| 003 | **Critical** | SSRF | Image proxy unvalidated URL | Fixed ✅ |
+| 004 | **Critical** | Authorization | Admin endpoints no role check | Fixed ✅ |
 | 005 | Low | SOL Transactions | Simulated transfers (gated by NODE_ENV) | Accepted |
 | 006 | **Critical** | Secrets | JWT secrets in git history | Open |
 | 007 | High | Auth / Frontend | JWT in localStorage | Open |
-| 008 | High | API / DoS | No rate limit on prize claim | Open |
-| 009 | High | Auth | No rate limit on token refresh | Open |
+| 008 | High | API / DoS | No rate limit on prize claim | Fixed ✅ |
+| 009 | High | Auth | No rate limit on token refresh | Fixed ✅ |
 | 010 | High | Auth | Stolen tokens valid post-logout | Open |
-| 011 | High | Database | No SSL on DB connection | Open |
-| 012 | High | CORS | ngrok allowed in production | Open |
-| 013 | High | Infrastructure | No HTTPS enforcement | Open |
+| 011 | High | Database | No SSL on DB connection | Fixed ✅ |
+| 012 | High | CORS | ngrok allowed in production | Fixed ✅ |
+| 013 | High | Infrastructure | No HTTPS enforcement | Fixed ✅ |
 | 014 | High | SOL Transactions | Contest finalization race condition | Open |
 | 015 | High | Auth / Database | Refresh tokens stored plaintext | Open |
-| 016 | Medium | Auth | JWT algorithm not pinned | Open |
-| 017 | Medium | Input Validation | Duplicate influencers in teams | Open |
-| 018 | Medium | Info Disclosure | Console.log leaks PII | Open |
+| 016 | Medium | Auth | JWT algorithm not pinned | Fixed ✅ |
+| 017 | Medium | Input Validation | Duplicate influencers in teams | Fixed ✅ |
+| 018 | Medium | Info Disclosure | Console.log leaks PII | Fixed ✅ |
 | 019 | Medium | SOL Transactions | 'confirmed' not 'finalized' commitment | Open |
-| 020 | Medium | Headers | Helmet CSP not configured | Open |
+| 020 | Medium | Headers | Helmet CSP not configured | Fixed ✅ |
 | 021 | Medium | Frontend | Missing CSRF protection | Open |
-| 022 | Medium | Input Validation | Unvalidated limit/offset params | Open |
+| 022 | Medium | Input Validation | Unvalidated limit/offset params | Fixed ✅ |
 | 023 | High | Dependencies | jws HMAC signature bypass | Open |
-| 024 | High | Dependencies | axios DoS via __proto__ | Open |
-| 025 | High | Dependencies | react-router XSS + CSRF | Open |
+| 024 | High | Dependencies | axios DoS via __proto__ | Fixed ✅ |
+| 025 | High | Dependencies | react-router XSS + CSRF | Fixed ✅ |
 | 026 | Medium | Dependencies | Multiple transitive vulns | Open |
-| 027 | Medium | Injection | Twitter OAuth redirect unsanitized error param | Open |
+| 027 | Medium | Injection | Twitter OAuth redirect unsanitized error param | Fixed ✅ |
 | 028 | Medium | Cryptographic | Twitter access tokens unencrypted in DB | Open |
 | 029 | Medium | Logging | No audit trail for admin/sensitive actions | Open |
 | 030 | Medium | Auth | Expired sessions never garbage-collected | Open |
-| 031 | Medium | Auth | Auth rate limiter too lenient (50-100/15min) | Open |
+| 031 | Medium | Auth | Auth rate limiter too lenient (50-100/15min) | Fixed ✅ |
 | 032 | **Critical** | Smart Contract | Double finalization — contest can be finalized twice | Open |
 | 033 | **Critical** | Smart Contract | Reentrancy on prize claims (flag set after transfer) | Open |
 | 034 | **Critical** | Smart Contract | Rake calculation integer arithmetic bug | Open |
@@ -710,4 +710,4 @@ Each finding follows a standard format. Findings are numbered sequentially and d
 | 044 | Medium | Smart Contract | Treasury distributeMonthly allows 0-fee distribution | Open |
 | 045 | Medium | Smart Contract | QuestRewards budget allocation can exceed balance | Open |
 
-**Totals: 8 Critical, 17 High, 19 Medium, 1 Low (Accepted) = 45 findings**
+**Totals: 18 Fixed, 1 Accepted, 26 Open out of 45 findings**
