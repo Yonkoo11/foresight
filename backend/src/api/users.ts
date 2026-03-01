@@ -55,7 +55,7 @@ router.get(
   '/xp-leaderboard',
   asyncHandler(async (req: Request, res: Response) => {
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
-    const offset = parseInt(req.query.offset as string) || 0;
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
     const period = req.query.period as string || 'all-time';
 
     let query = db('users')
@@ -146,7 +146,7 @@ router.get(
   '/leaderboard',
   asyncHandler(async (req: Request, res: Response) => {
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 1000);
-    const offset = parseInt(req.query.offset as string) || 0;
+    const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
 
     const users = await db('users')
       .select(

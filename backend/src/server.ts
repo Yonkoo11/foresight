@@ -41,7 +41,31 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 app.set('trust proxy', 1);
 
 // Middleware
-app.use(helmet()); // Security headers
+// FINDING-020: Configure Helmet with explicit CSP
+app.use(helmet({
+  contentSecurityPolicy: NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'https://api.devnet.solana.com', 'https://*.privy.io'],
+      frameSrc: ["'self'", 'https://*.privy.io'],
+      formAction: ["'self'"],
+    },
+  } : false, // Disable CSP in development for easier debugging
+  hsts: NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
+}));
+
+// FINDING-013: Enforce HTTPS in production
+if (NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(`https://${req.header('host')}${req.url}`);
+    }
+    next();
+  });
+}
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, Postman, curl)

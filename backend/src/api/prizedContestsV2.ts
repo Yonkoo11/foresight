@@ -473,6 +473,11 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
       return res.status(400).json({ error: `Team must have exactly ${contest.team_size} influencers` });
     }
 
+    // FINDING-017: Reject duplicate influencers
+    if (new Set(teamIds).size !== teamIds.length) {
+      return res.status(400).json({ error: 'Team cannot contain duplicate influencers' });
+    }
+
     // Validate captain (if required)
     if (contest.has_captain) {
       if (!captainId || !teamIds.includes(captainId)) {
@@ -697,6 +702,11 @@ router.put('/contests/:id/update-free-team', authenticate, async (req: Request, 
     // Validate team size
     if (!Array.isArray(teamIds) || teamIds.length !== contest.team_size) {
       return res.status(400).json({ error: `Team must have exactly ${contest.team_size} influencers` });
+    }
+
+    // FINDING-017: Reject duplicate influencers
+    if (new Set(teamIds).size !== teamIds.length) {
+      return res.status(400).json({ error: 'Team cannot contain duplicate influencers' });
     }
 
     // Validate captain

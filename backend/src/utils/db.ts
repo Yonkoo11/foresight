@@ -4,15 +4,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Create Knex instance
+// FINDING-011: Enforce SSL for production database connections
+const connectionConfig = process.env.DATABASE_URL || {
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'foresight',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+};
+
 const db: Knex = knex({
   client: 'postgresql',
-  connection: process.env.DATABASE_URL || {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME || 'foresight',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-  },
+  connection: typeof connectionConfig === 'string'
+    ? { connectionString: connectionConfig, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false }
+    : connectionConfig,
   pool: {
     min: 2,
     max: 20,

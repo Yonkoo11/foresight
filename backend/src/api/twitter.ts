@@ -183,7 +183,7 @@ router.get(
 
     if (error) {
       // User denied or error occurred
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings?twitter=error&message=${error}`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings?twitter=error&message=${encodeURIComponent(String(error))}`);
     }
 
     if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
