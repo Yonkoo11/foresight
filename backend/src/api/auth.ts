@@ -35,7 +35,7 @@ const REFRESH_COOKIE_OPTIONS = {
   secure: IS_PROD,
   sameSite: 'lax' as const,
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  path: '/api/auth/refresh', // Only sent to refresh endpoint
+  path: '/', // httpOnly + sameSite provide security; broad path avoids proxy breakage
 };
 
 const CSRF_COOKIE_OPTIONS = {
@@ -444,7 +444,7 @@ router.post(
     if (new Date(session.expires_at) < new Date()) {
       await db('sessions').where({ id: session.id }).del();
       res.clearCookie('accessToken', { path: '/' });
-      res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+      res.clearCookie('refreshToken', { path: '/' });
       res.clearCookie('csrf-token', { path: '/' });
       throw new AppError('Session expired', 401);
     }
@@ -484,7 +484,7 @@ router.post(
 
     // FINDING-007: Always clear httpOnly cookies, even if token is expired
     res.clearCookie('accessToken', { path: '/' });
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    res.clearCookie('refreshToken', { path: '/' });
     res.clearCookie('csrf-token', { path: '/' });
 
     sendSuccess(res, { message: 'Logged out successfully' });

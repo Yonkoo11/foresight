@@ -17,6 +17,7 @@ export function usePrivyAuth() {
   const { ready, authenticated, user, getAccessToken, logout } = usePrivy();
   const hasAttemptedAuth = useRef(false);
   const lastUserId = useRef<string | undefined>();
+  const retryCount = useRef(0);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isBackendAuthed, setIsBackendAuthed] = useState(false);
 
@@ -68,11 +69,15 @@ export function usePrivyAuth() {
       } else {
         setSyncError('network_error');
         hasAttemptedAuth.current = false;
-        setTimeout(() => {
-          if (!isBackendAuthed) {
-            syncWithBackend();
-          }
-        }, 4000);
+        retryCount.current += 1;
+        if (retryCount.current <= 3) {
+          const delay = Math.min(2000 * Math.pow(2, retryCount.current - 1), 16000);
+          setTimeout(() => {
+            if (!isBackendAuthed) {
+              syncWithBackend();
+            }
+          }, delay);
+        }
       }
       hasAttemptedAuth.current = false;
     }
@@ -99,6 +104,7 @@ export function usePrivyAuth() {
     // New user or user changed
     if (authenticated && user && user.id !== lastUserId.current) {
       hasAttemptedAuth.current = false;
+      retryCount.current = 0;
       lastUserId.current = user.id;
       syncWithBackend();
     }
