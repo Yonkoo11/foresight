@@ -56,20 +56,20 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 
 ## Findings Summary
 
-**Totals: 37 Fixed, 1 Accepted, 2 Mitigated, 5 Deferred out of 45 findings**
+**Totals: 41 Fixed, 1 Accepted, 2 Mitigated, 1 Deferred (transitive deps) out of 45 findings**
 
 | # | Severity | Category | Short Description | Status |
 |---|----------|----------|-------------------|--------|
-| 001 | **Critical** | Architecture | Free leagues off-chain | Open |
+| 001 | **Critical** | Architecture | Free leagues off-chain | Accepted (post-launch) |
 | 002 | **Critical** | SOL Transactions | Race condition in prize claim (TOCTOU) | Fixed ✅ |
 | 003 | **Critical** | SSRF | Image proxy unvalidated URL | Fixed ✅ |
 | 004 | **Critical** | Authorization | Admin endpoints no role check | Fixed ✅ |
 | 005 | Low | SOL Transactions | Simulated transfers (gated by NODE_ENV) | Accepted |
-| 006 | **Critical** | Secrets | JWT secrets in git history | Deferred |
-| 007 | High | Auth / Frontend | JWT in localStorage | Deferred |
+| 006 | **Critical** | Secrets | JWT secrets in git history | Fixed ✅ |
+| 007 | High | Auth / Frontend | JWT in localStorage | Fixed ✅ |
 | 008 | High | API / DoS | No rate limit on prize claim | Fixed ✅ |
 | 009 | High | Auth | No rate limit on token refresh | Fixed ✅ |
-| 010 | High | Auth | Stolen tokens valid post-logout (7 days) | Deferred |
+| 010 | High | Auth | Stolen tokens valid post-logout (7 days) | Fixed ✅ |
 | 011 | High | Database | No SSL on DB connection | Fixed ✅ |
 | 012 | High | CORS | ngrok allowed in production | Fixed ✅ |
 | 013 | High | Infrastructure | No HTTPS enforcement | Fixed ✅ |
@@ -80,7 +80,7 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers with two b
 | 018 | Medium | Info Disclosure | Console.log leaks PII/wallets | Fixed ✅ |
 | 019 | Medium | SOL Transactions | 'confirmed' not 'finalized' commitment | Fixed ✅ |
 | 020 | Medium | Headers | Helmet CSP not configured | Fixed ✅ |
-| 021 | Medium | Frontend | Missing CSRF protection | Deferred |
+| 021 | Medium | Frontend | Missing CSRF protection | Fixed ✅ |
 | 022 | Medium | Input Validation | Unvalidated limit/offset params | Fixed ✅ |
 | 023 | High | Dependencies | jws HMAC signature bypass (via jsonwebtoken) | Fixed ✅ |
 | 024 | High | Dependencies | axios DoS via __proto__ | Fixed ✅ |

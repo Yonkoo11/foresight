@@ -4,10 +4,9 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import { useToast } from '../contexts/ToastContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const REQUIRED_SECONDS = 30;
 
 interface UseBrowseTimeTrackerOptions {
@@ -52,16 +51,14 @@ export function useBrowseTimeTracker(options: UseBrowseTimeTrackerOptions): Brow
     if (!enabled || statusCheckedRef.current) return;
 
     const checkDailyStatus = async () => {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      if (!hasSession()) {
         setIsChecking(false);
         return;
       }
 
       try {
-        const res = await axios.get(`${API_URL}/api/v2/fs/daily-status`, {
+        const res = await apiClient.get(`/api/v2/fs/daily-status`, {
           headers: {
-            Authorization: `Bearer ${token}`,
             'Cache-Control': 'no-cache',
           },
         });
@@ -89,17 +86,15 @@ export function useBrowseTimeTracker(options: UseBrowseTimeTrackerOptions): Brow
   const claimReward = useCallback(async (duration: number) => {
     if (hasClaimedRef.current || isClaimingRef.current) return;
 
-    const token = localStorage.getItem('authToken');
-    if (!token) return;
+    if (!hasSession()) return;
 
     isClaimingRef.current = true;
     console.log('[BrowseTracker] Claiming reward, duration:', duration);
 
     try {
-      const res = await axios.post(
-        `${API_URL}/api/v2/fs/track-activity`,
-        { activityType, durationSeconds: duration },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await apiClient.post(
+        `/api/v2/fs/track-activity`,
+        { activityType, durationSeconds: duration }
       );
 
       console.log('[BrowseTracker] Response:', res.data);

@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../../lib/apiClient';
 import {
   X,
   TrendUp,
@@ -21,8 +21,6 @@ import {
 } from '@phosphor-icons/react';
 import { getAvatarUrl } from '../../utils/avatar';
 import { useToast } from '../../contexts/ToastContext';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface Influencer {
   id: number;
@@ -107,10 +105,7 @@ export default function InfluencerDetailModal({
   const fetchDetail = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
-      const res = await axios.get(`${API_URL}/api/intel/influencers/${influencer.id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await apiClient.get(`/api/intel/influencers/${influencer.id}`);
 
       if (res.data.success) {
         setDetail(res.data.data.influencer);

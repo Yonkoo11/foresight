@@ -18,7 +18,9 @@ Foresight is a fantasy sports platform for Crypto Twitter influencers. This docu
 ### Authentication & Authorization
 - Privy-based multi-auth (wallet, email, Twitter) with JWT session layer
 - JWT tokens signed with HS256, algorithm explicitly pinned
-- Refresh tokens hashed (SHA-256) before database storage
+- Access tokens: 15-minute expiry, stored in httpOnly secure cookies
+- Refresh tokens: 30-day expiry, hashed (SHA-256) before database storage, scoped to refresh endpoint
+- CSRF protection: double-submit cookie pattern on all mutation requests
 - `requireAdmin` middleware enforced on all admin endpoints
 - Rate limiting: 15 auth attempts / 15min, 3 prize claims / hour, 500 API calls / 15min
 
@@ -55,21 +57,25 @@ A structured self-audit was conducted covering dependency scanning, static analy
 | Metric | Count |
 |--------|-------|
 | Total findings | 45 |
-| Fixed | 37 |
-| Accepted risk | 1 |
+| Fixed | 41 |
+| Accepted risk | 2 |
 | Already mitigated | 2 |
-| Deferred (architectural) | 5 |
+| Deferred (transitive deps) | 1 |
 
-All **critical** and **high** severity findings affecting backend and smart contracts have been addressed.
+All **critical** and **high** severity findings have been addressed.
+
+### Accepted Risks
+- Free league results off-chain (planned for on-chain anchoring post-launch)
+- Simulated SOL transfers in development (gated by NODE_ENV)
 
 ### Deferred Items
-These require architectural changes beyond the current scope:
-- Free league results on-chain anchoring (planned post-launch)
-- JWT secrets in git history (rotate before production)
-- httpOnly cookie migration (replaces localStorage tokens)
-- Token revocation mechanism (requires Redis)
-- CSRF tokens (blocked by cookie migration)
 - Transitive dependency vulnerabilities (upstream fixes needed)
+
+### Recently Fixed (formerly deferred)
+- JWT secrets rotated, .env.example documents generation procedure
+- JWT access tokens shortened to 15 minutes (from 7 days)
+- httpOnly cookies replace localStorage for token storage
+- CSRF protection via double-submit cookie pattern
 
 ## Reporting Vulnerabilities
 

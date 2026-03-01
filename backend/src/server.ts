@@ -3,8 +3,10 @@ import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import { testConnection } from './utils/db';
 import { apiLimiter } from './middleware/rateLimiter';
+import { csrfProtection } from './middleware/csrf';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { initializeCronJobs } from './services/cronJobs';
 import { ensureDemoContest } from './api/admin';
@@ -100,9 +102,13 @@ app.use(cors({
   },
   credentials: true,
 }));
+app.use(cookieParser());
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined')); // Logging
+
+// CSRF protection for state-changing requests (FINDING-021)
+app.use(csrfProtection);
 
 // Rate limiting (apply to all routes)
 app.use(apiLimiter);

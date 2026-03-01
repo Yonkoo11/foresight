@@ -11,11 +11,40 @@ import { verifyPrivyToken, getPrivyUserInfo, isPrivyConfigured, type PrivyUserIn
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { authLimiter } from '../middleware/rateLimiter';
 import { authenticate } from '../middleware/auth';
+import { generateCsrfToken } from '../middleware/csrf';
 import questService from '../services/questService';
 import foresightScoreService from '../services/foresightScoreService';
 import tapestryService from '../services/tapestryService';
 import { sendSuccess } from '../utils/response';
 import logger from '../utils/logger';
+
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const IS_PROD = NODE_ENV === 'production';
+
+// FINDING-007: Cookie options for httpOnly JWT storage
+const ACCESS_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: IS_PROD,
+  sameSite: 'lax' as const,
+  maxAge: 15 * 60 * 1000, // 15 minutes (matches JWT_EXPIRES_IN)
+  path: '/',
+};
+
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: IS_PROD,
+  sameSite: 'lax' as const,
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  path: '/api/auth/refresh', // Only sent to refresh endpoint
+};
+
+const CSRF_COOKIE_OPTIONS = {
+  httpOnly: false, // Frontend JS must read this
+  secure: IS_PROD,
+  sameSite: 'lax' as const,
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+  path: '/',
+};
 
 const router: Router = Router();
 
@@ -288,9 +317,16 @@ async function createSessionAndRespond(
       .catch((err) => logger.error('Error awarding daily login FS:', err, { context: 'Auth API' }));
   }
 
+  // FINDING-007: Set httpOnly cookies instead of sending tokens in body
+  res.cookie('accessToken', accessToken, ACCESS_COOKIE_OPTIONS);
+  res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
+
+  // FINDING-021: Set CSRF token (readable by frontend JS)
+  const csrfToken = generateCsrfToken();
+  res.cookie('csrf-token', csrfToken, CSRF_COOKIE_OPTIONS);
+
   sendSuccess(res, {
-    accessToken,
-    refreshToken,
+    csrfToken,
     user: {
       id: user.id,
       walletAddress: user.wallet_address || null,
@@ -378,26 +414,27 @@ router.post(
 
 /**
  * POST /api/auth/refresh
- * Refresh access token using refresh token
+ * Refresh access token using refresh token (from httpOnly cookie or body)
  */
 router.post(
   '/refresh',
   authLimiter,
   asyncHandler(async (req: Request, res: Response) => {
-    const { refreshToken } = req.body;
+    // Read refresh token from cookie (preferred) or body (legacy)
+    const refreshTokenValue = req.cookies?.refreshToken || req.body?.refreshToken;
 
-    if (!refreshToken) {
+    if (!refreshTokenValue) {
       throw new AppError('Refresh token is required', 400);
     }
 
-    const payload = verifyToken(refreshToken);
+    const payload = verifyToken(refreshTokenValue);
     if (!payload) {
       throw new AppError('Invalid or expired refresh token', 401);
     }
 
     // FINDING-015: Compare against hashed refresh token
     const session = await db('sessions')
-      .where({ refresh_token: hashToken(refreshToken) })
+      .where({ refresh_token: hashToken(refreshTokenValue) })
       .first();
 
     if (!session) {
@@ -406,6 +443,9 @@ router.post(
 
     if (new Date(session.expires_at) < new Date()) {
       await db('sessions').where({ id: session.id }).del();
+      res.clearCookie('accessToken', { path: '/' });
+      res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+      res.clearCookie('csrf-token', { path: '/' });
       throw new AppError('Session expired', 401);
     }
 
@@ -419,13 +459,16 @@ router.post(
       .where({ id: session.id })
       .update({ access_token: newAccessToken });
 
-    sendSuccess(res, { accessToken: newAccessToken });
+    // FINDING-007: Set new access token as httpOnly cookie
+    res.cookie('accessToken', newAccessToken, ACCESS_COOKIE_OPTIONS);
+
+    sendSuccess(res, { refreshed: true });
   })
 );
 
 /**
  * POST /api/auth/logout
- * Delete session
+ * Delete session and clear cookies
  */
 router.post(
   '/logout',
@@ -433,6 +476,12 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.userId;
     await db('sessions').where({ user_id: userId }).del();
+
+    // FINDING-007: Clear httpOnly cookies
+    res.clearCookie('accessToken', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    res.clearCookie('csrf-token', { path: '/' });
+
     sendSuccess(res, { message: 'Logged out successfully' });
   })
 );

@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import {
   Lightning,
   Trophy,
@@ -17,8 +17,6 @@ import {
   ArrowRight,
   Users,
 } from '@phosphor-icons/react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface ActivityItem {
   type: string;
@@ -32,16 +30,13 @@ export default function ActivityFeedCard() {
   const [loading, setLoading] = useState(true);
 
   const fetchActivity = useCallback(async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    if (!hasSession()) {
       setLoading(false);
       return;
     }
 
     try {
-      const res = await axios.get(`${API_URL}/api/tapestry/activity`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get(`/api/tapestry/activity`);
       if (res.data?.data?.activity) {
         setActivity(res.data.data.activity.slice(0, 6));
       }
@@ -116,8 +111,8 @@ export default function ActivityFeedCard() {
     return `${Math.floor(hours / 24)}d ago`;
   };
 
-  // Don't render if no token (not logged in)
-  if (!localStorage.getItem('authToken')) return null;
+  // Don't render if no session (not logged in)
+  if (!hasSession()) return null;
 
   // Show placeholder with 0 items
   if (!loading && activity.length === 0) {

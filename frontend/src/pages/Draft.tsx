@@ -9,11 +9,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 import {
   Trophy, ArrowLeft, ArrowRight, Lock, CheckCircle, Warning,
   Timer, Coins, Users, Info, Wallet, X, LinkSimple
 } from '@phosphor-icons/react';
+import apiClient, { hasSession } from '../lib/apiClient';
 import FormationTeam from '../components/draft/FormationTeam';
 import InfluencerGrid from '../components/draft/InfluencerGrid';
 import TapestryBadge from '../components/TapestryBadge';
@@ -23,8 +23,6 @@ import ShareTeamCard from '../components/ShareTeamCard';
 import { useToast } from '../contexts/ToastContext';
 import { useDelayedLoading } from '../hooks/useDelayedLoading';
 import { useAuth } from '../hooks/useAuth';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface Influencer {
   id: number;
@@ -132,15 +130,11 @@ export default function Draft() {
 
   // Fetch user info for the share card footer
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) return;
-    fetch(`${API_URL}/api/v2/fs/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(d => {
-        if (d?.success && d?.data) {
-          setUserInfo({ username: d.data.username || '', avatarUrl: d.data.avatarUrl });
+    if (!hasSession()) return;
+    apiClient.get('/api/v2/fs/me')
+      .then(r => {
+        if (r.data?.success && r.data?.data) {
+          setUserInfo({ username: r.data.data.username || '', avatarUrl: r.data.data.avatarUrl });
         }
       })
       .catch(() => {});
@@ -161,19 +155,19 @@ export default function Draft() {
       return;
     }
 
-    const token = localStorage.getItem('authToken');
-    setIsAuthenticated(!!token);
+    const hasAuth = hasSession();
+    setIsAuthenticated(hasAuth);
 
     Promise.all([
       fetchContest(),
       fetchInfluencers(),
-      token ? fetchExistingTeam(token) : Promise.resolve(),
+      hasAuth ? fetchExistingTeam() : Promise.resolve(),
     ]).finally(() => setLoading(false));
   }, [contestId]);
 
   const fetchContest = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/v2/contests/${contestId}`);
+      const res = await apiClient.get(`/api/v2/contests/${contestId}`);
       setContest(res.data.contest);
     } catch (err) {
       console.error('Failed to fetch contest:', err);
@@ -183,7 +177,7 @@ export default function Draft() {
 
   const fetchInfluencers = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/league/influencers`);
+      const res = await apiClient.get('/api/league/influencers');
       // Transform data
       const data = res.data.influencers.map((i: InfluencerApiResponse): Influencer => ({
         id: i.id,
@@ -203,27 +197,24 @@ export default function Draft() {
     }
   };
 
-  const fetchExistingTeam = async (token: string) => {
+  const fetchExistingTeam = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/v2/contests/${contestId}/my-entry`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get(`/api/v2/contests/${contestId}/my-entry`);
       if (res.data.entry) {
         setExistingTeam(res.data.entry);
         const captain = res.data.entry.captainId || res.data.entry.captain_id;
         setCaptainId(captain);
         // Fetch transfer status now that we know user has an existing entry
-        axios.get(`${API_URL}/api/v2/contests/${contestId}/transfer-status`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).then(r => {
-          if (r.data.success) {
-            setTransferStatus({
-              remaining: r.data.data.transfersRemaining,
-              allowed: r.data.data.transfersAllowed,
-              level: r.data.data.level,
-            });
-          }
-        }).catch(() => {});
+        apiClient.get(`/api/v2/contests/${contestId}/transfer-status`)
+          .then(r => {
+            if (r.data.success) {
+              setTransferStatus({
+                remaining: r.data.data.transfersRemaining,
+                allowed: r.data.data.transfersAllowed,
+                level: r.data.data.level,
+              });
+            }
+          }).catch(() => {});
       }
     } catch (err) {
       // No existing team - that's fine
@@ -342,12 +333,11 @@ export default function Draft() {
 
   // Authentication — Privy handles auth automatically via usePrivyAuth
   const authenticate = async () => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
+    if (hasSession()) {
       setIsAuthenticated(true);
       return true;
     }
-    // No token — prompt login
+    // No session — prompt login
     showToast('Please sign in first', 'error');
     login();
     return false;
@@ -378,11 +368,9 @@ export default function Draft() {
     setShowPaymentModal(false);
 
     try {
-      let token = localStorage.getItem('authToken');
-      if (!token) {
+      if (!hasSession()) {
         const success = await authenticate();
         if (!success) { setSubmitting(false); return; }
-        token = localStorage.getItem('authToken');
       }
 
       const teamIds = selectedPicks.map((p) => p.id);
@@ -391,19 +379,18 @@ export default function Draft() {
       let res;
       if (isPaid) {
         // Paid: use enter-test endpoint (devnet — simulates payment for hackathon)
-        res = await axios.post(
-          `${API_URL}/api/v2/contests/${contestId}/enter-test`,
-          { team_name: 'My Team', influencer_ids: teamIds, captain_id: captainId },
-          { headers: { Authorization: `Bearer ${token}` } }
+        res = await apiClient.post(
+          `/api/v2/contests/${contestId}/enter-test`,
+          { team_name: 'My Team', influencer_ids: teamIds, captain_id: captainId }
         );
       } else {
         const isUpdate = !!existingTeam;
         const endpoint = isUpdate
-          ? `${API_URL}/api/v2/contests/${contestId}/update-free-team`
-          : `${API_URL}/api/v2/contests/${contestId}/enter-free`;
+          ? `/api/v2/contests/${contestId}/update-free-team`
+          : `/api/v2/contests/${contestId}/enter-free`;
         res = isUpdate
-          ? await axios.put(endpoint, { teamIds, captainId }, { headers: { Authorization: `Bearer ${token}` } })
-          : await axios.post(endpoint, { teamIds, captainId }, { headers: { Authorization: `Bearer ${token}` } });
+          ? await apiClient.put(endpoint, { teamIds, captainId })
+          : await apiClient.post(endpoint, { teamIds, captainId });
       }
 
       if (res.data.success) {
@@ -418,9 +405,10 @@ export default function Draft() {
       }
     } catch (err) {
       console.error('Submit failed:', err);
-      const errorMessage = axios.isAxiosError(err) && err.response?.data?.error
-        ? err.response.data.error
-        : 'Failed to submit team';
+      let errorMessage = 'Failed to submit team';
+      if (err instanceof Error && (err as any).response?.data?.error) {
+        errorMessage = (err as any).response.data.error;
+      }
       showToast(errorMessage, 'error');
     } finally {
       setSubmitting(false);

@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import {
   Users,
   Trophy,
@@ -24,7 +24,6 @@ import {
   Check
 } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
-import { API_URL } from '../config/api';
 import { useAuth } from '../hooks/useAuth';
 import SEO from '../components/SEO';
 
@@ -70,16 +69,13 @@ export default function Referrals() {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      if (!hasSession()) {
         setError('Please sign in to view referrals');
         setLoading(false);
         return;
       }
 
-      const response = await axios.get(`${API_URL}/api/referrals/my-code`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/api/referrals/my-code');
 
       setData(response.data);
     } catch (err: any) {

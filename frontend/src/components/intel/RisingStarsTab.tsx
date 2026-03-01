@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../../lib/apiClient';
 import {
   Rocket,
   ThumbsUp,
@@ -20,8 +20,6 @@ import {
 } from '@phosphor-icons/react';
 import { getAvatarUrl } from '../../utils/avatar';
 import { useToast } from '../../contexts/ToastContext';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface RisingStar {
   id: string;
@@ -54,11 +52,8 @@ export default function RisingStarsTab() {
   const fetchStars = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
 
-      const res = await axios.get(`${API_URL}/api/intel/rising-stars`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await apiClient.get(`/api/intel/rising-stars`);
 
       if (res.data.success) {
         // Sort by vote score descending
@@ -82,8 +77,7 @@ export default function RisingStarsTab() {
 
   // Vote handler
   const handleVote = async (starId: string, vote: 'for' | 'against') => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    if (!hasSession()) {
       showToast('Please sign in to vote', 'error');
       return;
     }
@@ -91,10 +85,9 @@ export default function RisingStarsTab() {
     setVotingId(starId);
 
     try {
-      const res = await axios.post(
-        `${API_URL}/api/intel/rising-stars/${starId}/vote`,
-        { vote },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await apiClient.post(
+        `/api/intel/rising-stars/${starId}/vote`,
+        { vote }
       );
 
       if (res.data.success) {
@@ -129,10 +122,9 @@ export default function RisingStarsTab() {
         if (vote === 'for') {
           try {
             const contentId = `foresight-rising-star-${starId}`;
-            await axios.post(
-              `${API_URL}/api/tapestry/like/${contentId}`,
-              {},
-              { headers: { Authorization: `Bearer ${token}` } }
+            await apiClient.post(
+              `/api/tapestry/like/${contentId}`,
+              {}
             );
           } catch (tapestryErr) {
             console.log('[RisingStars] Tapestry like write failed (non-blocking):', tapestryErr);

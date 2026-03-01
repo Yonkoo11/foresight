@@ -9,11 +9,9 @@
 
 import { useState } from 'react';
 import { UserPlus, UserMinus, Check } from '@phosphor-icons/react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface FollowButtonProps {
   targetProfileId: string;
@@ -39,8 +37,7 @@ export default function FollowButton({
   const { isConnected, login } = useAuth();
 
   const handleToggle = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    if (!hasSession()) {
       if (!isConnected) {
         login();
       } else {
@@ -52,10 +49,9 @@ export default function FollowButton({
     setLoading(true);
     try {
       const endpoint = isFollowing ? 'unfollow' : 'follow';
-      await axios.post(
-        `${API_URL}/api/tapestry/${endpoint}`,
-        { targetProfileId, targetUsername },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await apiClient.post(
+        `/api/tapestry/${endpoint}`,
+        { targetProfileId, targetUsername }
       );
 
       const newState = !isFollowing;

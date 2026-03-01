@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../../lib/apiClient';
 import {
   X,
   XLogo,
@@ -20,8 +20,6 @@ import {
 } from '@phosphor-icons/react';
 import { getAvatarUrl } from '../../utils/avatar';
 import MetricsChart from './MetricsChart';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface InfluencerComparison {
   id: number;
@@ -77,11 +75,9 @@ export default function ComparisonView({ influencerIds, onClose }: ComparisonVie
   const fetchComparison = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
 
-      const res = await axios.get(`${API_URL}/api/intel/compare`, {
+      const res = await apiClient.get(`/api/intel/compare`, {
         params: { ids: influencerIds.join(',') },
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (res.data.success) {

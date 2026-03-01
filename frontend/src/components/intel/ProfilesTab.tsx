@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../../lib/apiClient';
 import {
   MagnifyingGlass,
   Funnel,
@@ -17,8 +17,6 @@ import {
 import { useToast } from '../../contexts/ToastContext';
 import InfluencerProfileCard from './InfluencerProfileCard';
 import InfluencerDetailModal from './InfluencerDetailModal';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface Influencer {
   id: number;
@@ -80,7 +78,6 @@ export default function ProfilesTab({ onCompare }: ProfilesTabProps) {
         setPage(1);
       }
 
-      const token = localStorage.getItem('authToken');
       const currentPage = reset ? 1 : page;
 
       const params = new URLSearchParams({
@@ -92,9 +89,7 @@ export default function ProfilesTab({ onCompare }: ProfilesTabProps) {
       if (tier !== 'all') params.append('tier', tier);
       if (search) params.append('search', search);
 
-      const res = await axios.get(`${API_URL}/api/intel/influencers?${params}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await apiClient.get(`/api/intel/influencers?${params}`);
 
       if (res.data.success) {
         const newInfluencers = res.data.data.influencers;
@@ -115,10 +110,7 @@ export default function ProfilesTab({ onCompare }: ProfilesTabProps) {
   useEffect(() => {
     const fetchCommunityPicks = async () => {
       try {
-        const token = localStorage.getItem('authToken');
-        const res = await axios.get(`${API_URL}/api/intel/community-picks`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await apiClient.get(`/api/intel/community-picks`);
 
         if (res.data.success && res.data.data) {
           const picksMap: CommunityPicks = {};
@@ -152,8 +144,7 @@ export default function ProfilesTab({ onCompare }: ProfilesTabProps) {
 
   // Scout handler
   const handleScout = async (influencerId: number, influencerName: string) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    if (!hasSession()) {
       showToast('Please sign in to scout influencers', 'error');
       return;
     }
@@ -164,17 +155,13 @@ export default function ProfilesTab({ onCompare }: ProfilesTabProps) {
 
     try {
       if (isScouted) {
-        await axios.delete(`${API_URL}/api/watchlist/${influencerId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await apiClient.delete(`/api/watchlist/${influencerId}`);
         setInfluencers(prev => prev.map(i =>
           i.id === influencerId ? { ...i, isScouted: false } : i
         ));
         showToast(`Removed ${influencerName} from watchlist`, 'success');
       } else {
-        await axios.post(`${API_URL}/api/watchlist/${influencerId}`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await apiClient.post(`/api/watchlist/${influencerId}`, {});
         setInfluencers(prev => prev.map(i =>
           i.id === influencerId ? { ...i, isScouted: true } : i
         ));

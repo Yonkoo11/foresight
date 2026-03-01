@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import {
   Users, Trophy, Crown, Sparkle, Star, Fire, TrendUp,
   CheckCircle, Medal, Gear, PencilSimple,
@@ -24,8 +24,6 @@ import { getAvatarUrl } from '../utils/avatar';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 import SEO from '../components/SEO';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const QUEST_ICONS: Record<string, React.ElementType> = {
   wallet: Fire, user: Users, users: Users, trophy: Trophy,
@@ -192,17 +190,14 @@ export default function Profile() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
-      if (!token) { setLoading(false); return; }
-
-      const headers = { Authorization: `Bearer ${token}` };
+      if (!hasSession()) { setLoading(false); return; }
 
       const [profileRes, teamRes, actionsRes, watchlistRes, questsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/users/me`, { headers }).catch(() => ({ data: null })),
-        axios.get(`${API_URL}/api/v2/me/latest-entry`, { headers }).catch(() => ({ data: { entry: null } })),
-        axios.get(`${API_URL}/api/v2/quests/summary`, { headers }).catch(() => ({ data: { success: false } })),
-        axios.get(`${API_URL}/api/watchlist`, { headers }).catch(() => ({ data: { success: false } })),
-        axios.get(`${API_URL}/api/v2/quests`, { headers }).catch(() => ({ data: { success: false } })),
+        apiClient.get('/api/users/me').catch(() => ({ data: null })),
+        apiClient.get('/api/v2/me/latest-entry').catch(() => ({ data: { entry: null } })),
+        apiClient.get('/api/v2/quests/summary').catch(() => ({ data: { success: false } })),
+        apiClient.get('/api/watchlist').catch(() => ({ data: { success: false } })),
+        apiClient.get('/api/v2/quests').catch(() => ({ data: { success: false } })),
       ]);
 
       if (profileRes.data?.data) {
@@ -245,7 +240,7 @@ export default function Profile() {
       }
 
       // Fetch Tapestry status + social data (non-blocking)
-      axios.get(`${API_URL}/api/auth/tapestry-status`, { headers })
+      apiClient.get('/api/auth/tapestry-status')
         .then((res) => {
           if (res.data?.data) {
             const tId = res.data.data.tapestryUserId;
@@ -257,13 +252,13 @@ export default function Profile() {
               walletAddress: isSolana ? wa : null,
             });
             if (tId) {
-              axios.get(`${API_URL}/api/tapestry/social-counts/${tId}`, { headers })
+              apiClient.get(`/api/tapestry/social-counts/${tId}`)
                 .then((r) => { if (r.data?.data) setSocialCounts(prev => ({ ...prev, followers: r.data.data.followers ?? 0 })); })
                 .catch(() => {});
-              axios.get(`${API_URL}/api/tapestry/my-following`, { headers })
+              apiClient.get('/api/tapestry/my-following')
                 .then((r) => { if (r.data?.data?.following) setSocialCounts(prev => ({ ...prev, following: r.data.data.following.length })); })
                 .catch(() => {});
-              axios.get(`${API_URL}/api/tapestry/content/${tId}`, { headers })
+              apiClient.get(`/api/tapestry/content/${tId}`)
                 .then((r) => { if (r.data?.data?.content) setTapestryContent(r.data.data.content); })
                 .catch(() => {});
             }
@@ -280,11 +275,8 @@ export default function Profile() {
   const fetchHistory = async (offset = 0) => {
     try {
       setHistoryLoading(true);
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-      const res = await axios.get(`${API_URL}/api/v2/me/history?limit=20&offset=${offset}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (!hasSession()) return;
+      const res = await apiClient.get(`/api/v2/me/history?limit=20&offset=${offset}`);
       if (res.data?.success && res.data?.data) {
         const d = res.data.data;
         if (offset === 0) {
@@ -305,13 +297,11 @@ export default function Profile() {
 
   const handleSaveUsername = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token || !tempUsername.trim()) return;
+      if (!hasSession() || !tempUsername.trim()) return;
 
-      await axios.patch(
-        `${API_URL}/api/users/profile`,
-        { username: tempUsername.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await apiClient.patch(
+        '/api/users/profile',
+        { username: tempUsername.trim() }
       );
 
       setUsername(tempUsername.trim());
@@ -335,12 +325,9 @@ export default function Profile() {
   const removeFromWatchlist = async (influencerId: number, influencerName: string) => {
     try {
       setRemovingId(influencerId);
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
+      if (!hasSession()) return;
 
-      await axios.delete(`${API_URL}/api/watchlist/${influencerId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiClient.delete(`/api/watchlist/${influencerId}`);
 
       setWatchlist((prev) => prev.filter((item) => item.influencer.id !== influencerId));
       showToast(`Removed @${influencerName} from watchlist`, 'success');

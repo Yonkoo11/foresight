@@ -1,25 +1,24 @@
 /**
  * Privy authentication hook
- * Replaces useAutoAuth (SIWE) with Privy-based auth flow.
  *
  * Flow:
  * 1. Privy handles wallet connection + authentication
  * 2. On successful Privy auth, we get a Privy access token
- * 3. Send token to our backend POST /api/auth/verify { privyToken }
- * 4. Backend verifies with Privy, creates/finds user, issues our JWT
- * 5. Store our JWT in localStorage for subsequent API calls
+ * 3. Send token to our backend POST /api/auth/verify (with credentials)
+ * 4. Backend verifies with Privy, creates/finds user, sets httpOnly cookies
+ * 5. Cookies are sent automatically on subsequent requests
  */
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import axios from 'axios';
-import { API_URL } from '../config/api';
+import apiClient from '../lib/apiClient';
 
 export function usePrivyAuth() {
   const { ready, authenticated, user, getAccessToken, logout } = usePrivy();
   const hasAttemptedAuth = useRef(false);
   const lastUserId = useRef<string | undefined>();
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [isBackendAuthed, setIsBackendAuthed] = useState(false);
 
   const syncWithBackend = useCallback(async () => {
     if (hasAttemptedAuth.current) return;
@@ -32,47 +31,33 @@ export function usePrivyAuth() {
       if (!privyToken) {
         console.error('[PrivyAuth] No access token available');
         setSyncError('No Privy access token. Try disconnecting and reconnecting.');
-        hasAttemptedAuth.current = false; // Allow retry
+        hasAttemptedAuth.current = false;
         return;
       }
 
-      // Check if we already have a valid backend session
-      const existingToken = localStorage.getItem('authToken');
-      if (existingToken) {
-        try {
-          const meResponse = await axios.get(`${API_URL}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${existingToken}` },
-          });
-          if (meResponse.status === 200) {
-            // Existing session still valid
-            return;
-          }
-        } catch {
-          // Token expired or invalid — continue to re-auth
-          localStorage.removeItem('authToken');
+      // Check if we already have a valid backend session (cookie-based)
+      try {
+        const meResponse = await apiClient.get('/api/auth/me');
+        if (meResponse.status === 200) {
+          setIsBackendAuthed(true);
+          return;
         }
+      } catch {
+        // Token expired or invalid — continue to re-auth
       }
 
       // Send Privy token to our backend for verification
       console.log('[PrivyAuth] Syncing with backend...');
-      const response = await axios.post(`${API_URL}/api/auth/verify`, {
-        privyToken,
-      });
+      const response = await apiClient.post('/api/auth/verify', { privyToken });
 
-      const token =
-        response.data.data?.accessToken ||
-        response.data.accessToken ||
-        response.data.token;
-
-      if (token) {
-        localStorage.setItem('authToken', token);
+      if (response.data?.success) {
+        setIsBackendAuthed(true);
         console.log('[PrivyAuth] Backend session created');
-        // Reload to fetch data with new auth context
         window.location.reload();
       } else {
-        console.error('[PrivyAuth] No token in response:', response.data);
-        setSyncError('Backend returned no token. Contact support.');
-        hasAttemptedAuth.current = false; // Allow retry
+        console.error('[PrivyAuth] Unexpected response:', response.data);
+        setSyncError('Backend returned unexpected response. Contact support.');
+        hasAttemptedAuth.current = false;
       }
     } catch (error: any) {
       const status = error?.response?.status;
@@ -82,19 +67,17 @@ export function usePrivyAuth() {
         setSyncError('rate_limited');
       } else {
         setSyncError('network_error');
-        // Auto-retry once after 4s — recovers from brief backend restart/hiccup
         hasAttemptedAuth.current = false;
         setTimeout(() => {
-          if (!localStorage.getItem('authToken')) {
+          if (!isBackendAuthed) {
             syncWithBackend();
           }
         }, 4000);
       }
       hasAttemptedAuth.current = false;
     }
-  }, [getAccessToken]);
+  }, [getAccessToken, isBackendAuthed]);
 
-  // Manual retry function
   const retrySync = useCallback(() => {
     hasAttemptedAuth.current = false;
     setSyncError(null);
@@ -106,7 +89,7 @@ export function usePrivyAuth() {
 
     // User disconnected
     if (!authenticated && lastUserId.current) {
-      localStorage.removeItem('authToken');
+      setIsBackendAuthed(false);
       lastUserId.current = undefined;
       hasAttemptedAuth.current = false;
       setSyncError(null);
@@ -120,32 +103,20 @@ export function usePrivyAuth() {
       syncWithBackend();
     }
 
-    // User is authenticated but no backend token — retry
-    if (authenticated && user && user.id === lastUserId.current && !localStorage.getItem('authToken') && !hasAttemptedAuth.current) {
+    // User is authenticated but no backend session — retry
+    if (authenticated && user && user.id === lastUserId.current && !isBackendAuthed && !hasAttemptedAuth.current) {
       syncWithBackend();
     }
-  }, [ready, authenticated, user, syncWithBackend]);
+  }, [ready, authenticated, user, syncWithBackend, isBackendAuthed]);
 
   const handleLogout = useCallback(async () => {
     try {
-      // Logout from our backend
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        await axios
-          .post(
-            `${API_URL}/api/auth/logout`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-          )
-          .catch(() => {});
-      }
-      localStorage.removeItem('authToken');
-
-      // Logout from Privy
+      await apiClient.post('/api/auth/logout').catch(() => {});
+      setIsBackendAuthed(false);
       await logout();
     } catch (error) {
       console.error('[PrivyAuth] Logout failed:', error);
-      localStorage.removeItem('authToken');
+      setIsBackendAuthed(false);
     }
   }, [logout]);
 
@@ -156,6 +127,6 @@ export function usePrivyAuth() {
     logout: handleLogout,
     retrySync,
     syncError,
-    isBackendAuthed: !!localStorage.getItem('authToken'),
+    isBackendAuthed,
   };
 }

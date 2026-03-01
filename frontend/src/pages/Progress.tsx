@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import {
   Target, Trophy, Star, Sparkle, TrendUp, Lightning, Gift,
   CheckCircle, Sun, CalendarBlank, Users, XLogo, Share,
@@ -18,7 +18,6 @@ import FoundingMembersWall from '../components/FoundingMembersWall';
 import TierGuide from '../components/TierGuide';
 import SEO from '../components/SEO';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 type QuestTab = 'daily' | 'weekly' | 'onboarding' | 'achievement';
 
@@ -115,17 +114,15 @@ export default function Progress() {
     try {
       setLoading(true);
       setNeedsAuth(false);
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      if (!hasSession()) {
         setNeedsAuth(true);
         setLoading(false);
         return;
       }
 
-      const headers = { Authorization: `Bearer ${token}` };
       const [fsRes, questsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/v2/fs/me`, { headers }).catch((e) => ({ data: { success: false }, status: e.response?.status })),
-        axios.get(`${API_URL}/api/v2/quests`, { headers }).catch((e) => ({ data: { success: false }, status: e.response?.status })),
+        apiClient.get('/api/v2/fs/me').catch((e) => ({ data: { success: false }, status: e.response?.status })),
+        apiClient.get('/api/v2/quests').catch((e) => ({ data: { success: false }, status: e.response?.status })),
       ]);
 
       // Check if APIs failed due to auth issues
@@ -134,7 +131,6 @@ export default function Progress() {
 
       if (fsAuthFailed || questsAuthFailed) {
         // Auth failure - token is invalid
-        localStorage.removeItem('authToken');
         setNeedsAuth(true);
         setLoading(false);
         return;
@@ -150,11 +146,7 @@ export default function Progress() {
       }
 
       // Trigger daily login quest (idempotent — backend dedupes by day)
-      axios.post(
-        `${API_URL}/api/v2/fs/track-activity`,
-        { activityType: 'daily_login', durationSeconds: 1 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).catch(() => {}); // non-blocking, silent fail
+      apiClient.post('/api/v2/fs/track-activity', { activityType: 'daily_login', durationSeconds: 1 }).catch(() => {}); // non-blocking, silent fail
     } catch (error) {
       console.error('Error fetching progress:', error);
     } finally {
@@ -165,14 +157,9 @@ export default function Progress() {
   const claimReward = async (questId: string) => {
     try {
       setClaiming(questId);
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
+      if (!hasSession()) return;
 
-      const response = await axios.post(
-        `${API_URL}/api/v2/quests/${questId}/claim`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await apiClient.post(`/api/v2/quests/${questId}/claim`, {});
 
       if (response.data.success) {
         showToast(`+${response.data.data.multipliedReward} FS earned!`, 'success');
@@ -188,18 +175,13 @@ export default function Progress() {
   const claimAllRewards = async () => {
     try {
       setClaimingAll(true);
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
+      if (!hasSession()) return;
 
       const claimableQuests = Object.values(quests).flat().filter(q => q.isCompleted && !q.isClaimed);
       let totalEarned = 0;
 
       for (const quest of claimableQuests) {
-        const response = await axios.post(
-          `${API_URL}/api/v2/quests/${quest.id}/claim`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await apiClient.post(`/api/v2/quests/${quest.id}/claim`, {});
         if (response.data.success) {
           totalEarned += response.data.data.multipliedReward;
         }
@@ -438,7 +420,7 @@ export default function Progress() {
         <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-8 text-center mb-6">
           <Rocket size={40} className="mx-auto mb-3 text-gold-400" />
           <h3 className="text-xl font-bold text-white mb-2">Start Earning Foresight Score</h3>
-          {!localStorage.getItem('authToken') ? (
+          {!hasSession() ? (
             <>
               <p className="text-gray-400 mb-4">Sign in to track your progress and complete quests</p>
               <Link to="/compete?tab=contests" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gold-500 text-gray-950 font-medium">

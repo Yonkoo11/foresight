@@ -7,9 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { Binoculars, Users, Crown, CaretDown, CaretUp, Spinner } from '@phosphor-icons/react';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import apiClient, { hasSession } from '../lib/apiClient';
 
 interface Scout {
   username: string;
@@ -34,16 +32,13 @@ export default function ScoutingPanel({ contestId, className = '' }: ScoutingPan
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    if (!hasSession()) {
       setLoading(false);
       return;
     }
 
-    axios
-      .get(`${API_URL}/api/v2/contests/${contestId}/social-scouts`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    apiClient
+      .get(`/api/v2/contests/${contestId}/social-scouts`)
       .then((res) => {
         setScouts(res.data.scouts || []);
         setMessage(res.data.message || null);
@@ -56,7 +51,7 @@ export default function ScoutingPanel({ contestId, className = '' }: ScoutingPan
   }, [contestId]);
 
   // Don't render if not logged in or no data
-  if (!localStorage.getItem('authToken')) return null;
+  if (!hasSession()) return null;
   if (loading) return null;
 
   const hasMostDrafted = scouts.length > 0;

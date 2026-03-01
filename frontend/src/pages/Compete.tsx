@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import {
   Trophy,
   Crown,
@@ -34,8 +34,6 @@ import FollowButton from '../components/FollowButton';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 import SEO from '../components/SEO';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /** Tapestry on-chain reputation tier — separate from player tier badges */
 function getReputationTier(rank: number, total: number): { label: string; color: string } {
@@ -197,12 +195,9 @@ export default function Compete() {
 
   // Fetch who we follow (for friends tab + follow buttons)
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token || !isConnected) return;
+    if (!hasSession() || !isConnected) return;
 
-    axios.get(`${API_URL}/api/tapestry/my-following`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiClient.get('/api/tapestry/my-following')
       .then((res) => {
         if (res.data?.data?.following) {
           const ids = new Set(res.data.data.following.map((f: any) => f.id));
@@ -214,8 +209,7 @@ export default function Compete() {
 
   // Fetch batch follow states when FS leaders load (for follow buttons)
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token || fsLeaders.length === 0) return;
+    if (!hasSession() || fsLeaders.length === 0) return;
 
     const profileIds = fsLeaders
       .filter((e) => e.tapestryUserId)
@@ -223,11 +217,7 @@ export default function Compete() {
 
     if (profileIds.length === 0) return;
 
-    axios.post(
-      `${API_URL}/api/tapestry/following-state-batch`,
-      { targetProfileIds: profileIds },
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
+    apiClient.post('/api/tapestry/following-state-batch', { targetProfileIds: profileIds })
       .then((res) => {
         if (res.data?.data?.states) {
           setFollowStates(res.data.data.states);
@@ -246,7 +236,7 @@ export default function Compete() {
       if (rankingsSubTab === 'fs') {
         // Always fetch all-time data; friends filtering done client-side in filteredFsLeaders memo
         const actualTimeframe = fsTimeframe === 'friends' ? 'all_time' : fsTimeframe;
-        const response = await axios.get(`${API_URL}/api/v2/fs/leaderboard`, {
+        const response = await apiClient.get('/api/v2/fs/leaderboard', {
           params: { type: actualTimeframe, limit: FS_PAGE_SIZE, offset },
         });
         if (response.data.success) {
@@ -257,12 +247,10 @@ export default function Compete() {
         }
 
         // Get user position (not for friends tab)
-        const token = localStorage.getItem('authToken');
-        if (token && fsTimeframe !== 'friends') {
+        if (hasSession() && fsTimeframe !== 'friends') {
           try {
-            const posRes = await axios.get(`${API_URL}/api/v2/fs/leaderboard/position`, {
+            const posRes = await apiClient.get('/api/v2/fs/leaderboard/position', {
               params: { type: fsTimeframe },
-              headers: { Authorization: `Bearer ${token}` },
             });
             if (posRes.data.success) {
               setUserPosition(posRes.data.data);
@@ -274,10 +262,10 @@ export default function Compete() {
           setUserPosition(null);
         }
       } else if (rankingsSubTab === 'fantasy') {
-        const response = await axios.get(`${API_URL}/api/league/leaderboard`);
+        const response = await apiClient.get('/api/league/leaderboard');
         setFantasyLeaders(response.data.leaderboard || []);
       } else if (rankingsSubTab === 'xp') {
-        const response = await axios.get(`${API_URL}/api/users/xp-leaderboard`, {
+        const response = await apiClient.get('/api/users/xp-leaderboard', {
           params: { limit: 50 },
         });
         setXpLeaders(response.data.users || []);
@@ -300,12 +288,10 @@ export default function Compete() {
     try {
       setLoading(true);
       const [contestsRes, archivedRes, entriesRes] = await Promise.all([
-        axios.get(`${API_URL}/api/v2/contests`, { params: { active: 'true' } }),
-        axios.get(`${API_URL}/api/v2/contests`, { params: { status: 'finalized' } }),
-        isConnected && localStorage.getItem('authToken')
-          ? axios.get(`${API_URL}/api/v2/me/entries`, {
-              headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-            }).catch(() => ({ data: { entries: [] } }))
+        apiClient.get('/api/v2/contests', { params: { active: 'true' } }),
+        apiClient.get('/api/v2/contests', { params: { status: 'finalized' } }),
+        isConnected && hasSession()
+          ? apiClient.get('/api/v2/me/entries').catch(() => ({ data: { entries: [] } }))
           : Promise.resolve({ data: { entries: [] } }),
       ]);
       setContests(contestsRes.data.contests || []);
@@ -368,7 +354,7 @@ export default function Compete() {
   // Fetch prize rules when a contest is selected
   useEffect(() => {
     if (!selectedContestId) { setPrizeRules([]); return; }
-    axios.get(`${API_URL}/api/v2/contests/${selectedContestId}`)
+    apiClient.get(`/api/v2/contests/${selectedContestId}`)
       .then(res => setPrizeRules(res.data.prizeRules || []))
       .catch(() => setPrizeRules([]));
   }, [selectedContestId]);
@@ -752,7 +738,7 @@ export default function Compete() {
                                 On-chain verified
                               </span>
                             )}
-                            {entry.tapestryUserId && isConnected && localStorage.getItem('authToken') && (
+                            {entry.tapestryUserId && isConnected && hasSession() && (
                               <FollowButton
                                 targetProfileId={entry.tapestryUserId}
                                 targetUsername={entry.username}
@@ -968,13 +954,8 @@ export default function Compete() {
                 <button
                   onClick={async () => {
                     try {
-                      const token = localStorage.getItem('authToken');
-                      const r = await fetch(`${API_URL}/api/admin/seed-demo-contest`, {
-                        method: 'POST',
-                        headers: { Authorization: `Bearer ${token}` },
-                      });
-                      const d = await r.json();
-                      showToast(d.message || 'Done', 'success');
+                      const r = await apiClient.post('/api/admin/seed-demo-contest');
+                      showToast(r.data.message || 'Done', 'success');
                       setTimeout(() => window.location.reload(), 1200);
                     } catch {
                       showToast('Failed to seed contest', 'error');

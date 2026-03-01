@@ -5,7 +5,7 @@
 
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import {
   ArrowRight,
   SignIn,
@@ -24,7 +24,6 @@ import SEO from '../components/SEO';
 import { useAuth } from '../hooks/useAuth';
 import { getXPLevel } from '../utils/xp';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // ─── Countdown ───────────────────────────────────────────────────────────────
 
@@ -420,14 +419,13 @@ export default function Home() {
 
   useEffect(() => {
     if (!isConnected) return;
-    const token = localStorage.getItem('authToken');
-    if (!token) return;
-    axios.get(`${API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!hasSession()) return;
+    apiClient.get('/api/users/me')
       .then(r => setXp(r.data.xp || 0)).catch(() => {});
   }, [isConnected]);
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/v2/contests?status=open&limit=1`)
+    apiClient.get('/api/v2/contests?status=open&limit=1')
       .then(r => {
         const contests = r.data?.contests || r.data?.data || [];
         const free = contests.find((c: any) => c.isFree || c.is_free) || contests[0];

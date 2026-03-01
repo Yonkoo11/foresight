@@ -12,10 +12,10 @@ declare global {
 
 /**
  * Authentication middleware
- * Verifies JWT token and attaches user to request
+ * Reads JWT from httpOnly cookie (preferred) or Authorization header (fallback).
  */
 export function authenticate(req: Request, res: Response, next: NextFunction): void {
-  const token = extractTokenFromHeader(req.headers.authorization);
+  const token = req.cookies?.accessToken || extractTokenFromHeader(req.headers.authorization);
 
   if (!token) {
     res.status(401).json({ success: false, error: 'No token provided' });
@@ -42,7 +42,7 @@ export function optionalAuthenticate(
   res: Response,
   next: NextFunction
 ): void {
-  const token = extractTokenFromHeader(req.headers.authorization);
+  const token = req.cookies?.accessToken || extractTokenFromHeader(req.headers.authorization);
 
   if (token) {
     const payload = verifyToken(token);

@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import { usePrivy } from '@privy-io/react-auth';
 import { useLinkAccount } from '@privy-io/react-auth';
 import {
@@ -17,8 +17,6 @@ import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 import { getXPLevel } from '../utils/xp';
 import SEO from '../components/SEO';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface UserProfile {
   id: number;
@@ -114,30 +112,25 @@ export default function Settings() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      if (!hasSession()) {
         setLoading(false);
         return;
       }
 
-      const profileResponse = await axios.get(`${API_URL}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const profileResponse = await apiClient.get('/api/users/me');
       const profileData = profileResponse.data?.data || profileResponse.data;
       setProfile(profileData);
       setUsernameInput(profileData.username || '');
       setAvatarUrlInput(profileData.avatarUrl || '');
 
       try {
-        const teamResponse = await axios.get(`${API_URL}/api/league/team/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const teamResponse = await apiClient.get('/api/league/team/me');
         if (teamResponse.data.team) {
           setTeam(teamResponse.data.team);
           setTeamNameInput(teamResponse.data.team.team_name || '');
         }
       } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status !== 404) {
+        if (error instanceof Error && 'response' in error && (error as any).response?.status !== 404) {
           console.error('Error fetching team:', error);
         }
       }
@@ -152,7 +145,6 @@ export default function Settings() {
   const handleUpdateProfile = async () => {
     try {
       setSavingProfile(true);
-      const token = localStorage.getItem('authToken');
 
       const updates: { username?: string; avatarUrl?: string } = {};
       if (usernameInput !== profile?.username) updates.username = usernameInput;
@@ -163,19 +155,15 @@ export default function Settings() {
         return;
       }
 
-      await axios.patch(
-        `${API_URL}/api/users/profile`,
-        updates,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await apiClient.patch('/api/users/profile', updates);
 
       showToast('Profile updated successfully!', 'success');
       setIsEditingUsername(false);
       setIsEditingAvatar(false);
       await fetchUserData();
     } catch (error) {
-      const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
-        ? error.response.data.error
+      const errorMsg = error instanceof Error && 'response' in error && (error as any).response?.data?.error
+        ? (error as any).response.data.error
         : 'Failed to update profile';
       showToast(errorMsg, 'error');
     } finally {
@@ -186,7 +174,6 @@ export default function Settings() {
   const handleUpdateTeamName = async () => {
     try {
       setSavingTeam(true);
-      const token = localStorage.getItem('authToken');
 
       if (teamNameInput === team?.team_name) {
         showToast('No changes to save', 'error');
@@ -199,18 +186,14 @@ export default function Settings() {
         return;
       }
 
-      await axios.patch(
-        `${API_URL}/api/league/team/name`,
-        { team_name: teamNameInput },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await apiClient.patch('/api/league/team/name', { team_name: teamNameInput });
 
       showToast('Team name updated successfully!', 'success');
       setIsEditingTeamName(false);
       await fetchUserData();
     } catch (error) {
-      const errorMsg = axios.isAxiosError(error) && error.response?.data?.error
-        ? error.response.data.error
+      const errorMsg = error instanceof Error && 'response' in error && (error as any).response?.data?.error
+        ? (error as any).response.data.error
         : 'Failed to update team name';
       showToast(errorMsg, 'error');
     } finally {
@@ -259,8 +242,7 @@ export default function Settings() {
     );
   }
 
-  const token = localStorage.getItem('authToken');
-  if (!token && !loading) {
+  if (!hasSession() && !loading) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
         <User size={48} className="mx-auto mb-4 text-gold-400" />

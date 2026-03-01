@@ -53,7 +53,7 @@ const queryClient = new QueryClient();
  */
 function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
   const { ready, authenticated, user, login, logout: privyLogout } = usePrivy();
-  const { syncError, retrySync } = usePrivyAuth();
+  const { syncError, retrySync, isBackendAuthed: backendAuthed } = usePrivyAuth();
 
   const { address, email, twitterHandle } = useMemo(() => {
     if (!user) return { address: undefined, email: undefined, twitterHandle: undefined };
@@ -86,7 +86,6 @@ function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const handleLogout = useCallback(async () => {
-    localStorage.removeItem('authToken');
     await privyLogout();
   }, [privyLogout]);
 
@@ -113,13 +112,13 @@ function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
       email,
       twitterHandle,
       displayName,
-      isBackendAuthed: !!localStorage.getItem('authToken'),
+      isBackendAuthed: backendAuthed,
       login,
       logout: handleLogout,
     };
-  }, [ready, authenticated, address, email, twitterHandle, login, handleLogout]);
+  }, [ready, authenticated, address, email, twitterHandle, login, handleLogout, backendAuthed]);
 
-  const isSyncing = ready && authenticated && !localStorage.getItem('authToken');
+  const isSyncing = ready && authenticated && !backendAuthed;
   const [errorDismissed, setErrorDismissed] = useState(false);
 
   // Reset dismiss when error changes

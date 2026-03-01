@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import {
   Newspaper,
   Fire,
@@ -36,8 +36,6 @@ import ProfilesTab from '../components/intel/ProfilesTab';
 import RisingStarsTab from '../components/intel/RisingStarsTab';
 import ComparisonTool from '../components/intel/ComparisonTool';
 import SEO from '../components/SEO';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 type MainTab = 'feed' | 'profiles' | 'rising';
 type TierFilter = 'all' | 'team' | 'scouted' | 'S' | 'A' | 'B' | 'C';
@@ -222,17 +220,12 @@ export default function Intel() {
   // Fetch user's team and watchlist
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
+      if (!hasSession()) return;
 
       try {
         const [teamRes, watchlistRes] = await Promise.all([
-          axios.get(`${API_URL}/api/league/team/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).catch(() => null),
-          axios.get(`${API_URL}/api/watchlist/ids`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).catch(() => null),
+          apiClient.get('/api/league/team/me').catch(() => null),
+          apiClient.get('/api/watchlist/ids').catch(() => null),
         ]);
 
         if (teamRes?.data.team?.picks) {
@@ -256,8 +249,7 @@ export default function Intel() {
 
   // Scout/Unscout an influencer
   const toggleScout = async (influencerId: number, influencerName: string) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    if (!hasSession()) {
       showToast('Please sign in to scout influencers', 'error');
       return;
     }
@@ -267,24 +259,21 @@ export default function Intel() {
 
     try {
       if (isScouted) {
-        await axios.delete(`${API_URL}/api/watchlist/${influencerId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await apiClient.delete(`/api/watchlist/${influencerId}`);
         setScoutedIds((prev) => prev.filter((id) => id !== influencerId));
         showToast(`Removed ${influencerName} from watchlist`, 'success');
       } else {
-        await axios.post(
-          `${API_URL}/api/watchlist/${influencerId}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
+        await apiClient.post(
+          `/api/watchlist/${influencerId}`,
+          {}
         );
         setScoutedIds((prev) => [...prev, influencerId]);
         showToast(`Scouted ${influencerName}! View in Profile → Watchlist`, 'success');
 
         // Secondary: Write to Tapestry (non-blocking)
         try {
-          await axios.post(
-            `${API_URL}/api/tapestry/content`,
+          await apiClient.post(
+            '/api/tapestry/content',
             {
               title: `Scouted ${influencerName}`,
               body: `Watching @${influencerName} for potential future team picks`,
@@ -293,8 +282,7 @@ export default function Intel() {
                 influencerId,
                 influencerName,
               },
-            },
-            { headers: { Authorization: `Bearer ${token}` } }
+            }
           );
         } catch (tapestryErr) {
           console.log('[Intel] Tapestry scout write failed (non-blocking):', tapestryErr);
@@ -311,10 +299,7 @@ export default function Intel() {
   useEffect(() => {
     const fetchCommunityPicks = async () => {
       try {
-        const token = localStorage.getItem('authToken');
-        const res = await axios.get(`${API_URL}/api/intel/community-picks`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await apiClient.get('/api/intel/community-picks');
 
         if (res.data.success && res.data.data) {
           const picksMap: Record<number, number> = {};
@@ -345,11 +330,11 @@ export default function Intel() {
     try {
       const feedTimeframe = timeFilter === '1h' ? '1h' : timeFilter === 'all' ? '30d' : timeFilter;
       const [feedRes, highlightsRes, emergingRes] = await Promise.all([
-        axios.get(`${API_URL}/api/ct-feed?limit=50&timeframe=${feedTimeframe}`),
-        axios.get(`${API_URL}/api/ct-feed/highlights?limit=6&timeframe=${feedTimeframe}`),
+        apiClient.get(`/api/ct-feed?limit=50&timeframe=${feedTimeframe}`),
+        apiClient.get(`/api/ct-feed/highlights?limit=6&timeframe=${feedTimeframe}`),
         // Emerging movers: 1h breakouts with relative virality (different from all-day highlights)
         feedTimeframe !== '1h'
-          ? axios.get(`${API_URL}/api/ct-feed/highlights?limit=6&timeframe=1h`).catch(() => null)
+          ? apiClient.get(`/api/ct-feed/highlights?limit=6&timeframe=1h`).catch(() => null)
           : Promise.resolve(null),
       ]);
 

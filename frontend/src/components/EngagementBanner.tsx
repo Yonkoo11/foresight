@@ -5,12 +5,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient, { hasSession } from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { X, TrendUp, Clock, Trophy, Fire, Lightning, Bell } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface BannerMessage {
   id: string;
@@ -52,7 +50,7 @@ export default function EngagementBanner() {
   const checkForNotifications = async () => {
     try {
       // Get current contest info
-      const contestRes = await axios.get(`${API_URL}/api/league/contest/current`);
+      const contestRes = await apiClient.get(`/api/league/contest/current`);
       if (!contestRes.data.contest) return;
 
       const contest = contestRes.data.contest;
@@ -120,14 +118,9 @@ export default function EngagementBanner() {
       }
 
       // 3. If user is connected but hasn't created a team
-      if (address) {
+      if (address && hasSession()) {
         try {
-          const token = localStorage.getItem('authToken');
-          if (!token) throw new Error('No token');
-
-          const teamRes = await axios.get(`${API_URL}/api/league/team/me`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const teamRes = await apiClient.get(`/api/league/team/me`);
 
           if (!teamRes.data.team) {
             messages.push({

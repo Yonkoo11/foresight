@@ -4,15 +4,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import {
   Star, Crown, Lightning, TrendUp, Medal, Diamond,
   Trophy, Fire, ArrowRight, Sparkle, Users
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
-
-import { API_URL } from '../config/api';
 
 interface TierProgress {
   currentTier: string;
@@ -113,16 +111,7 @@ export default function ForesightScoreDisplay({
       setLoading(true);
       setError(null);
 
-      // Get auth token from localStorage
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const response = await axios.get(`${API_URL}/api/v2/fs/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get(`/api/v2/fs/me`);
 
       if (response.data.success) {
         setFsData(response.data.data);

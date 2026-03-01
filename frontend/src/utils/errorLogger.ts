@@ -3,7 +3,8 @@
  * Centralized error logging to backend
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import apiClient, { hasSession } from '../lib/apiClient';
+
 const APP_VERSION = '1.0.0'; // Can be pulled from package.json or env
 const ENVIRONMENT = import.meta.env.MODE || 'production';
 
@@ -39,25 +40,35 @@ export async function logError(data: ErrorLogData): Promise<void> {
       timestamp: new Date().toISOString(),
     };
 
-    // Get auth token if available
-    const token = localStorage.getItem('authToken');
-
-    // Send to backend
-    await fetch(`${API_URL}/api/errors/log`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({
+    // Send to backend using apiClient (handles auth cookies automatically)
+    try {
+      await apiClient.post('/api/errors/log', {
         ...data,
         metadata,
         environment: ENVIRONMENT,
         app_version: APP_VERSION,
         url: data.url || window.location.href,
         session_id: getSessionId(),
-      }),
-    });
+      });
+    } catch (apiError) {
+      // If authenticated request fails, try without auth
+      if (!hasSession()) {
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/errors/log`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...data,
+            metadata,
+            environment: ENVIRONMENT,
+            app_version: APP_VERSION,
+            url: data.url || window.location.href,
+            session_id: getSessionId(),
+          }),
+        });
+      }
+    }
 
     // Log to console in development
     if (ENVIRONMENT === 'development') {

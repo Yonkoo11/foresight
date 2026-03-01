@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 import {
   Trophy, Users, Clock, Coins, Crown, ArrowLeft,
   Timer, ChartLineUp, Medal, Gift, Lock, Play, Lightning,
@@ -19,7 +18,7 @@ import { getRarityInfo } from '../utils/rarities';
 import PotentialWinningsModal from '../components/onboarding/PotentialWinningsModal';
 import FormationPreview from '../components/FormationPreview';
 import ScoreBreakdown from '../components/ScoreBreakdown';
-import { API_URL } from '../config/api';
+import apiClient, { hasSession } from '../lib/apiClient';
 
 interface Contest {
   id: number;
@@ -181,8 +180,8 @@ export default function ContestDetail() {
     const poll = async () => {
       try {
         const [entriesRes, contestRes] = await Promise.all([
-          axios.get(`${API_URL}/api/v2/contests/${id}/entries`),
-          axios.get(`${API_URL}/api/v2/contests/${id}`),
+          apiClient.get(`/api/v2/contests/${id}/entries`),
+          apiClient.get(`/api/v2/contests/${id}`),
         ]);
         const newContest = contestRes.data.contest;
         // Detect fresh finalization → trigger "Results are in!" banner
@@ -252,14 +251,11 @@ export default function ContestDetail() {
   const fetchContestData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
       // Fetch contest details, entries, and influencers in parallel
       const [contestRes, entriesRes, influencersRes] = await Promise.all([
-        axios.get(`${API_URL}/api/v2/contests/${id}`),
-        axios.get(`${API_URL}/api/v2/contests/${id}/entries`),
-        axios.get(`${API_URL}/api/league/influencers`),
+        apiClient.get(`/api/v2/contests/${id}`),
+        apiClient.get(`/api/v2/contests/${id}/entries`),
+        apiClient.get(`/api/league/influencers`),
       ]);
 
       setContest(contestRes.data.contest);
@@ -268,9 +264,9 @@ export default function ContestDetail() {
       setPrizeRules(contestRes.data.prizeRules || []);
 
       // Fetch user's entry if connected
-      if (token && address) {
+      if (hasSession() && address) {
         try {
-          const myEntryRes = await axios.get(`${API_URL}/api/v2/contests/${id}/my-entry`, { headers });
+          const myEntryRes = await apiClient.get(`/api/v2/contests/${id}/my-entry`);
           if (myEntryRes.data.entered) {
             setMyEntry(myEntryRes.data.entry);
             setActiveTab('myteam');
@@ -341,12 +337,7 @@ export default function ContestDetail() {
     setClaimModalState('processing');
     setClaiming(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const res = await axios.post(
-        `${API_URL}/api/v2/contests/${id}/claim-prize`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await apiClient.post(`/api/v2/contests/${id}/claim-prize`, {});
       setMyEntry(prev => prev ? { ...prev, claimed: true, canClaim: false } : prev);
       setClaimTxSignature(res.data.txSignature || null);
       setClaimExplorerUrl(res.data.explorerUrl || null);

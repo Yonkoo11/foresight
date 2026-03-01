@@ -8,12 +8,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { Star, Crown, Diamond, Medal, Trophy, Share, XLogo, Copy, Check, Lightning, X } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface ProfileCardData {
   username: string;
@@ -336,11 +334,9 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) { setLoading(false); return; }
       const [fsRes, statsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/v2/fs/me`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_URL}/api/users/stats`, { headers: { Authorization: `Bearer ${token}` } })
+        apiClient.get(`/api/v2/fs/me`),
+        apiClient.get(`/api/users/stats`)
           .catch(() => ({ data: { success: false } })),
       ]);
       if (fsRes.data.success) {
