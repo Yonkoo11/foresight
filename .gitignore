@@ -59,8 +59,7 @@ temp/
 archive_docs/
 .vercel
 
-# Internal docs and design files
-docs/
+# Internal docs and design files (but allow launch documents)
 .claude/
 screenshots/
 video/
@@ -76,3 +75,6 @@ REDESIGN_PROGRESS.md
 !SECURITY_AUDIT.md
 !AUDIT_FINDINGS.md
 !SECURITY.md
+!docs/LAUNCH_PLAYBOOK_2026.md
+!docs/LAUNCH_QUICK_REFERENCE.md
+!docs/LAUNCH_OPS_GUIDE.md
