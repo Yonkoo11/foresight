@@ -79,17 +79,18 @@ function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
   const { syncError, retrySync, isBackendAuthed: backendAuthed, logout: backendLogout } = usePrivyAuth();
 
   // After OAuth, Privy always redirects to the root (customOAuthRedirectUrl: origin).
-  // Only navigate to the saved path when we're actually at root — this prevents
-  // the effect from firing on normal page reloads for already-authenticated users.
+  // Wait for backend auth to complete before redirecting — navigating too early
+  // (before /verify finishes) causes a page reload that kills the in-flight verify
+  // request, leaving the user with no accessToken cookie and a 401 on /me.
   useEffect(() => {
-    if (!ready || !authenticated) return;
+    if (!ready || !authenticated || !backendAuthed) return;
     if (window.location.pathname !== '/') return;
     const saved = sessionStorage.getItem('privy_post_login_path');
     if (saved) {
       sessionStorage.removeItem('privy_post_login_path');
       window.location.replace(saved);
     }
-  }, [ready, authenticated]);
+  }, [ready, authenticated, backendAuthed]);
 
   const { address, email, twitterHandle } = useMemo(() => {
     if (!user) return { address: undefined, email: undefined, twitterHandle: undefined };

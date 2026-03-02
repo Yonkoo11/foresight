@@ -60,8 +60,10 @@ app.use(helmet({
 }));
 
 // FINDING-013: Enforce HTTPS in production
+// Skip /health so Railway's internal healthcheck (plain HTTP, no proxy headers) passes
 if (NODE_ENV === 'production') {
   app.use((req, res, next) => {
+    if (req.path === '/health') return next();
     if (req.header('x-forwarded-proto') !== 'https') {
       return res.redirect(`https://${req.header('host')}${req.url}`);
     }
