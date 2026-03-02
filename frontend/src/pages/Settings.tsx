@@ -37,7 +37,7 @@ interface Team {
 }
 
 export default function Settings() {
-  const { address, isConnected, logout, email, twitterHandle } = useAuth();
+  const { address, isConnected, logout, email, twitterHandle, isBackendAuthed } = useAuth();
   const { user, unlinkTwitter, unlinkEmail, unlinkWallet } = usePrivy();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -104,10 +104,10 @@ export default function Settings() {
 
   useEffect(() => {
     if (disconnecting) return;
-    if (isConnected) {
+    if (isConnected && isBackendAuthed) {
       fetchUserData();
     }
-  }, [isConnected, disconnecting]);
+  }, [isConnected, isBackendAuthed, disconnecting]);
 
   const fetchUserData = async () => {
     try {

@@ -142,7 +142,7 @@ interface WatchlistItem {
 }
 
 export default function Profile() {
-  const { address, isConnected } = useAuth();
+  const { address, isConnected, isBackendAuthed } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -180,12 +180,12 @@ export default function Profile() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && isBackendAuthed) {
       fetchUserData();
-    } else {
+    } else if (!isConnected) {
       setLoading(false);
     }
-  }, [isConnected, address]);
+  }, [isConnected, isBackendAuthed, address]);
 
   const fetchUserData = async () => {
     try {
