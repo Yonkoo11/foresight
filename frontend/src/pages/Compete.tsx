@@ -1148,33 +1148,15 @@ export default function Compete() {
                 )}
 
                 {/* Season 1 Teaser */}
-                <div className="relative rounded-lg border border-gray-800 overflow-hidden">
+                <div className="relative rounded-lg border border-gray-800/60 overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 to-transparent pointer-events-none" />
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Fire size={14} weight="fill" className="text-gold-400" />
-                      <span className="text-[10px] font-bold text-gold-400 uppercase tracking-wider">Coming Soon</span>
+                  <div className="flex items-center gap-3 p-3">
+                    <Fire size={15} weight="fill" className="text-gold-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-bold text-white">Season 1: The Grind</span>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Weekly contests with real stakes</p>
                     </div>
-                    <div>
-                      <span className="text-sm font-bold text-white">Season 1: The Grind</span>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
-                        Weekly paid contests · Tiered prizes · Leaderboard rewards
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1 rounded bg-gray-800/60 border border-gray-700/40 px-2 py-1.5 text-center opacity-50">
-                        <span className="block text-[10px] text-gray-500">Entry</span>
-                        <span className="text-xs text-gray-400 font-mono">0.01 SOL</span>
-                      </div>
-                      <div className="flex-1 rounded bg-gray-800/60 border border-gray-700/40 px-2 py-1.5 text-center opacity-50">
-                        <span className="block text-[10px] text-gray-500">Duration</span>
-                        <span className="text-xs text-gray-400 font-mono">7 days</span>
-                      </div>
-                      <div className="flex-1 rounded bg-gray-800/60 border border-gray-700/40 px-2 py-1.5 text-center opacity-50">
-                        <span className="block text-[10px] text-gray-500">Prizes</span>
-                        <span className="text-xs text-gray-400 font-mono">Top 40%</span>
-                      </div>
-                    </div>
+                    <span className="text-[10px] font-bold text-gold-400 shrink-0">SOON</span>
                   </div>
                 </div>
 
@@ -1193,50 +1175,7 @@ export default function Compete() {
                   </a>
                 </div>
 
-                {/* Past Contests */}
-                {archivedContests.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2 px-1">
-                      <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Past</span>
-                      <span className="text-[10px] text-gray-700">{archivedContests.length}</span>
-                    </div>
-                    <div className="rounded-lg border border-gray-800/60 overflow-hidden divide-y divide-gray-800/40">
-                      {archivedContests.map((contest) => {
-                        const cfg = CONTEST_CONFIG[contest.typeCode] || CONTEST_CONFIG.WEEKLY_STARTER;
-                        const Icon = cfg.icon;
-                        const myEntry = myEntries.find(e => e.contestId === contest.id);
-                        const isSelected = selectedContestId === contest.id;
-
-                        return (
-                          <button
-                            key={contest.id}
-                            onClick={() => {
-                              setSelectedContestId(contest.id);
-                              if (window.innerWidth < 1024) navigate(`/contest/${contest.id}`);
-                            }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors duration-100 ${
-                              isSelected
-                                ? 'bg-gray-800/80 border-l-2 border-l-gray-500'
-                                : 'bg-gray-900/60 hover:bg-gray-800/50 border-l-2 border-l-transparent'
-                            }`}
-                          >
-                            <Icon size={13} weight="fill" className={`${cfg.color} opacity-50`} />
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm text-gray-400 truncate block">{contest.name || contest.typeName}</span>
-                              <span className="text-[10px] text-gray-600">
-                                {contest.endTime ? formatEndDate(contest.endTime) : 'Ended'} · {contest.playerCount} players
-                              </span>
-                            </div>
-                            {myEntry?.rank && (
-                              <span className="text-xs font-bold font-mono tabular-nums text-gray-500">#{myEntry.rank}</span>
-                            )}
-                            <span className="text-[10px] font-bold text-gray-600">FINAL</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                {/* Past Contests — hidden during launch week */}
               </div>
 
               {/* ═══ RIGHT PANEL: Contest detail (desktop only) ═══ */}

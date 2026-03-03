@@ -27,18 +27,14 @@ import { getXPLevel } from '../utils/xp';
 
 // ─── Countdown ───────────────────────────────────────────────────────────────
 
-function useContestCountdown() {
+function useContestCountdown(lockTime: string | null) {
   const [countdown, setCountdown] = useState('');
   useEffect(() => {
+    if (!lockTime) return;
     function calc() {
-      const now = new Date();
-      const day = now.getUTCDay();
-      const daysToSun = day === 0 ? 7 : 7 - day;
-      const target = new Date(now);
-      target.setUTCDate(now.getUTCDate() + daysToSun);
-      target.setUTCHours(23, 59, 0, 0);
-      if (target.getTime() <= now.getTime()) target.setUTCDate(target.getUTCDate() + 7);
-      const diff = target.getTime() - now.getTime();
+      const target = new Date(lockTime!);
+      const diff = target.getTime() - Date.now();
+      if (diff <= 0) { setCountdown('Locked'); return; }
       const d = Math.floor(diff / 86_400_000);
       const h = Math.floor((diff % 86_400_000) / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
@@ -47,7 +43,7 @@ function useContestCountdown() {
     calc();
     const id = setInterval(calc, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [lockTime]);
   return countdown;
 }
 
@@ -415,7 +411,8 @@ export default function Home() {
   const [xp, setXp] = useState(0);
   const [teamsOnChain, setTeamsOnChain] = useState<number | null>(null);
   const [prizeFormatted, setPrizeFormatted] = useState<string | null>(null);
-  const countdown = useContestCountdown();
+  const [lockTime, setLockTime] = useState<string | null>(null);
+  const countdown = useContestCountdown(lockTime);
 
   useEffect(() => {
     if (!isConnected) return;
@@ -433,6 +430,8 @@ export default function Home() {
         if (count) setTeamsOnChain(count);
         const prize = free?.prizePoolFormatted ?? free?.prize_pool_formatted;
         if (prize) setPrizeFormatted(prize);
+        const lock = free?.lockTime ?? free?.lock_time;
+        if (lock) setLockTime(lock);
       }).catch(() => {});
   }, []);
 
