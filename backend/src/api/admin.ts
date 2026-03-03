@@ -224,6 +224,7 @@ router.post('/trigger-end-snapshot', authenticate, requireAdmin, async (req: Req
  * @route POST /api/admin/trigger-prized-snapshot
  * @desc Take a start or end snapshot for the active prized contest.
  *       Body: { type: 'start' | 'end', contestId?: number }
+ *       Runs async — returns immediately, snapshot runs in background.
  *       No auth required so it can be triggered from scripts.
  */
 router.post('/trigger-prized-snapshot', async (req: Request, res: Response) => {
@@ -239,10 +240,18 @@ router.post('/trigger-prized-snapshot', async (req: Request, res: Response) => {
       return sendError(res, 'Body must include type: "start" or "end"', 400);
     }
 
-    const result = await triggerPrizedContestSnapshot(type, contestId);
+    // Fire and forget — snapshot takes ~6 min (62 influencers × 5.5s rate limit)
+    // Return immediately so the request doesn't timeout at the proxy layer
+    triggerPrizedContestSnapshot(type, contestId)
+      .then(result => {
+        console.log(`[SNAPSHOT] ${type.toUpperCase()} snapshot complete for contest ${result.contestId}: ${result.success} success, ${result.failed} failed`);
+      })
+      .catch(err => {
+        console.error(`[SNAPSHOT] ${type.toUpperCase()} snapshot failed:`, err.message);
+      });
+
     sendSuccess(res, {
-      message: `${type.toUpperCase()} snapshot captured for prized contest ${result.contestId}`,
-      result,
+      message: `${type.toUpperCase()} snapshot started — running in background (~6 min for 62 influencers)`,
     });
   } catch (error: any) {
     sendError(res, 'Failed to trigger prized snapshot', 500, error.message);
