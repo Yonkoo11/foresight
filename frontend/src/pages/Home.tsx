@@ -20,8 +20,10 @@ import {
 } from '@phosphor-icons/react';
 import FormationPreview from '../components/FormationPreview';
 import ActivityFeedCard from '../components/ActivityFeedCard';
+import OnboardingFlow from '../components/onboarding/OnboardingFlow';
 import SEO from '../components/SEO';
 import { useAuth } from '../hooks/useAuth';
+import { useOnboarding } from '../contexts/OnboardingContext';
 import { getXPLevel } from '../utils/xp';
 
 
@@ -408,11 +410,19 @@ function LandingPage({
 
 export default function Home() {
   const { isConnected, login } = useAuth();
+  const { isFirstVisit } = useOnboarding();
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [xp, setXp] = useState(0);
   const [teamsOnChain, setTeamsOnChain] = useState<number | null>(null);
   const [prizeFormatted, setPrizeFormatted] = useState<string | null>(null);
   const [lockTime, setLockTime] = useState<string | null>(null);
+  const [contestId, setContestId] = useState<number | null>(null);
   const countdown = useContestCountdown(lockTime);
+
+  // Show onboarding on first visit
+  useEffect(() => {
+    if (isFirstVisit) setShowOnboarding(true);
+  }, [isFirstVisit]);
 
   useEffect(() => {
     if (!isConnected) return;
@@ -426,6 +436,7 @@ export default function Home() {
       .then(r => {
         const contests = r.data?.contests || r.data?.data || [];
         const free = contests.find((c: any) => c.isFree || c.is_free) || contests[0];
+        if (free?.id) setContestId(free.id);
         const count = free?.playerCount ?? free?.player_count;
         if (count) setTeamsOnChain(count);
         const prize = free?.prizePoolFormatted ?? free?.prize_pool_formatted;
@@ -436,7 +447,15 @@ export default function Home() {
   }, []);
 
   return (
-    <LandingPage isConnected={isConnected} login={login} xp={xp}
-      teamsOnChain={teamsOnChain} countdown={countdown} prizeFormatted={prizeFormatted} />
+    <>
+      {showOnboarding && (
+        <OnboardingFlow
+          onComplete={() => setShowOnboarding(false)}
+          contestId={contestId ?? undefined}
+        />
+      )}
+      <LandingPage isConnected={isConnected} login={login} xp={xp}
+        teamsOnChain={teamsOnChain} countdown={countdown} prizeFormatted={prizeFormatted} />
+    </>
   );
 }
