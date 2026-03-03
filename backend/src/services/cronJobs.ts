@@ -590,6 +590,44 @@ export async function triggerEndOfWeekSnapshot(): Promise<{
 }
 
 /**
+ * Manual trigger for prized contest snapshot.
+ * Unlike the weekly triggers, this uses a prized_contests ID directly
+ * (doesn't require an active fantasy_contest).
+ */
+export async function triggerPrizedContestSnapshot(
+  type: 'start' | 'end',
+  contestId?: number,
+): Promise<{
+  contestId: number;
+  success: number;
+  failed: number;
+  errors: Array<{ influencerId: number; handle: string; error: string }>;
+}> {
+  // Find the target prized contest
+  let targetContestId: number;
+  if (contestId) {
+    targetContestId = contestId;
+  } else {
+    const activeContest = await db('prized_contests')
+      .whereIn('status', ['open', 'locked', 'scoring'])
+      .orderBy('created_at', 'desc')
+      .first();
+    if (!activeContest) {
+      throw new Error('No active prized contest found');
+    }
+    targetContestId = activeContest.id;
+  }
+
+  if (!twitterApiIoService.isConfigured()) {
+    throw new Error('TwitterAPI.io not configured. Set TWITTER_API_IO_KEY environment variable.');
+  }
+
+  console.log(`[MANUAL TRIGGER] Capturing ${type.toUpperCase()} snapshot for prized contest ${targetContestId}...`);
+  const result = await weeklySnapshotService.captureSnapshot(targetContestId, type);
+  return { contestId: targetContestId, ...result };
+}
+
+/**
  * Manual trigger for weekly scoring cycle (for testing/admin)
  */
 export async function triggerWeeklyScoring(): Promise<{

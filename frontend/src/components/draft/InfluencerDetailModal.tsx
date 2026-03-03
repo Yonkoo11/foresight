@@ -28,11 +28,11 @@ interface Props {
   onSetCaptain?: () => void;
 }
 
-const TIER_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  S: { bg: 'bg-gold-500/20', text: 'text-gold-400', border: 'border-gold-500' },
-  A: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500' },
-  B: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500' },
-  C: { bg: 'bg-gray-500/20', text: 'text-gray-400', border: 'border-gray-500' },
+const TIER_STYLES: Record<string, { bg: string; text: string; border: string; ring: string; glow: string }> = {
+  S: { bg: 'bg-gold-500/20', text: 'text-gold-400', border: 'border-gold-500', ring: 'ring-amber-500/60', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.2)]' },
+  A: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500', ring: 'ring-cyan-500/60', glow: 'shadow-[0_0_18px_rgba(6,182,212,0.15)]' },
+  B: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500', ring: 'ring-emerald-500/60', glow: 'shadow-[0_0_16px_rgba(16,185,129,0.15)]' },
+  C: { bg: 'bg-gray-500/20', text: 'text-gray-400', border: 'border-gray-500', ring: 'ring-gray-500/40', glow: '' },
 };
 
 export default function InfluencerDetailModal({
@@ -59,7 +59,7 @@ export default function InfluencerDetailModal({
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-gray-900 border border-gray-700 rounded-2xl max-w-md w-full overflow-hidden">
+      <div className={`relative bg-gray-900 border rounded-2xl max-w-md w-full overflow-hidden ${tier.border} ${tier.glow}`}>
         {/* Header with close button */}
         <button
           onClick={onClose}
@@ -75,10 +75,10 @@ export default function InfluencerDetailModal({
               <img
                 src={influencer.profile_image_url}
                 alt={influencer.handle}
-                className="w-20 h-20 rounded-full border-2 border-white/20"
+                className={`w-20 h-20 rounded-full ring-3 ${tier.ring}`}
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
+              <div className={`w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center ring-3 ${tier.ring}`}>
                 <Users size={32} className="text-gray-500" />
               </div>
             )}

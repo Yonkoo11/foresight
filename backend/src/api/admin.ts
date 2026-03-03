@@ -13,6 +13,7 @@ import {
   triggerPrizedContestLock,
   triggerPrizedContestScoring,
   triggerContestFinalization,
+  triggerPrizedContestSnapshot,
 } from '../services/cronJobs';
 import twitterApiService from '../services/twitterApiService';
 import twitterApiIoService from '../services/twitterApiIoService';
@@ -216,6 +217,35 @@ router.post('/trigger-end-snapshot', authenticate, requireAdmin, async (req: Req
     });
   } catch (error: any) {
     sendError(res, 'Failed to trigger end snapshot', 500, error.message);
+  }
+});
+
+/**
+ * @route POST /api/admin/trigger-prized-snapshot
+ * @desc Take a start or end snapshot for the active prized contest.
+ *       Body: { type: 'start' | 'end', contestId?: number }
+ *       No auth required so it can be triggered from scripts.
+ */
+router.post('/trigger-prized-snapshot', async (req: Request, res: Response) => {
+  try {
+    const adminKey = process.env.ADMIN_KEY;
+    const providedKey = req.query.key as string | undefined;
+    if (adminKey && providedKey !== adminKey) {
+      return sendError(res, 'Unauthorized', 401);
+    }
+
+    const { type, contestId } = req.body || {};
+    if (type !== 'start' && type !== 'end') {
+      return sendError(res, 'Body must include type: "start" or "end"', 400);
+    }
+
+    const result = await triggerPrizedContestSnapshot(type, contestId);
+    sendSuccess(res, {
+      message: `${type.toUpperCase()} snapshot captured for prized contest ${result.contestId}`,
+      result,
+    });
+  } catch (error: any) {
+    sendError(res, 'Failed to trigger prized snapshot', 500, error.message);
   }
 });
 
@@ -575,6 +605,102 @@ router.post('/seed-demo-contest', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     sendError(res, 'Failed to seed demo contest', 500, error.message);
+  }
+});
+
+// ─── Launch Campaign Contest ──────────────────────────────────────────────────
+
+/**
+ * Create the single hero launch contest:
+ * "The Call" — FREE, 72h, 500 cap, $100 USD prize pool ($50/$30/$20)
+ *
+ * Prizes are paid out-of-band (real USD/SOL on mainnet). The prize_pool
+ * field stores 100 as a display value; the description makes it clear.
+ */
+async function seedLaunchContest(): Promise<{ created: boolean; contest: Record<string, unknown> }> {
+  // Ensure FREE_LEAGUE type exists
+  let freeType = await db('contest_types').where('code', 'FREE_LEAGUE').first();
+  if (!freeType) {
+    await db('contest_types').insert({
+      code: 'FREE_LEAGUE',
+      name: 'Free League',
+      description: 'Practice mode - no entry fee, real prizes funded by platform',
+      entry_fee: 0,
+      team_size: 5,
+      has_captain: true,
+      duration_hours: 168,
+      rake_percent: 0,
+      min_players: 10,
+      max_players: 0,
+      winners_percent: 10,
+      is_free: true,
+      display_order: 1,
+    });
+    freeType = await db('contest_types').where('code', 'FREE_LEAGUE').first();
+  }
+
+  const contestName = 'The Call';
+
+  // Idempotent — skip if already active
+  const existing = await db('prized_contests')
+    .where('name', contestName)
+    .whereIn('status', ['open', 'locked', 'scoring'])
+    .first();
+
+  if (existing) {
+    return { created: false, contest: existing };
+  }
+
+  const now = new Date();
+  // Entries lock after 48h, contest ends at 72h
+  const lockTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+  const endTime = new Date(now.getTime() + 72 * 60 * 60 * 1000);
+
+  const [contest] = await db('prized_contests').insert({
+    contest_type_id: freeType.id,
+    contract_contest_id: null,
+    contract_address: null,
+    name: contestName,
+    description: 'Draft 5 CT influencers. Captain gets 2x. $100 in prizes: $50 / $30 / $20 to top 3. Free entry. This is your call.',
+    entry_fee: '0',
+    team_size: 5,
+    has_captain: true,
+    is_free: true,
+    rake_percent: '0',
+    min_players: 2,
+    max_players: 500,
+    lock_time: lockTime,
+    end_time: endTime,
+    status: 'open',
+    prize_pool: '100',
+    distributable_pool: '100',
+    player_count: 0,
+    created_at: now,
+    updated_at: now,
+  }).returning('*');
+
+  return { created: true, contest };
+}
+
+/**
+ * @route POST /api/admin/seed-launch-contest
+ * @desc Create the hero launch contest. Idempotent — skips if already active.
+ *       Optionally protected by ADMIN_KEY env var (?key= query param).
+ */
+router.post('/seed-launch-contest', async (req: Request, res: Response) => {
+  try {
+    const adminKey = process.env.ADMIN_KEY;
+    const providedKey = req.query.key as string | undefined;
+    if (adminKey && providedKey !== adminKey) {
+      return sendError(res, 'Unauthorized', 401);
+    }
+    const result = await seedLaunchContest();
+    sendSuccess(res, {
+      message: result.created ? 'Launch contest "The Call" created' : 'Launch contest already active',
+      contest: { id: result.contest.id, name: result.contest.name, status: result.contest.status },
+    });
+  } catch (error: any) {
+    sendError(res, 'Failed to seed launch contest', 500, error.message);
   }
 });
 

@@ -49,24 +49,34 @@ interface InfluencerProfileCardProps {
 
 // Tier visual tokens — badge only; color lives here and nowhere else on the card
 const TIER_CONFIG: Record<string, {
-  badge: string;  // badge text + bg
-  label: string;  // human label
+  badge: string;
+  label: string;
+  ring: string;
+  glow: string;
 }> = {
   S: {
     badge: 'bg-amber-500/20 text-amber-400 border border-amber-500/40',
     label: 'S-Tier',
+    ring: 'ring-amber-500/50',
+    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.15)]',
   },
   A: {
     badge: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40',
     label: 'A-Tier',
+    ring: 'ring-cyan-500/50',
+    glow: 'shadow-[0_0_12px_rgba(6,182,212,0.12)]',
   },
   B: {
     badge: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40',
     label: 'B-Tier',
+    ring: 'ring-emerald-500/50',
+    glow: 'shadow-[0_0_10px_rgba(16,185,129,0.12)]',
   },
   C: {
     badge: 'bg-gray-500/20 text-gray-400 border border-gray-600/40',
     label: 'C-Tier',
+    ring: 'ring-gray-500/30',
+    glow: '',
   },
 };
 
@@ -136,7 +146,7 @@ export default function InfluencerProfileCard({
         relative rounded-xl border transition-all overflow-hidden cursor-pointer
         ${isSelected
           ? 'bg-cyan-500/10 border-cyan-500/50 ring-1 ring-cyan-500/30'
-          : 'bg-gray-900/60 border-gray-800 hover:border-gray-700 hover:bg-gray-900/80'}
+          : `bg-gray-900/60 border-gray-800 hover:border-gray-700 hover:bg-gray-900/80 hover:-translate-y-0.5 ${tc.glow}`}
       `}
     >
       {/* Selection checkmark (compare mode) */}
@@ -154,7 +164,7 @@ export default function InfluencerProfileCard({
             <img
               src={getAvatarUrl(influencer.handle, influencer.avatar)}
               alt={influencer.name}
-              className="w-11 h-11 rounded-full object-cover"
+              className={`w-11 h-11 rounded-full object-cover ring-2 ${tc.ring}`}
             />
             <div className={`absolute -bottom-1 -right-1 px-1 py-0.5 rounded text-[9px] font-bold leading-none ${tc.badge}`}>
               {tier}

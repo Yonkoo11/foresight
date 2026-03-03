@@ -119,13 +119,12 @@ export default function ShareTeamCard({
       }
     }
 
-    // Desktop: copy image to clipboard + open Twitter composer
+    // Desktop: copy image to clipboard + open Twitter composer (no auto-download)
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      showToast('Image copied! Paste into your tweet with Ctrl+V / Cmd+V', 'success');
+      showToast('Image copied! Paste into your tweet with Ctrl+V', 'success');
     } catch {
-      downloadBlob(blob);
-      showToast('Image saved — attach it to your tweet', 'success');
+      showToast('Save the image first, then attach it to your tweet', 'info');
     }
     window.open(twitterUrl, '_blank');
   };
@@ -181,43 +180,35 @@ export default function ShareTeamCard({
 
   // ─── The formation card (display only — Canvas handles the image) ──
   const formationCard = (
-    <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '4/5' }}>
-      {/* Pitch background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/70 via-gray-900/90 to-gray-950" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.1)_0%,transparent_70%)]" />
+    <div className="relative w-[380px]" style={{
+      aspectRatio: '530/776',
+      backgroundImage: 'url(/card-frame-gold.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      borderRadius: 12,
+      overflow: 'hidden',
+    }}>
+      {/* Content positioned within the frame's interior */}
+      <div className="absolute inset-0 flex flex-col items-center justify-between"
+        style={{ top: '13%', bottom: '15%', left: '13%', right: '13%' }}>
 
-      {/* Pitch lines */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/[0.06] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white/10 rounded-full" />
-        <div className="absolute top-1/2 left-6 right-6 h-px bg-white/[0.04]" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-12 border-b border-l border-r border-white/[0.05] rounded-b-full" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-36 h-12 border-t border-l border-r border-white/[0.05] rounded-t-full" />
-      </div>
-
-      {/* Corner brackets */}
-      <div className="absolute top-2 left-2 w-5 h-5 border-l-2 border-t-2 border-white/[0.08] rounded-tl" />
-      <div className="absolute top-2 right-2 w-5 h-5 border-r-2 border-t-2 border-white/[0.08] rounded-tr" />
-      <div className="absolute bottom-2 left-2 w-5 h-5 border-l-2 border-b-2 border-white/[0.08] rounded-bl" />
-      <div className="absolute bottom-2 right-2 w-5 h-5 border-r-2 border-b-2 border-white/[0.08] rounded-br" />
-
-      {/* Content */}
-      <div className="relative z-10 h-full flex flex-col px-4 py-5">
         {/* Header */}
-        <div className="text-center mb-auto">
-          <div className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-gold-400 to-amber-300 bg-clip-text text-transparent">
+        <div className="flex flex-col items-center">
+          <img src="/logo.svg" alt="" style={{ width: 56, height: 32, objectFit: 'contain' }} />
+          <div style={{ color: '#F59E0B', fontSize: 13, fontWeight: 700, letterSpacing: '4px', marginTop: 1 }}>
             FORESIGHT
           </div>
+          <div style={{ height: 1.5, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.7), #F59E0B, rgba(245,158,11,0.7), transparent)', width: 120, margin: '3px 0 0' }} />
           {contestName && (
-            <div className="text-[10px] text-gray-400 tracking-widest uppercase mt-0.5">
+            <div className="text-[9px] text-gray-400 tracking-widest uppercase mt-1">
               {contestName}
             </div>
           )}
         </div>
 
         {/* Formation */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-5 py-2">
-          <div className="flex justify-center gap-8">
+        <div className="flex flex-col items-center justify-center gap-3 w-full">
+          <div className="flex justify-center gap-10">
             {topRow.map((pick) => (
               <PlayerNode key={pick.id} pick={pick} captainId={captainId} />
             ))}
@@ -227,43 +218,46 @@ export default function ShareTeamCard({
               <PlayerNode key={pick.id} pick={pick} captainId={captainId} />
             ))}
           </div>
-          <div className="flex justify-center gap-8">
+          <div className="flex justify-center gap-10">
             {botRow.map((pick) => (
               <PlayerNode key={pick.id} pick={pick} captainId={captainId} />
             ))}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-auto flex items-center justify-between">
-          {/* User identity */}
-          {username ? (
-            <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-full overflow-hidden border border-gold-500/40 shrink-0">
-                {userAvatar ? (
-                  <img src={userAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gold-500/20 flex items-center justify-center">
-                    <span className="text-[7px] font-bold text-gold-400">
-                      {username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <span className="text-[10px] text-gray-400">@{username}</span>
-            </div>
-          ) : (
-            <div className="text-[10px] text-gray-500 font-medium">ct-foresight.xyz</div>
-          )}
+        {/* Score/Rank + Footer */}
+        <div style={{ width: '100%' }}>
           {(totalScore !== undefined || rank) && (
-            <div className="flex items-center gap-3 text-[10px]">
-              {totalScore !== undefined && <span className="text-gold-400 font-bold">{totalScore} pts</span>}
+            <div className="flex items-center justify-center gap-4 text-[11px] mb-2">
+              {totalScore !== undefined && <span style={{ color: '#F59E0B' }} className="font-bold">{totalScore} pts</span>}
               {rank && <span className="text-white font-bold">#{rank}</span>}
             </div>
           )}
-          <div className="text-[10px] text-gray-500">Tapestry</div>
+          <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.25), transparent)', marginBottom: 4 }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            {username ? (
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded-full overflow-hidden shrink-0" style={{ border: '1px solid rgba(245,158,11,0.5)' }}>
+                  {userAvatar ? (
+                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)' }}>
+                      <span className="text-[6px] font-bold" style={{ color: '#F59E0B' }}>
+                        {username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <span className="text-[8px] text-gray-400">@{username}</span>
+              </div>
+            ) : (
+              <span style={{ color: '#52525B', fontSize: 8, fontWeight: 500 }}>ct-foresight.xyz</span>
+            )}
+            <span style={{ color: '#52525B', fontSize: 8 }}>Tapestry Protocol</span>
+          </div>
         </div>
       </div>
+
     </div>
   );
 
@@ -380,8 +374,9 @@ function PlayerNode({ pick, captainId }: { pick: TeamPick; captainId?: number | 
         </div>
       )}
 
-      <div className={`p-0.5 rounded-full bg-gradient-to-br ${tier.gradient} shadow-lg`}>
-        <div className="w-12 h-12 rounded-full bg-gray-900 overflow-hidden border border-gray-800">
+      <div className={`p-[3px] rounded-full bg-gradient-to-br ${tier.gradient}`}
+        style={{ boxShadow: `0 0 16px ${tier.hex}50, 0 0 32px ${tier.hex}20` }}>
+        <div className="w-12 h-12 rounded-full overflow-hidden" style={{ background: '#1A1A24' }}>
           {showImg ? (
             <img
               src={avatarSrc}

@@ -1147,6 +1147,37 @@ export default function Compete() {
                   </div>
                 )}
 
+                {/* Season 1 Teaser */}
+                <div className="relative rounded-lg border border-gray-800 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 to-transparent pointer-events-none" />
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Fire size={14} weight="fill" className="text-gold-400" />
+                      <span className="text-[10px] font-bold text-gold-400 uppercase tracking-wider">Coming Soon</span>
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-white">Season 1: The Grind</span>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Weekly paid contests · Tiered prizes · Leaderboard rewards
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-1 rounded bg-gray-800/60 border border-gray-700/40 px-2 py-1.5 text-center opacity-50">
+                        <span className="block text-[10px] text-gray-500">Entry</span>
+                        <span className="text-xs text-gray-400 font-mono">0.01 SOL</span>
+                      </div>
+                      <div className="flex-1 rounded bg-gray-800/60 border border-gray-700/40 px-2 py-1.5 text-center opacity-50">
+                        <span className="block text-[10px] text-gray-500">Duration</span>
+                        <span className="text-xs text-gray-400 font-mono">7 days</span>
+                      </div>
+                      <div className="flex-1 rounded bg-gray-800/60 border border-gray-700/40 px-2 py-1.5 text-center opacity-50">
+                        <span className="block text-[10px] text-gray-500">Prizes</span>
+                        <span className="text-xs text-gray-400 font-mono">Top 40%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Creator Leagues CTA */}
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-900 border border-gray-800">
                   <Crown size={15} weight="fill" className="text-gold-400 shrink-0" />
@@ -1303,7 +1334,7 @@ export default function Compete() {
                             <div className="text-base font-bold font-mono tabular-nums text-gold-400 mt-0.5">
                               {selectedContest.prizePoolFormatted}
                             </div>
-                            {selectedContest.prizePool > 0 && (
+                            {selectedContest.prizePool > 0 && selectedContest.prizePool < 10 && (
                               <span className="text-[10px] text-gray-600 font-mono">≈ ${(selectedContest.prizePool * solPrice).toFixed(2)}</span>
                             )}
                           </div>

@@ -20,6 +20,12 @@ import {
 
 const router = Router();
 
+/** Format prize pool — USD for platform-funded free contests, SOL otherwise */
+function formatPrizePool(pool: number, isFree: boolean): string {
+  if (isFree && pool >= 10) return `$${Math.round(pool)}`;
+  return `${pool.toFixed(3)} SOL`;
+}
+
 // Contest type codes
 export const ContestTypeCodes = {
   FREE_LEAGUE: 'FREE_LEAGUE',
@@ -128,7 +134,7 @@ router.get('/contests', async (req: Request, res: Response) => {
         lockTime: c.lock_time,
         endTime: c.end_time,
         prizePool: parseFloat(c.prize_pool || 0),
-        prizePoolFormatted: `${parseFloat(c.prize_pool || 0).toFixed(3)} SOL`,
+        prizePoolFormatted: formatPrizePool(parseFloat(c.prize_pool || 0), c.is_free),
         playerCount: c.player_count,
         status: c.status,
         isFree: c.is_free,
@@ -206,7 +212,7 @@ router.get('/contests/:id', async (req: Request, res: Response) => {
         lockTime: contest.lock_time,
         endTime: contest.end_time,
         prizePool: parseFloat(contest.prize_pool || 0),
-        prizePoolFormatted: `${parseFloat(contest.prize_pool || 0).toFixed(3)} SOL`,
+        prizePoolFormatted: formatPrizePool(parseFloat(contest.prize_pool || 0), contest.is_free),
         distributablePool: parseFloat(contest.distributable_pool || 0),
         playerCount: contest.player_count,
         status: contest.status,

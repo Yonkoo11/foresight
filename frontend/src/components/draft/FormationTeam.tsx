@@ -27,11 +27,11 @@ interface FormationTeamProps {
   showTapestryBadge?: boolean;
 }
 
-const TIER_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  S: { bg: 'bg-gold-500/20', border: 'border-gold-500', text: 'text-gold-400' },
-  A: { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-400' },
-  B: { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-400' },
-  C: { bg: 'bg-gray-500/20', border: 'border-gray-500', text: 'text-gray-400' },
+const TIER_COLORS: Record<string, { bg: string; border: string; text: string; ring: string; glow: string }> = {
+  S: { bg: 'bg-gold-500/20', border: 'border-gold-500', text: 'text-gold-400', ring: 'ring-amber-500/50', glow: 'shadow-[0_0_12px_rgba(245,158,11,0.15)]' },
+  A: { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-400', ring: 'ring-cyan-500/50', glow: 'shadow-[0_0_12px_rgba(6,182,212,0.12)]' },
+  B: { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-400', ring: 'ring-emerald-500/50', glow: 'shadow-[0_0_10px_rgba(16,185,129,0.12)]' },
+  C: { bg: 'bg-gray-500/20', border: 'border-gray-500', text: 'text-gray-400', ring: 'ring-gray-500/30', glow: '' },
 };
 
 export default function FormationTeam({
@@ -214,10 +214,10 @@ function PlayerSlot({ player, isCaptain, isLarge, onRemove, onSetCaptain }: Play
 
   return (
     <div
-      className={`relative rounded-xl border-2 transition-colors cursor-pointer group p-2 flex flex-col items-center ${slotWidth} ${
+      className={`relative rounded-xl border-2 transition-all cursor-pointer group p-2 flex flex-col items-center ${slotWidth} ${
         isCaptain
-          ? 'bg-gold-500/10 border-gold-500'
-          : `bg-gray-800/50 ${tierStyle.border} border-opacity-50 hover:border-opacity-100`
+          ? `bg-gold-500/10 border-gold-500 shadow-[0_0_16px_rgba(245,158,11,0.2)]`
+          : `bg-gray-800/50 ${tierStyle.border} border-opacity-50 hover:border-opacity-100 ${tierStyle.glow}`
       }`}
       onClick={onSetCaptain}
     >
@@ -244,10 +244,10 @@ function PlayerSlot({ player, isCaptain, isLarge, onRemove, onSetCaptain }: Play
         <img
           src={player.profile_image_url}
           alt={player.handle}
-          className={`rounded-full ${avatarSize} ${isCaptain ? 'ring-2 ring-gold-400' : ''}`}
+          className={`rounded-full ${avatarSize} ring-2 ${isCaptain ? 'ring-gold-400' : tierStyle.ring}`}
         />
       ) : (
-        <div className={`rounded-full bg-gray-700 flex items-center justify-center ${avatarSize} ${isCaptain ? 'ring-2 ring-gold-400' : ''}`}>
+        <div className={`rounded-full bg-gray-700 flex items-center justify-center ${avatarSize} ring-2 ${isCaptain ? 'ring-gold-400' : tierStyle.ring}`}>
           <User size={isLarge ? 20 : 16} className="text-gray-400" />
         </div>
       )}

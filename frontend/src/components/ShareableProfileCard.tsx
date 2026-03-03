@@ -1,10 +1,10 @@
 /**
- * Shareable Profile Card — Dark theme matching team card aesthetic
+ * Shareable Profile Card — Premium Trading Card edition
  *
- * Design: Dark surface card (#12121A), gold accents, tier-colored avatar ring,
- *         Inter font, corner brackets. Matches generateTeamCard.ts vibe.
+ * Design: Gold beveled frame, tier-colored avatar glow, decorative corners,
+ *         full tier badge, matching generateTeamCard.ts premium aesthetic.
  *
- * Canvas: 520×660px @2x retina
+ * Canvas: 520×680px @2x retina
  */
 
 import { useState, useEffect } from 'react';
@@ -12,6 +12,10 @@ import apiClient from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { Star, Crown, Diamond, Medal, Trophy, Share, XLogo, Copy, Check, X } from '@phosphor-icons/react';
 import { useToast } from '../contexts/ToastContext';
+import {
+  roundRect, drawAvatarRing,
+  loadImage, BG_MAIN, GOLD, TEXT_WHITE, TEXT_MUTED, TEXT_DIM,
+} from '../utils/cardDrawing';
 
 interface ProfileCardData {
   username: string;
@@ -50,240 +54,255 @@ const TIER_RANK_LABEL: Record<string, string> = {
   diamond: 'DIAMOND TIER',
 };
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-function loadImg(url: string, ms = 3000): Promise<HTMLImageElement | null> {
-  return new Promise((res) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    const t = setTimeout(() => { img.src = ''; res(null); }, ms);
-    img.onload = () => { clearTimeout(t); res(img); };
-    img.onerror = () => { clearTimeout(t); res(null); };
-    img.src = url;
-  });
-}
-
-function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
-// ─── Canvas generator ──────────────────────────────────────────────────────
+// ─── Canvas generator (Premium Trading Card) ────────────────────────────────
 
 async function generateProfileCard(data: ProfileCardData): Promise<Blob | null> {
-  const W = 520;
-  const H = 660;
+  const W = 530;
+  const H = 776;      // Matches frame image aspect ratio (0.683)
   const S = 2;
 
   const tier = TIER[data.tier as keyof typeof TIER] ?? TIER.bronze;
   const tc = tier.color;
-  const [gradA, gradB] = tier.gradient;
 
   const canvas = document.createElement('canvas');
   canvas.width = W * S;
   canvas.height = H * S;
   const ctx = canvas.getContext('2d')!;
-  ctx.scale(S, S);
 
-  // ── Dark background ─────────────────────────────────────────────────
-  ctx.fillStyle = '#0A0A0F';
-  ctx.fillRect(0, 0, W, H);
+  // ── Load assets in parallel ────────────────────────────────────────
+  const [frameImg, logoImg, avatarImg] = await Promise.all([
+    loadImage('/card-frame-gold.png', 8000),
+    loadImage('/logo.svg', 3000),
+    data.avatarUrl ? loadImage(data.avatarUrl) : Promise.resolve(null),
+  ]);
 
-  // Card surface
-  rr(ctx, 20, 20, W - 40, H - 40, 16);
-  ctx.fillStyle = '#12121A';
-  ctx.fill();
-  ctx.strokeStyle = '#27272A';
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  // ── Frame image as background (slight overscale to crop dark edges) ─
+  if (frameImg) {
+    const os = 1.02;
+    const fw = W * S * os;
+    const fh = H * S * os;
+    ctx.drawImage(frameImg, (W * S - fw) / 2, (H * S - fh) / 2, fw, fh);
+  } else {
+    ctx.fillStyle = BG_MAIN;
+    ctx.fillRect(0, 0, W * S, H * S);
+  }
 
-  // Subtle radial glow behind avatar
-  const glow = ctx.createRadialGradient(W / 2, 200, 20, W / 2, 200, 200);
-  glow.addColorStop(0, `${tc}15`);
-  glow.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow;
-  ctx.fillRect(20, 20, W - 40, H - 40);
+  // ── Content zone ───────────────────────────────────────────────────
+  const cx = W * S / 2;
+  const safeTop = Math.round(H * 0.13) * S;
+  const safeBot = Math.round(H * 0.87) * S;
+  const safeL   = Math.round(W * 0.13) * S;
+  const safeR   = Math.round(W * 0.87) * S;
+  const contentW = safeR - safeL;
 
-  // Gold accent line at top of card
-  ctx.fillStyle = '#F59E0B';
-  ctx.fillRect(20, 20, W - 40, 3);
+  // ── Atmosphere: Radial tier glow from avatar area ──────────────────
+  const glowCY = safeTop + 180 * S;
+  const rg = ctx.createRadialGradient(cx, glowCY, 0, cx, glowCY, 280 * S);
+  rg.addColorStop(0, `${tc}14`);
+  rg.addColorStop(0.4, `${tc}08`);
+  rg.addColorStop(1, 'transparent');
+  ctx.fillStyle = rg;
+  ctx.fillRect(0, 0, W * S, H * S);
 
-  // Corner brackets
-  const co = 32, cl = 16;
-  ctx.strokeStyle = '#F59E0B';
-  ctx.lineWidth = 1.5;
-  ctx.globalAlpha = 0.5;
-  ctx.beginPath(); ctx.moveTo(co + cl, co); ctx.lineTo(co, co); ctx.lineTo(co, co + cl); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(W - co - cl, co); ctx.lineTo(W - co, co); ctx.lineTo(W - co, co + cl); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(co + cl, H - co); ctx.lineTo(co, H - co); ctx.lineTo(co, H - co - cl); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(W - co - cl, H - co); ctx.lineTo(W - co, H - co); ctx.lineTo(W - co, H - co - cl); ctx.stroke();
-  ctx.globalAlpha = 1;
+  // ── Atmosphere: Subtle horizontal scan lines ───────────────────────
+  ctx.fillStyle = 'rgba(255,255,255,0.012)';
+  for (let sy = safeTop; sy < safeBot; sy += 6 * S) {
+    ctx.fillRect(safeL, sy, contentW, 1 * S);
+  }
 
-  // ── FORESIGHT header ────────────────────────────────────────────────
+  // ── Logo ───────────────────────────────────────────────────────────
+  let y = safeTop;
+  if (logoImg) {
+    const logoH = 36 * S;
+    const logoW = logoH * (logoImg.naturalWidth / logoImg.naturalHeight || 1.714);
+    ctx.drawImage(logoImg, cx - logoW / 2, y, logoW, logoH);
+    y += logoH + 2 * S;
+  }
+
+  // ── "FORESIGHT" header ─────────────────────────────────────────────
+  ctx.font = `bold ${18 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = GOLD;
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#F59E0B';
-  ctx.font = 'bold 20px Inter, system-ui, sans-serif';
-  ctx.fillText('FORESIGHT', W / 2, 52);
+  ctx.textBaseline = 'top';
+  ctx.letterSpacing = `${1.5 * S}px`;
+  ctx.fillText('FORESIGHT', cx, y);
+  ctx.letterSpacing = '0px';
 
-  // Thin gold line under header
-  ctx.strokeStyle = 'rgba(245,158,11,0.3)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(80, 66); ctx.lineTo(W - 80, 66); ctx.stroke();
+  const titleW = ctx.measureText('FORESIGHT').width;
+  y += 24 * S;
+  const lineGrad = ctx.createLinearGradient(cx - titleW / 2, y, cx + titleW / 2, y);
+  lineGrad.addColorStop(0, 'rgba(245,158,11,0)');
+  lineGrad.addColorStop(0.3, 'rgba(245,158,11,0.6)');
+  lineGrad.addColorStop(0.5, GOLD);
+  lineGrad.addColorStop(0.7, 'rgba(245,158,11,0.6)');
+  lineGrad.addColorStop(1, 'rgba(245,158,11,0)');
+  ctx.fillStyle = lineGrad;
+  ctx.fillRect(cx - titleW * 0.7, y, titleW * 1.4, 2 * S);
+  y += 18 * S;
 
-  // ── Avatar with tier-colored ring ───────────────────────────────────
-  const AX = W / 2;
-  const AY = 170;
-  const AR = 64;
+  // ── Avatar with tier ring + glow ──────────────────────────────────
+  const AR = 52 * S;
+  const AY = y + AR + 4 * S;
+  drawAvatarRing(ctx, cx, AY, AR, '', S, avatarImg, data.username,
+    { hex: tc, gradient: [tier.gradient[0], tier.gradient[1]] });
 
-  // Outer glow ring
-  ctx.save();
-  ctx.shadowBlur = 16;
-  ctx.shadowColor = `${tc}40`;
-  const ringGrad = ctx.createLinearGradient(AX - AR - 4, AY - AR - 4, AX + AR + 4, AY + AR + 4);
-  ringGrad.addColorStop(0, gradA);
-  ringGrad.addColorStop(1, gradB);
-  ctx.beginPath(); ctx.arc(AX, AY, AR + 4, 0, Math.PI * 2);
-  ctx.strokeStyle = ringGrad;
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  ctx.restore();
-
-  // Dark fill inside ring
-  ctx.beginPath(); ctx.arc(AX, AY, AR, 0, Math.PI * 2);
-  ctx.fillStyle = '#1A1A24';
-  ctx.fill();
-
-  // Avatar image or initial
-  ctx.save();
-  ctx.beginPath(); ctx.arc(AX, AY, AR - 2, 0, Math.PI * 2); ctx.clip();
-  let avatarLoaded = false;
-  if (data.avatarUrl) {
-    const img = await loadImg(data.avatarUrl);
-    if (img) { ctx.drawImage(img, AX - AR + 2, AY - AR + 2, (AR - 2) * 2, (AR - 2) * 2); avatarLoaded = true; }
-  }
-  if (!avatarLoaded) {
-    ctx.fillStyle = '#1A1A24';
-    ctx.fillRect(AX - AR, AY - AR, AR * 2, AR * 2);
-    ctx.fillStyle = tc;
-    ctx.font = 'bold 44px Inter, system-ui, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(data.username.charAt(0).toUpperCase(), AX, AY + 2);
-  }
-  ctx.restore();
-
-  // Tier badge (small circle to right of avatar)
-  const badgeX = AX + AR - 8;
-  const badgeY = AY + AR - 12;
-  ctx.beginPath(); ctx.arc(badgeX, badgeY, 14, 0, Math.PI * 2);
+  // Tier badge circle (bottom-right of avatar)
+  const badgeR = 14 * S;
+  const badgeX = cx + AR - 4 * S;
+  const badgeY = AY + AR - 8 * S;
+  ctx.beginPath(); ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
   ctx.fillStyle = tc; ctx.fill();
+  ctx.beginPath(); ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+  ctx.strokeStyle = BG_MAIN; ctx.lineWidth = 3 * S; ctx.stroke();
   ctx.fillStyle = '#0A0A0F';
-  ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+  ctx.font = `bold ${11 * S}px Inter, system-ui, sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(tier.label.charAt(0), badgeX, badgeY);
 
-  // ── Username ────────────────────────────────────────────────────────
-  const nameY = AY + AR + 32;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#FAFAFA';
-  ctx.font = 'bold 28px Inter, system-ui, sans-serif';
-  ctx.fillText(data.username, W / 2, nameY);
+  // ── Username ──────────────────────────────────────────────────────
+  y = AY + AR + 22 * S;
+  ctx.fillStyle = TEXT_WHITE;
+  ctx.font = `bold ${24 * S}px Inter, system-ui, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(data.username, cx, y);
 
-  // Founding member or tier label
+  // Tier / founding member label
   const memberText = data.isFoundingMember && data.foundingMemberNumber
     ? `Founding Member #${data.foundingMemberNumber}`
     : TIER_RANK_LABEL[data.tier] || 'CT FORESIGHT';
+
+  y += 8 * S;
+  ctx.font = `bold ${8 * S}px Inter, system-ui, sans-serif`;
+  const labelW = ctx.measureText(memberText).width;
+  const lbPadX = 10 * S;
+  const lbH = 16 * S;
+  const lbW = labelW + lbPadX * 2;
+  const lbX = cx - lbW / 2;
+  roundRect(ctx, lbX, y, lbW, lbH, 4 * S);
+  ctx.fillStyle = `${tc}25`; ctx.fill();
+  roundRect(ctx, lbX, y, lbW, lbH, 4 * S);
+  ctx.strokeStyle = `${tc}50`; ctx.lineWidth = 1 * S; ctx.stroke();
   ctx.fillStyle = tc;
-  ctx.font = '600 11px Inter, system-ui, sans-serif';
-  ctx.letterSpacing = '1px';
-  ctx.fillText(memberText, W / 2, nameY + 22);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(memberText, cx, y + lbH / 2);
+  y += lbH + 14 * S;
+
+  // ── SEASON RANK — gold, glowing ───────────────────────────────────
+  ctx.fillStyle = TEXT_MUTED;
+  ctx.font = `600 ${8 * S}px Inter, system-ui, sans-serif`;
+  ctx.letterSpacing = `${2 * S}px`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('SEASON RANK', cx, y);
   ctx.letterSpacing = '0px';
 
-  // ── Stats section ───────────────────────────────────────────────────
-  const statsY = nameY + 56;
+  const rankStr = data.seasonRank ? `#${data.seasonRank}` : '\u2014';
+  y += 8 * S;
 
-  // SEASON RANK label
-  ctx.fillStyle = '#71717A';
-  ctx.font = '600 10px Inter, system-ui, sans-serif';
-  ctx.letterSpacing = '2px';
-  ctx.fillText('SEASON RANK', W / 2, statsY);
+  // Gold glow pass
+  ctx.save();
+  ctx.shadowColor = GOLD;
+  ctx.shadowBlur = 18 * S;
+  ctx.fillStyle = GOLD;
+  ctx.font = `bold ${44 * S}px Inter, system-ui, sans-serif`;
+  ctx.textBaseline = 'top';
+  ctx.fillText(rankStr, cx, y);
+  ctx.restore();
+
+  // Crisp gold text on top
+  ctx.fillStyle = GOLD;
+  ctx.font = `bold ${44 * S}px Inter, system-ui, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(rankStr, cx, y);
+  y += 54 * S;
+
+  // ── Stat Pyramid ──────────────────────────────────────────────────
+  const boxR = 8 * S;
+
+  // FS Score — full width, prominent
+  const fsBoxH = 52 * S;
+  roundRect(ctx, safeL, y, contentW, fsBoxH, boxR);
+  const fsGrad = ctx.createLinearGradient(safeL, y, safeL, y + fsBoxH);
+  fsGrad.addColorStop(0, '#1E1E28');
+  fsGrad.addColorStop(1, '#151520');
+  ctx.fillStyle = fsGrad;
+  ctx.fill();
+
+  // Gold top accent line
+  const accentInset = 16 * S;
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(safeL + accentInset, y, contentW - accentInset * 2, 2 * S);
+
+  // Subtle gold border
+  roundRect(ctx, safeL, y, contentW, fsBoxH, boxR);
+  ctx.strokeStyle = `${GOLD}30`;
+  ctx.lineWidth = 1 * S;
+  ctx.stroke();
+
+  ctx.fillStyle = GOLD;
+  ctx.font = `600 ${7 * S}px Inter, system-ui, sans-serif`;
+  ctx.letterSpacing = `${1.5 * S}px`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('FORESIGHT SCORE', cx, y + 17 * S);
   ctx.letterSpacing = '0px';
 
-  // Big rank number
-  const rankStr = data.seasonRank ? `#${data.seasonRank}` : '—';
-  ctx.fillStyle = '#FAFAFA';
-  ctx.font = 'bold 72px Inter, system-ui, sans-serif';
-  ctx.fillText(rankStr, W / 2, statsY + 66);
+  ctx.fillStyle = TEXT_WHITE;
+  ctx.font = `bold ${24 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillText(data.totalScore.toLocaleString(), cx, y + 38 * S);
+  y += fsBoxH + 8 * S;
 
-  // ── Stat boxes row ──────────────────────────────────────────────────
-  const boxY = statsY + 96;
-  const boxW = 130;
-  const boxH = 52;
-  const boxGap = 16;
-  const totalBoxW = boxW * 3 + boxGap * 2;
-  const boxStartX = (W - totalBoxW) / 2;
+  // Multiplier + All-Time — side by side
+  const sideGap = 8 * S;
+  const halfW = (contentW - sideGap) / 2;
+  const sideBoxH = 44 * S;
 
-  const statItems = [
-    { label: 'FS SCORE', value: data.totalScore.toLocaleString() },
-    { label: 'MULTIPLIER', value: data.effectiveMultiplier > 1 ? `${data.effectiveMultiplier.toFixed(2)}×` : '1.00×' },
-    { label: 'ALL-TIME', value: data.allTimeRank ? `#${data.allTimeRank}` : '—' },
+  const sideStats = [
+    { label: 'MULTIPLIER', value: data.effectiveMultiplier > 1 ? `${data.effectiveMultiplier.toFixed(2)}\u00d7` : '1.00\u00d7' },
+    { label: 'ALL-TIME', value: data.allTimeRank ? `#${data.allTimeRank}` : '\u2014' },
   ];
 
-  statItems.forEach((item, i) => {
-    const bx = boxStartX + i * (boxW + boxGap);
-    rr(ctx, bx, boxY, boxW, boxH, 8);
-    ctx.fillStyle = '#18181B';
+  sideStats.forEach((item, i) => {
+    const bx = safeL + i * (halfW + sideGap);
+
+    roundRect(ctx, bx, y, halfW, sideBoxH, boxR);
+    const sg = ctx.createLinearGradient(bx, y, bx, y + sideBoxH);
+    sg.addColorStop(0, '#1A1A24');
+    sg.addColorStop(1, '#141420');
+    ctx.fillStyle = sg;
     ctx.fill();
+
+    roundRect(ctx, bx, y, halfW, sideBoxH, boxR);
     ctx.strokeStyle = '#27272A';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1 * S;
     ctx.stroke();
 
-    ctx.fillStyle = '#F59E0B';
-    ctx.font = '600 8px Inter, system-ui, sans-serif';
-    ctx.letterSpacing = '1px';
-    ctx.fillText(item.label, bx + boxW / 2, boxY + 18);
+    ctx.fillStyle = GOLD;
+    ctx.font = `600 ${7 * S}px Inter, system-ui, sans-serif`;
+    ctx.letterSpacing = `${1 * S}px`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(item.label, bx + halfW / 2, y + 15 * S);
     ctx.letterSpacing = '0px';
 
-    ctx.fillStyle = '#FAFAFA';
-    ctx.font = 'bold 18px Inter, system-ui, sans-serif';
-    ctx.fillText(item.value, bx + boxW / 2, boxY + 40);
+    ctx.fillStyle = TEXT_WHITE;
+    ctx.font = `bold ${18 * S}px Inter, system-ui, sans-serif`;
+    ctx.fillText(item.value, bx + halfW / 2, y + 32 * S);
   });
 
-  // ── Contest stats row ───────────────────────────────────────────────
-  const contestY = boxY + boxH + 20;
-  if (data.contestsEntered > 0) {
-    ctx.fillStyle = '#3F3F46';
-    ctx.font = '500 11px Inter, system-ui, sans-serif';
-    const contestText = `${data.contestsEntered} contests entered${data.contestsWon > 0 ? ` · ${data.contestsWon} won` : ''}`;
-    ctx.fillText(contestText, W / 2, contestY);
-  }
+  // ── Footer ────────────────────────────────────────────────────────
+  const footerY = safeBot - 18 * S;
+  const inset = safeL;
+  const footGrad = ctx.createLinearGradient(inset, footerY, W * S - inset, footerY);
+  footGrad.addColorStop(0, 'rgba(245,158,11,0)');
+  footGrad.addColorStop(0.5, 'rgba(245,158,11,0.25)');
+  footGrad.addColorStop(1, 'rgba(245,158,11,0)');
+  ctx.fillStyle = footGrad;
+  ctx.fillRect(inset, footerY, W * S - inset * 2, 1 * S);
 
-  // ── Footer ──────────────────────────────────────────────────────────
-  // Separator
-  ctx.strokeStyle = '#27272A';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(50, H - 68); ctx.lineTo(W - 50, H - 68); ctx.stroke();
-
-  // Tapestry + URL
-  ctx.fillStyle = '#3F3F46';
-  ctx.font = '500 10px Inter, system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('Tapestry Protocol', 50, H - 46);
+  ctx.font = `500 ${10 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = TEXT_MUTED;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText('Tapestry Protocol', inset, footerY + 8 * S);
   ctx.textAlign = 'right';
-  ctx.font = '500 10px "JetBrains Mono", monospace';
-  ctx.fillText('ct-foresight.xyz', W - 50, H - 46);
-
-  ctx.textAlign = 'center';
+  ctx.fillText('ct-foresight.xyz', W * S - inset, footerY + 8 * S);
 
   return new Promise((res) => canvas.toBlob((b) => res(b), 'image/png'));
 }
@@ -361,6 +380,9 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
 
   const handleShare = async () => {
     if (!cachedBlob) { showToast('Still preparing card, try again in a moment', 'info'); return; }
+    const tweetUrl = `https://x.com/intent/post?text=${encodeURIComponent(buildTweetText())}`;
+
+    // Mobile: native share sheet with image file
     const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
     if (isMobile && navigator.canShare) {
       const file = new File([cachedBlob], 'foresight-profile.png', { type: 'image/png' });
@@ -369,9 +391,15 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
         catch { /* cancelled */ }
       }
     }
-    downloadBlob(cachedBlob, `foresight-${data?.username || 'profile'}.png`);
-    window.open(`https://x.com/intent/post?text=${encodeURIComponent(buildTweetText())}`, '_blank');
-    showToast('Card saved! Attach the image to your tweet 📎', 'success');
+
+    // Desktop: copy image to clipboard + open Twitter composer
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': cachedBlob })]);
+      showToast('Image copied! Paste into your tweet with Ctrl+V', 'success');
+    } catch {
+      showToast('Save the image first, then attach it to your tweet', 'info');
+    }
+    window.open(tweetUrl, '_blank');
   };
 
   const handleSave = async () => {
@@ -404,55 +432,45 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
     ? `Founding Member #${data.foundingMemberNumber}`
     : TIER_RANK_LABEL[data?.tier || 'bronze'] || 'CT FORESIGHT';
   const rankStr = data?.seasonRank ? `#${data.seasonRank}` : '—';
-  const statItems = [
-    { label: 'FS SCORE', value: (data?.totalScore || 0).toLocaleString() },
-    { label: 'MULTIPLIER', value: (data?.effectiveMultiplier ?? 1) > 1 ? `${data!.effectiveMultiplier.toFixed(2)}×` : '1.00×' },
-    { label: 'ALL-TIME', value: data?.allTimeRank ? `#${data.allTimeRank}` : '—' },
-  ];
 
   const preview = (
-    <div className="w-[300px] rounded-2xl overflow-hidden relative"
-      style={{ background: '#12121A', border: '1px solid #27272A' }}>
-
-      {/* Gold accent top */}
-      <div style={{ height: 3, background: '#F59E0B' }} />
-
-      {/* Subtle glow */}
-      <div style={{
-        position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)',
-        width: 200, height: 200, borderRadius: '50%',
-        background: `radial-gradient(circle, ${tc}12 0%, transparent 70%)`,
-        pointerEvents: 'none',
+    <div className="relative w-[380px]" style={{
+      aspectRatio: '530/776',
+      backgroundImage: 'url(/card-frame-gold.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      borderRadius: 12,
+      overflow: 'hidden',
+    }}>
+      {/* Atmosphere: radial tier glow */}
+      <div className="absolute inset-0" style={{
+        background: `radial-gradient(ellipse at 50% 35%, ${tc}14 0%, ${tc}08 40%, transparent 70%)`,
       }} />
 
-      {/* Corner brackets */}
-      {[
-        { top: 12, left: 12, borderWidth: '1.5px 0 0 1.5px' },
-        { top: 12, right: 12, borderWidth: '1.5px 1.5px 0 0' },
-        { bottom: 12, left: 12, borderWidth: '0 0 1.5px 1.5px' },
-        { bottom: 12, right: 12, borderWidth: '0 1.5px 1.5px 0' },
-      ].map((s, i) => (
-        <div key={i} style={{
-          position: 'absolute', width: 12, height: 12,
-          borderColor: 'rgba(245,158,11,0.5)', borderStyle: 'solid',
-          ...s,
-        }} />
-      ))}
+      {/* Atmosphere: scan lines */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(255,255,255,0.012) 5px, rgba(255,255,255,0.012) 6px)',
+      }} />
 
-      <div className="relative px-5 pt-4 pb-4 flex flex-col items-center">
+      {/* Content layer */}
+      <div className="absolute inset-0 flex flex-col items-center justify-between"
+        style={{ top: '13%', bottom: '15%', left: '13%', right: '13%' }}>
 
-        {/* FORESIGHT header */}
-        <div style={{ color: '#F59E0B', fontSize: 14, fontWeight: 700, letterSpacing: '3px', fontFamily: 'Inter, system-ui, sans-serif' }}>
-          FORESIGHT
+        {/* Logo + FORESIGHT header */}
+        <div className="flex flex-col items-center">
+          <img src="/logo.svg" alt="" style={{ width: 68, height: 40, objectFit: 'contain' }} />
+          <div style={{ color: GOLD, fontSize: 16, fontWeight: 700, letterSpacing: '2px', marginTop: 2 }}>
+            FORESIGHT
+          </div>
+          <div style={{ height: 2, background: `linear-gradient(90deg, transparent, ${GOLD}90, ${GOLD}, ${GOLD}90, transparent)`, width: 130, margin: '4px 0 0' }} />
         </div>
-        <div style={{ height: 1, background: 'rgba(245,158,11,0.25)', width: '60%', margin: '6px 0 16px' }} />
 
-        {/* Avatar with tier ring */}
-        <div style={{ position: 'relative', marginBottom: 14 }}>
+        {/* Avatar with tier ring + glow */}
+        <div style={{ position: 'relative' }}>
           <div style={{
-            width: 88, height: 88, borderRadius: '50%',
+            width: 70, height: 70, borderRadius: '50%',
             background: `linear-gradient(135deg, ${tierCfg.gradient[0]}, ${tierCfg.gradient[1]})`,
-            padding: 3, boxShadow: `0 0 20px ${tc}30`,
+            padding: 3, boxShadow: `0 0 20px ${tc}40, 0 0 40px ${tc}15`,
           }}>
             <div style={{
               width: '100%', height: '100%', borderRadius: '50%',
@@ -462,60 +480,91 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
               {data?.avatarUrl ? (
                 <img src={data.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <span style={{ color: tc, fontSize: 32, fontWeight: 700 }}>
+                <span style={{ color: tc, fontSize: 30, fontWeight: 700 }}>
                   {(data?.username || 'A').charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
           </div>
-          {/* Tier badge */}
           <div style={{
             position: 'absolute', bottom: -2, right: -2,
-            width: 24, height: 24, borderRadius: '50%',
+            width: 22, height: 22, borderRadius: '50%',
             background: tc, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, fontWeight: 700, color: '#0A0A0F',
-            border: '2px solid #12121A',
+            fontSize: 10, fontWeight: 700, color: '#0A0A0F',
+            border: '2px solid #0A0A0F', boxShadow: `0 0 8px ${tc}60`,
           }}>
             {tierCfg.label.charAt(0)}
           </div>
         </div>
 
-        {/* Username */}
-        <div style={{ color: '#FAFAFA', fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
-          {data?.username || '—'}
+        {/* Name + badge + rank */}
+        <div className="flex flex-col items-center">
+          <div style={{ color: '#FAFAFA', fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
+            {data?.username || '\u2014'}
+          </div>
+          <div style={{
+            marginTop: 4, padding: '2px 10px', borderRadius: 4,
+            background: `${tc}25`, border: `1px solid ${tc}50`,
+            color: tc, fontSize: 9, fontWeight: 700, letterSpacing: '1px',
+          }}>
+            {memberText}
+          </div>
+          <div style={{ color: '#A1A1AA', fontSize: 8, fontWeight: 600, letterSpacing: '2px', marginTop: 10 }}>SEASON RANK</div>
+          <div style={{
+            color: GOLD, fontSize: 36, fontWeight: 700, lineHeight: 1, marginTop: 2,
+            textShadow: `0 0 20px ${GOLD}60, 0 0 40px ${GOLD}25`,
+          }}>{rankStr}</div>
         </div>
 
-        {/* Member / tier label */}
-        <div style={{ color: tc, fontSize: 9, fontWeight: 600, letterSpacing: '1px', marginTop: 6 }}>
-          {memberText}
-        </div>
-
-        {/* SEASON RANK */}
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <div style={{ color: '#71717A', fontSize: 8, fontWeight: 600, letterSpacing: '2px' }}>SEASON RANK</div>
-          <div style={{ color: '#FAFAFA', fontSize: 52, fontWeight: 700, lineHeight: 1, marginTop: 4 }}>{rankStr}</div>
-        </div>
-
-        {/* Stat boxes */}
-        <div style={{ display: 'flex', gap: 8, marginTop: 16, width: '100%' }}>
-          {statItems.map((item, i) => (
-            <div key={i} style={{
-              flex: 1, background: '#18181B', border: '1px solid #27272A',
-              borderRadius: 8, padding: '8px 4px', textAlign: 'center',
-            }}>
-              <div style={{ color: '#F59E0B', fontSize: 7, fontWeight: 600, letterSpacing: '1px' }}>{item.label}</div>
-              <div style={{ color: '#FAFAFA', fontSize: 14, fontWeight: 700, marginTop: 2 }}>{item.value}</div>
+        {/* Stat Pyramid */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* FS Score — full width, prominent */}
+          <div style={{
+            position: 'relative',
+            background: 'linear-gradient(180deg, #1E1E28, #151520)',
+            border: `1px solid ${GOLD}30`,
+            borderRadius: 8, padding: '8px 8px', textAlign: 'center',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: 0, left: 16, right: 16,
+              height: 2, background: GOLD,
+            }} />
+            <div style={{ color: GOLD, fontSize: 7, fontWeight: 600, letterSpacing: '1.5px' }}>FORESIGHT SCORE</div>
+            <div style={{ color: '#FAFAFA', fontSize: 22, fontWeight: 700, marginTop: 2 }}>
+              {(data?.totalScore || 0).toLocaleString()}
             </div>
-          ))}
+          </div>
+
+          {/* Multiplier + All-Time side by side */}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[
+              { label: 'MULTIPLIER', value: (data?.effectiveMultiplier ?? 1) > 1 ? `${data!.effectiveMultiplier.toFixed(2)}×` : '1.00×' },
+              { label: 'ALL-TIME', value: data?.allTimeRank ? `#${data.allTimeRank}` : '—' },
+            ].map((item, i) => (
+              <div key={i} style={{
+                flex: 1,
+                background: 'linear-gradient(180deg, #1A1A24, #141420)',
+                border: '1px solid #27272A',
+                borderRadius: 8, padding: '6px 4px', textAlign: 'center',
+              }}>
+                <div style={{ color: GOLD, fontSize: 7, fontWeight: 600, letterSpacing: '1px' }}>{item.label}</div>
+                <div style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 700, marginTop: 2 }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
-        <div style={{ height: 1, background: '#27272A', width: '100%', margin: '14px 0 8px' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-          <span style={{ color: '#3F3F46', fontSize: 9, fontWeight: 500 }}>Tapestry Protocol</span>
-          <span style={{ color: '#3F3F46', fontSize: 9, fontFamily: '"JetBrains Mono", monospace' }}>ct-foresight.xyz</span>
+        <div style={{ width: '100%' }}>
+          <div style={{ height: 1, background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.25), transparent)`, marginBottom: 4 }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <span style={{ color: '#71717A', fontSize: 9, fontWeight: 500 }}>Tapestry Protocol</span>
+            <span style={{ color: '#71717A', fontSize: 9 }}>ct-foresight.xyz</span>
+          </div>
         </div>
       </div>
+
     </div>
   );
 
@@ -552,7 +601,7 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
           : <><Copy size={14} />Copy profile link</>}
       </button>
       <p className="text-center text-[11px] text-gray-600 mt-2 leading-tight">
-        On desktop, card saves automatically — attach to your tweet
+        Image is copied to clipboard — paste into your tweet
       </p>
     </div>
   );

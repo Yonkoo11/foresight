@@ -40,11 +40,11 @@ interface InfluencerGridProps {
 
 const TIER_ORDER = ['S', 'A', 'B', 'C'];
 
-const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; accent: string }> = {
-  S: { label: 'S-TIER (Elite)', color: 'text-gold-400', bg: 'bg-gold-500/10', border: 'border-gold-500/30', accent: 'border-l-gold-500' },
-  A: { label: 'A-TIER (Strong)', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', accent: 'border-l-cyan-500' },
-  B: { label: 'B-TIER (Solid)', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', accent: 'border-l-emerald-500' },
-  C: { label: 'C-TIER (Value)', color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/30', accent: 'border-l-gray-600' },
+const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; accent: string; ring: string; glow: string }> = {
+  S: { label: 'S-TIER (Elite)', color: 'text-gold-400', bg: 'bg-gold-500/10', border: 'border-gold-500/30', accent: 'border-l-gold-500', ring: 'ring-amber-500/50', glow: 'shadow-[0_0_12px_rgba(245,158,11,0.15)]' },
+  A: { label: 'A-TIER (Strong)', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', accent: 'border-l-cyan-500', ring: 'ring-cyan-500/50', glow: 'shadow-[0_0_12px_rgba(6,182,212,0.12)]' },
+  B: { label: 'B-TIER (Solid)', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', accent: 'border-l-emerald-500', ring: 'ring-emerald-500/50', glow: 'shadow-[0_0_10px_rgba(16,185,129,0.12)]' },
+  C: { label: 'C-TIER (Value)', color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/30', accent: 'border-l-gray-600', ring: 'ring-gray-500/30', glow: '' },
 };
 
 export default function InfluencerGrid({
@@ -168,10 +168,10 @@ export default function InfluencerGrid({
                       disabled={disabled && !selected}
                       className={`relative p-3 rounded-lg text-left transition-all border ${
                         selected
-                          ? `${config.bg} ${config.border} border-l-[3px] ${config.accent}`
+                          ? `${config.bg} ${config.border} border-l-[3px] ${config.accent} ${config.glow}`
                           : disabled
                           ? `bg-gray-900/50 border-gray-800 border-l-[3px] ${config.accent} opacity-50 cursor-not-allowed`
-                          : `bg-gray-800/50 border-gray-700 border-l-[3px] ${config.accent} hover:border-gray-600`
+                          : `bg-gray-800/50 border-gray-700 border-l-[3px] ${config.accent} hover:border-gray-600 hover:-translate-y-0.5`
                       }`}
                     >
                       {/* Selected indicator */}
@@ -183,9 +183,9 @@ export default function InfluencerGrid({
 
                       <div className="flex items-center gap-2 mb-2">
                         {inf.profile_image_url ? (
-                          <img src={inf.profile_image_url} alt="" className="w-8 h-8 rounded-full" />
+                          <img src={inf.profile_image_url} alt="" className={`w-8 h-8 rounded-full ring-2 ${config.ring}`} />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-700" />
+                          <div className={`w-8 h-8 rounded-full bg-gray-700 ring-2 ${config.ring}`} />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-white truncate">@{inf.handle}</p>
