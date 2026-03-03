@@ -22,15 +22,16 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PROD = NODE_ENV === 'production';
 
 // FINDING-007: Cookie options for httpOnly JWT storage
-// Production uses sameSite:'none' because frontend (ct-foresight.xyz) and backend
-// (railway.app) are on different domains — 'lax' blocks cross-origin cookie sending.
-// sameSite:'none' requires secure:true (already enforced in prod).
-const SAME_SITE = IS_PROD ? ('none' as const) : ('lax' as const);
+// Production: frontend (ct-foresight.xyz) and backend (api.ct-foresight.xyz) share
+// the same parent domain, so sameSite:'lax' works and cookies set with
+// domain='.ct-foresight.xyz' are sent on every request to *.ct-foresight.xyz.
+const COOKIE_DOMAIN = IS_PROD ? '.ct-foresight.xyz' : undefined;
 
 const ACCESS_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: IS_PROD,
-  sameSite: SAME_SITE,
+  sameSite: 'lax' as const,
+  domain: COOKIE_DOMAIN,
   maxAge: 15 * 60 * 1000, // 15 minutes (matches JWT_EXPIRES_IN)
   path: '/',
 };
@@ -38,7 +39,8 @@ const ACCESS_COOKIE_OPTIONS = {
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: IS_PROD,
-  sameSite: SAME_SITE,
+  sameSite: 'lax' as const,
+  domain: COOKIE_DOMAIN,
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   path: '/',
 };
@@ -46,7 +48,8 @@ const REFRESH_COOKIE_OPTIONS = {
 const CSRF_COOKIE_OPTIONS = {
   httpOnly: false, // Frontend JS must read this
   secure: IS_PROD,
-  sameSite: SAME_SITE,
+  sameSite: 'lax' as const,
+  domain: COOKIE_DOMAIN,
   maxAge: 30 * 24 * 60 * 60 * 1000,
   path: '/',
 };
@@ -323,16 +326,12 @@ async function createSessionAndRespond(
   }
 
   // FINDING-007: Set httpOnly cookies instead of sending tokens in body
-  console.log('[AUTH-DEBUG] Setting cookies. IS_PROD=', IS_PROD, 'SAME_SITE=', SAME_SITE);
-  console.log('[AUTH-DEBUG] ACCESS_COOKIE_OPTIONS=', JSON.stringify(ACCESS_COOKIE_OPTIONS));
-  console.log('[AUTH-DEBUG] Request origin=', res.req?.headers?.origin, 'host=', res.req?.headers?.host);
   res.cookie('accessToken', accessToken, ACCESS_COOKIE_OPTIONS);
   res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
 
   // FINDING-021: Set CSRF token (readable by frontend JS)
   const csrfToken = generateCsrfToken();
   res.cookie('csrf-token', csrfToken, CSRF_COOKIE_OPTIONS);
-  console.log('[AUTH-DEBUG] Cookies set: accessToken, refreshToken, csrf-token');
 
   sendSuccess(res, {
     csrfToken,
@@ -372,7 +371,6 @@ router.post(
   authLimiter,
   asyncHandler(async (req: Request, res: Response) => {
     const { privyToken, referralCode } = req.body;
-    console.log('[AUTH-DEBUG] POST /verify hit. origin=', req.headers.origin, 'hasPrivyToken=', !!privyToken, 'cookies=', Object.keys(req.cookies || {}));
 
     if (!privyToken) {
       throw new AppError(
