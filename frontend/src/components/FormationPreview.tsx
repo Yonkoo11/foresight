@@ -33,6 +33,27 @@ interface FormationPreviewProps {
   showEdit?: boolean;
 }
 
+// Animated score counter — ticks up from 0 to final value
+function AnimatedScore({ value, animate, delay = 0 }: { value: number; animate: boolean; delay?: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!animate) return;
+    const timeout = setTimeout(() => {
+      let start: number | null = null;
+      const duration = 600;
+      function tick(ts: number) {
+        if (!start) start = ts;
+        const progress = Math.min((ts - start) / duration, 1);
+        setDisplay(Math.round(value * progress));
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [animate, value, delay]);
+  return <>{display} pts</>;
+}
+
 // Example team for when API fails or is loading
 const EXAMPLE_TEAM: Influencer[] = [
   { id: 1, name: 'CT Legend', twitter_handle: 'ctlegend', tier: 'S', price: 45 },
@@ -115,6 +136,16 @@ export default function FormationPreview({
     }
   };
 
+  // Staggered entrance animation
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Entrance delays per card position
+  const entranceDelays = [0, 150, 150, 300, 300];
+
   const renderPlayerCard = (influencer: Influencer, index: number, isCaptain: boolean = false) => {
     const colors = getTierColors(influencer.tier);
     const isLarge = variant === 'hero' || variant === 'team';
@@ -122,9 +153,12 @@ export default function FormationPreview({
     return (
       <div
         key={influencer.id}
-        className={`relative group ${
-          loading ? 'animate-pulse' : ''
-        }`}
+        className={`relative group ${loading ? 'animate-pulse' : ''}`}
+        style={{
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(16px)',
+          transition: `opacity 500ms ease-out ${entranceDelays[index]}ms, transform 500ms ease-out ${entranceDelays[index]}ms`,
+        }}
       >
         {/* Captain Crown */}
         {isCaptain && (
@@ -136,12 +170,12 @@ export default function FormationPreview({
           </div>
         )}
 
-        {/* Player Card */}
-        <div className={`relative border-2 ${colors.border} rounded-xl transition-colors`}>
+        {/* Player Card — lift + glow on hover */}
+        <div className={`relative border-2 ${colors.border} rounded-xl transition-all duration-200 group-hover:-translate-y-1.5 group-hover:shadow-[0_8px_24px_rgba(245,158,11,0.15)]`}>
           <div className={`bg-gray-900 rounded-xl ${isLarge ? 'p-3 w-28 md:w-32' : 'p-2 w-20'}`}>
             {/* Avatar */}
             <div className={`relative mx-auto mb-2 ${isLarge ? 'w-14 h-14 md:w-16 md:h-16' : 'w-10 h-10'}`}>
-              <div className={`w-full h-full rounded-full border-2 ${colors.border} overflow-hidden bg-gray-800`}>
+              <div className={`w-full h-full rounded-full border-2 ${colors.border} overflow-hidden bg-gray-800 transition-shadow duration-200 group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)]`}>
                 {influencer.profile_image_url ? (
                   <img
                     src={influencer.profile_image_url}
@@ -155,7 +189,7 @@ export default function FormationPreview({
                 )}
               </div>
               {/* Tier Badge */}
-              <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 ${colors.badge} px-1.5 py-0.5 rounded-full text-[10px] font-bold`}>
+              <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 ${colors.badge} px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-transform duration-200 group-hover:scale-110`}>
                 {influencer.tier}
               </div>
             </div>
@@ -168,13 +202,13 @@ export default function FormationPreview({
               @{influencer.handle || influencer.twitter_handle}
             </p>
 
-            {/* Stats (optional) */}
+            {/* Stats (optional) — gold border brightens on hover */}
             {showStats && isLarge && (
-              <div className="mt-2 pt-2 border-t border-gray-800 flex justify-center">
+              <div className="mt-2 pt-2 border-t border-gray-800 flex justify-center transition-colors duration-200 group-hover:border-gold-500/30">
                 <span className="text-[10px] text-gold-400 font-semibold">
                   {variant === 'team' && influencer.total_points !== undefined
                     ? `${influencer.total_points} pts`
-                    : `${Math.round(influencer.price || 25)} pts`}
+                    : <AnimatedScore value={Math.round(influencer.price || 25)} animate={mounted} delay={entranceDelays[index] + 400} />}
                 </span>
               </div>
             )}
