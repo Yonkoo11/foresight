@@ -429,18 +429,142 @@ export default function ContestDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-black">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Back Button */}
         <button
           onClick={() => navigate('/compete?tab=contests')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-4 sm:mb-6 transition-colors"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={16} />
           Back to Contests
         </button>
 
-        {/* Contest Header */}
-        <div className="rounded-2xl border border-gray-800 bg-gray-900 p-6 mb-6">
+        {/* ═══ MOBILE Contest Header ═══ */}
+        <div className="sm:hidden space-y-3 mb-4">
+          {/* Title + status + timer */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${config.color} bg-black/20`}>
+                {contest.typeName || contest.typeCode?.replace('_', ' ')}
+              </span>
+              {contest.isFree && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-400 bg-emerald-500/20">FREE</span>
+              )}
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                contest.status === 'open' ? 'text-green-400 bg-green-500/20' :
+                contest.status === 'locked' ? 'text-yellow-400 bg-yellow-500/20' :
+                contest.status === 'scoring' ? 'text-blue-400 bg-blue-500/20' :
+                'text-gray-400 bg-gray-500/20'
+              }`}>
+                {contest.status.toUpperCase()}
+              </span>
+            </div>
+            <h1 className="text-xl font-bold text-white leading-tight">{contest.name}</h1>
+          </div>
+
+          {/* Compact stats strip — no icons, just values */}
+          <div className="flex items-center gap-3 text-xs">
+            <div>
+              <span className="text-gray-500">Prize </span>
+              <span className="font-mono font-bold text-gold-400">{contest.prizePoolFormatted}</span>
+            </div>
+            <span className="text-gray-700">·</span>
+            <div>
+              <span className="text-gray-500">Entry </span>
+              <span className={`font-mono font-bold ${contest.isFree ? 'text-emerald-400' : 'text-white'}`}>
+                {contest.isFree ? 'Free' : contest.entryFeeFormatted}
+              </span>
+            </div>
+            <span className="text-gray-700">·</span>
+            <div>
+              <span className="font-mono font-bold text-white">{contest.playerCount}</span>
+              <span className="text-gray-500"> in</span>
+            </div>
+          </div>
+
+          {/* Timer — prominent */}
+          {contest.status === 'finalized' ? (
+            <div className="flex items-center gap-2">
+              <CheckCircle size={16} weight="fill" className="text-emerald-400" />
+              <span className="text-sm font-bold text-emerald-400">Final Results</span>
+            </div>
+          ) : contest.status === 'scoring' ? (
+            <div className="flex items-center gap-2">
+              <Hourglass size={16} className="text-blue-400 animate-spin" weight="fill" />
+              <span className="text-sm font-bold text-blue-400">Calculating scores...</span>
+            </div>
+          ) : contest.status !== 'cancelled' && timeRemaining ? (
+            <div className="flex items-center gap-2">
+              <Clock size={14} className="text-gray-500" />
+              <span className="text-xs text-gray-500">{contest.status === 'open' ? 'Locks in' : 'Ends in'}</span>
+              <span className={`text-lg font-mono font-bold tabular-nums ${config.color}`}>{timeRemaining}</span>
+            </div>
+          ) : null}
+
+          {/* CTA — right here, above the fold on mobile */}
+          {myEntry ? (
+            <div className={`${
+              contest.status === 'finalized'
+                ? 'bg-gold-500/5 border border-gold-500/20'
+                : 'bg-emerald-500/5 border border-emerald-500/20'
+            } rounded-lg p-3 flex items-center justify-between`}>
+              <div className="flex items-center gap-2">
+                {contest.status === 'finalized'
+                  ? <Trophy size={18} weight="fill" className="text-gold-400" />
+                  : <CheckCircle size={18} weight="fill" className="text-emerald-400" />
+                }
+                <div>
+                  <p className="text-sm font-bold text-white">
+                    {contest.status === 'finalized' ? 'Contest Ended' : "You're In!"}
+                  </p>
+                  <p className={`text-xs font-mono tabular-nums ${contest.status === 'finalized' ? 'text-gold-400/80' : 'text-emerald-400/80'}`}>
+                    {contest.status === 'finalized'
+                      ? `#${myEntry.rank || '-'} · ${myEntry.score ? parseFloat(String(myEntry.score)).toFixed(1) : '-'} pts`
+                      : (myEntry.rank ? `#${myEntry.rank}` : 'Pending') +
+                        (myEntry.score && parseFloat(String(myEntry.score)) > 0 ? ` · ${parseFloat(String(myEntry.score)).toFixed(1)} pts` : '')
+                    }
+                  </p>
+                </div>
+              </div>
+              {contest.status === 'open' && (
+                <button onClick={handleEnterContest}
+                  className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 rounded-lg font-semibold text-xs transition-colors">
+                  Edit Team
+                </button>
+              )}
+            </div>
+          ) : contest.status === 'open' ? (
+            <button onClick={handleEnterContest}
+              className="w-full py-3 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-gray-950 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+              {contest.isFree ? 'Enter Contest — Free' : `Enter (${contest.entryFeeFormatted})`}
+              <ArrowSquareOut size={16} weight="bold" />
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Lock size={16} />
+              <span>Entry period ended</span>
+            </div>
+          )}
+
+          {/* Prize breakdown — only top 3 on mobile */}
+          {prizeRules.length > 0 && (
+            <div className="flex items-center gap-3 text-[11px] text-gray-500">
+              <Trophy size={12} className={config.color} />
+              {[...prizeRules].sort((a, b) => (a.rank || 999) - (b.rank || 999)).slice(0, 3).map((rule) => {
+                const amount = ((contest.prizePool || 0) * rule.percentage / 100);
+                return (
+                  <span key={rule.rank}>
+                    <span className={rule.rank === 1 ? 'text-gold-400 font-bold' : 'text-gray-400'}>{rule.label}</span>
+                    {' '}<span className="font-mono">{amount.toFixed(3)}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ═══ DESKTOP Contest Header ═══ */}
+        <div className="hidden sm:block rounded-2xl border border-gray-800 bg-gray-900 p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-4">
               <div className={`p-4 rounded-xl bg-gradient-to-br ${config.gradient}`}>
@@ -452,9 +576,7 @@ export default function ContestDetail() {
                     {contest.typeName || contest.typeCode?.replace('_', ' ')}
                   </span>
                   {contest.isFree && (
-                    <span className="px-2 py-0.5 rounded text-xs font-bold text-emerald-400 bg-emerald-500/20">
-                      FREE
-                    </span>
+                    <span className="px-2 py-0.5 rounded text-xs font-bold text-emerald-400 bg-emerald-500/20">FREE</span>
                   )}
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                     contest.status === 'open' ? 'text-green-400 bg-green-500/20' :
@@ -471,9 +593,7 @@ export default function ContestDetail() {
                 )}
               </div>
             </div>
-
-            {/* Timer / Status */}
-            <div className="text-right">
+            <div className="text-right shrink-0">
               {contest.status === 'finalized' ? (
                 <>
                   <p className="text-xs text-gray-400 mb-1">Results</p>
@@ -494,18 +614,14 @@ export default function ContestDetail() {
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 mb-1">
-                    {contest.status === 'open' ? 'Locks in' : 'Ends in'}
-                  </p>
-                  <div className={`text-2xl font-mono font-bold tabular-nums ${config.color}`}>
-                    {timeRemaining}
-                  </div>
+                  <p className="text-xs text-gray-400 mb-1">{contest.status === 'open' ? 'Locks in' : 'Ends in'}</p>
+                  <div className={`text-2xl font-mono font-bold tabular-nums ${config.color}`}>{timeRemaining}</div>
                 </>
               )}
             </div>
           </div>
 
-          {/* "Results are in!" reveal banner — shown for 8s after fresh finalization */}
+          {/* Banners — desktop only */}
           {justFinalized && (
             <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 animate-pulse">
               <Sparkle size={18} className="text-emerald-400 shrink-0" weight="fill" />
@@ -515,8 +631,6 @@ export default function ContestDetail() {
               </div>
             </div>
           )}
-
-          {/* "Calculating Results..." banner — shown during scoring status */}
           {contest.status === 'scoring' && !justFinalized && (
             <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/30">
               <Hourglass size={18} className="text-blue-400 shrink-0 animate-spin" weight="fill" />
@@ -526,8 +640,6 @@ export default function ContestDetail() {
               </div>
             </div>
           )}
-
-          {/* Countdown urgency banner — shown when < 24h remaining and still open/locked */}
           {(contest.status === 'open' || contest.status === 'locked') && msRemaining > 0 && msRemaining < 24 * 60 * 60 * 1000 && (
             <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
               <Timer size={18} className="text-amber-400 shrink-0" weight="fill" />
@@ -542,13 +654,11 @@ export default function ContestDetail() {
             </div>
           )}
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {/* Stats Grid — desktop */}
+          <div className="grid grid-cols-5 gap-3">
             <div className="bg-black/20 rounded-xl p-3 text-center">
               <Coins size={20} className={`mx-auto mb-1.5 ${config.color}`} />
-              <p className="text-base font-mono font-bold text-gold-400 tabular-nums">
-                {contest.prizePoolFormatted}
-              </p>
+              <p className="text-base font-mono font-bold text-gold-400 tabular-nums">{contest.prizePoolFormatted}</p>
               <p className="text-[10px] text-gray-500 mt-0.5">Prize Pool</p>
             </div>
             <div className="bg-black/20 rounded-xl p-3 text-center">
@@ -575,7 +685,7 @@ export default function ContestDetail() {
             </div>
           </div>
 
-          {/* Prize Breakdown */}
+          {/* Prize Breakdown — desktop */}
           {prizeRules.length > 0 && (
             <div className="mt-4 bg-black/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -613,7 +723,8 @@ export default function ContestDetail() {
           )}
         </div>
 
-        {/* Entry Status / CTA */}
+        {/* Entry Status / CTA — desktop only (mobile has it inline above) */}
+        <div className="hidden sm:block">
         {myEntry ? (
           <div className={`${
             contest.status === 'finalized'
@@ -675,6 +786,7 @@ export default function ContestDetail() {
             </div>
           </div>
         )}
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">

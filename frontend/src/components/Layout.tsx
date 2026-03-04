@@ -90,7 +90,7 @@ export default function Layout({ children }: LayoutProps) {
     <div className="miniapp-container min-h-screen flex flex-col">
       <CursorFollower />
       {/* Header with Navigation */}
-      <header className="sticky top-0 z-30 bg-gray-950/80 backdrop-blur-xl border-b border-gray-700/50 px-4 py-3 mb-6">
+      <header className="sticky top-0 z-30 bg-gray-950/80 backdrop-blur-xl border-b border-gray-700/50 px-4 py-3 mb-3 sm:mb-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo + Nav */}
           <div className="flex items-center gap-6">

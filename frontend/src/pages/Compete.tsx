@@ -449,79 +449,80 @@ export default function Compete() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
       <SEO
         title="Compete — Contests & Rankings"
         description="Join contests, draft CT influencers, and climb the Foresight leaderboard. Weekly competitions with SOL prizes."
         keywords="crypto CT contest, CT leaderboard, solana competition, solana prizes, crypto twitter rankings"
         path="/compete"
       />
-      {/* Row 1: Title + Main Tabs + Contest Filter (when on contests tab) */}
-      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gold-500/15 flex items-center justify-center shrink-0">
-            <Trophy size={16} weight="fill" className="text-gold-400" />
+      {/* Row 1: Title + Main Tabs */}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gold-500/15 flex items-center justify-center shrink-0">
+            <Trophy size={14} weight="fill" className="text-gold-400 sm:hidden" />
+            <Trophy size={16} weight="fill" className="text-gold-400 hidden sm:block" />
           </div>
-          <h1 className="text-lg font-bold text-white">Compete</h1>
+          <h1 className="text-base sm:text-lg font-bold text-white">Compete</h1>
         </div>
-        <div className="flex gap-1.5 items-center flex-wrap">
+        <div className="flex gap-1.5 items-center">
           <button
             onClick={() => setMainTab('rankings')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               mainTab === 'rankings'
                 ? 'bg-gold-500 text-gray-950 shadow-lg shadow-gold-500/20'
                 : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800 hover:text-white'
             }`}
           >
-            <Medal size={15} weight={mainTab === 'rankings' ? 'fill' : 'regular'} />
+            <Medal size={14} weight={mainTab === 'rankings' ? 'fill' : 'regular'} />
             Rankings
           </button>
           <button
             onClick={() => setMainTab('contests')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               mainTab === 'contests'
                 ? 'bg-gold-500 text-gray-950 shadow-lg shadow-gold-500/20'
                 : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800 hover:text-white'
             }`}
           >
-            <Trophy size={15} weight={mainTab === 'contests' ? 'fill' : 'regular'} />
+            <Trophy size={14} weight={mainTab === 'contests' ? 'fill' : 'regular'} />
             Contests
             {(filteredContests.length + signatureContests.length) > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-gray-950/30 text-xs">
+              <span className="px-1.5 py-0.5 rounded-full bg-gray-950/30 text-[10px] sm:text-xs">
                 {filteredContests.length + signatureContests.length}
               </span>
             )}
           </button>
-
-          {/* Contest Filter Pills — only show when on contests tab */}
-          {mainTab === 'contests' && (
-            <div className="flex gap-1.5 ml-auto">
-              {[
-                { key: 'all' as ContestFilter, label: 'All', icon: Trophy },
-                { key: 'free' as ContestFilter, label: 'Free', icon: Gift },
-                { key: 'weekly' as ContestFilter, label: 'Weekly', icon: Calendar },
-                { key: 'daily' as ContestFilter, label: 'Daily', icon: Lightning },
-              ].map((filter) => {
-                const Icon = filter.icon;
-                return (
-                  <button
-                    key={filter.key}
-                    onClick={() => setContestFilter(filter.key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                      contestFilter === filter.key
-                        ? 'bg-white/10 text-white border border-white/20'
-                        : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-800'
-                    }`}
-                  >
-                    <Icon size={13} weight={contestFilter === filter.key ? 'fill' : 'regular'} />
-                    {filter.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Contest Filter Pills — below tabs on mobile, inline on desktop */}
+      {mainTab === 'contests' && (
+        <div className="flex gap-1 sm:gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-0.5">
+          {[
+            { key: 'all' as ContestFilter, label: 'All', icon: Trophy },
+            { key: 'free' as ContestFilter, label: 'Free', icon: Gift },
+            { key: 'weekly' as ContestFilter, label: 'Weekly', icon: Calendar },
+            { key: 'daily' as ContestFilter, label: 'Daily', icon: Lightning },
+          ].map((filter) => {
+            const Icon = filter.icon;
+            return (
+              <button
+                key={filter.key}
+                onClick={() => setContestFilter(filter.key)}
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap ${
+                  contestFilter === filter.key
+                    ? 'bg-white/10 text-white border border-white/20'
+                    : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-800'
+                }`}
+              >
+                <Icon size={12} weight={contestFilter === filter.key ? 'fill' : 'regular'} />
+                {filter.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Rankings Tab */}
       {mainTab === 'rankings' && (

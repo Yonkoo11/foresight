@@ -59,7 +59,7 @@ function ContestPanel({
   prizeFormatted: string | null; teamsOnChain: number | null;
 }) {
   return (
-    <div className="mt-8 rounded-2xl overflow-hidden border border-gray-800">
+    <div className="mt-5 rounded-2xl overflow-hidden border border-gray-800">
       <div className="grid grid-cols-3 divide-x divide-gray-800 bg-gray-900">
         <div className="px-4 py-3.5">
           <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Prize Pool</p>
@@ -254,27 +254,27 @@ function LandingPage({
       <SEO path="/" />
 
       {/* ═══════════════════════ MOBILE HERO ════════════════════════════ */}
-      <section className="lg:hidden pt-8 pb-6 px-1">
-        <div className="flex items-center gap-2 mb-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-xs text-gold-400 font-medium">
-            <span className="relative flex h-2 w-2 shrink-0">
+      <section className="lg:hidden pt-4 pb-4 px-3">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-[11px] text-gold-400 font-medium">
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gold-500" />
             </span>
             Live · Solana Devnet
           </div>
           <a href="https://www.usetapestry.dev" target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-[10px] text-gray-400">
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-[10px] text-gray-400">
             <img src="https://cdn.prod.website-files.com/67814d9fc76ba46748750247/6793b4f682781f7c980f8921_Favicon31_black.png" alt="" className="w-3 h-3 rounded-sm invert opacity-70" />
             Tapestry
           </a>
         </div>
 
-        <h1 className="text-4xl font-bold text-white mb-3 leading-tight tracking-tight">
+        <h1 className="text-3xl font-bold text-white mb-2 leading-tight tracking-tight">
           Back CT calls.{' '}
           <span className="animate-gold-shimmer">Get paid.</span>
         </h1>
-        <p className="text-sm text-gray-400 mb-0 leading-relaxed">
+        <p className="text-[13px] text-gray-400 mb-0 leading-relaxed">
           Pick 5 CT influencers. Score their weekly engagement. Compete for SOL.
         </p>
 
@@ -282,7 +282,7 @@ function LandingPage({
           prizeFormatted={prizeFormatted} teamsOnChain={teamsOnChain} />
 
         {/* Compact formation teaser */}
-        <div className="mt-6">
+        <div className="mt-4">
           <FormationPreview variant="compact" showStats={false} />
         </div>
       </section>

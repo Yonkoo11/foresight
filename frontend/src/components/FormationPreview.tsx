@@ -220,7 +220,7 @@ export default function FormationPreview({
 
   const isHero = variant === 'hero';
   const isTeamView = variant === 'team';
-  const containerHeight = isHero || isTeamView ? 'min-h-[380px] md:min-h-[440px]' : 'min-h-[260px]';
+  const containerHeight = isHero || isTeamView ? 'min-h-[380px] md:min-h-[440px]' : 'min-h-[220px] sm:min-h-[260px]';
   const gap = isHero || isTeamView ? 'gap-14 md:gap-20' : 'gap-8';
 
   return (
