@@ -3,6 +3,7 @@
  */
 
 import { X, XLogo, TrendUp, Users, Fire, ChartLineUp, Crown, Heart, ArrowsClockwise, Coins } from '@phosphor-icons/react';
+import LazyAvatar from '../LazyAvatar';
 
 interface Influencer {
   id: number;
@@ -71,17 +72,13 @@ export default function InfluencerDetailModal({
         {/* Profile Header */}
         <div className="p-6 bg-gray-900 border-b border-gray-800">
           <div className="flex items-center gap-4">
-            {influencer.profile_image_url ? (
-              <img
-                src={influencer.profile_image_url}
-                alt={influencer.handle}
-                className={`w-20 h-20 rounded-full ring-3 ${tier.ring}`}
-              />
-            ) : (
-              <div className={`w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center ring-3 ${tier.ring}`}>
-                <Users size={32} className="text-gray-500" />
-              </div>
-            )}
+            <LazyAvatar
+              src={influencer.profile_image_url}
+              name={influencer.name}
+              size="w-20 h-20"
+              iconSize={32}
+              className={`ring-3 ${tier.ring}`}
+            />
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className={`px-2 py-0.5 rounded text-xs font-bold ${tier.bg} ${tier.text} border ${tier.border}`}>

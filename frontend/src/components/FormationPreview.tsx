@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Crown, Users, PencilSimple } from '@phosphor-icons/react';
+import LazyAvatar from './LazyAvatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -176,17 +177,13 @@ export default function FormationPreview({
             {/* Avatar */}
             <div className={`relative mx-auto mb-2 ${isLarge ? 'w-14 h-14 md:w-16 md:h-16' : 'w-10 h-10'}`}>
               <div className={`w-full h-full rounded-full border-2 ${colors.border} overflow-hidden bg-gray-800 transition-shadow duration-200 group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)]`}>
-                {influencer.profile_image_url ? (
-                  <img
-                    src={influencer.profile_image_url}
-                    alt={influencer.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Users size={isLarge ? 24 : 16} className="text-gray-500" />
-                  </div>
-                )}
+                <LazyAvatar
+                  src={influencer.profile_image_url}
+                  name={influencer.name}
+                  size="w-full h-full"
+                  iconSize={isLarge ? 24 : 16}
+                  placeholderBg="bg-gray-800"
+                />
               </div>
               {/* Tier Badge */}
               <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 ${colors.badge} px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-transform duration-200 group-hover:scale-110`}>

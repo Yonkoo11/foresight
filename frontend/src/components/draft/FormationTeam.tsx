@@ -4,6 +4,7 @@
  */
 
 import { Crown, Plus, X, User, Sparkle, Trash, LinkSimple } from '@phosphor-icons/react';
+import LazyAvatar from '../LazyAvatar';
 
 interface Influencer {
   id: number;
@@ -240,17 +241,13 @@ function PlayerSlot({ player, isCaptain, isLarge, onRemove, onSetCaptain }: Play
       </button>
 
       {/* Avatar */}
-      {player.profile_image_url ? (
-        <img
-          src={player.profile_image_url}
-          alt={player.handle}
-          className={`rounded-full ${avatarSize} ring-2 ${isCaptain ? 'ring-gold-400' : tierStyle.ring}`}
-        />
-      ) : (
-        <div className={`rounded-full bg-gray-700 flex items-center justify-center ${avatarSize} ring-2 ${isCaptain ? 'ring-gold-400' : tierStyle.ring}`}>
-          <User size={isLarge ? 20 : 16} className="text-gray-400" />
-        </div>
-      )}
+      <LazyAvatar
+        src={player.profile_image_url}
+        name={player.name}
+        size={avatarSize}
+        iconSize={isLarge ? 20 : 16}
+        className={`ring-2 ${isCaptain ? 'ring-gold-400' : tierStyle.ring}`}
+      />
 
       {/* Handle */}
       <span className="text-[10px] sm:text-xs text-white truncate w-full text-center mt-1.5">

@@ -6,6 +6,7 @@
 import { useState, useMemo } from 'react';
 import { MagnifyingGlass, Plus, Check, TrendUp, Users, Fire, Info } from '@phosphor-icons/react';
 import InfluencerDetailModal from './InfluencerDetailModal';
+import LazyAvatar from '../LazyAvatar';
 
 interface Influencer {
   id: number;
@@ -182,11 +183,13 @@ export default function InfluencerGrid({
                       )}
 
                       <div className="flex items-center gap-2 mb-2">
-                        {inf.profile_image_url ? (
-                          <img src={inf.profile_image_url} alt="" className={`w-8 h-8 rounded-full ring-2 ${config.ring}`} />
-                        ) : (
-                          <div className={`w-8 h-8 rounded-full bg-gray-700 ring-2 ${config.ring}`} />
-                        )}
+                        <LazyAvatar
+                          src={inf.profile_image_url}
+                          name={inf.name}
+                          size="w-8 h-8"
+                          iconSize={14}
+                          className={`ring-2 ${config.ring}`}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-white truncate">@{inf.handle}</p>
                           <p className={`text-sm font-bold font-mono tabular-nums ${config.color}`}>{inf.price} pts</p>

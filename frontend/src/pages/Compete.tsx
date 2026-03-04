@@ -33,6 +33,7 @@ import TapestryBadge from '../components/TapestryBadge';
 import FollowButton from '../components/FollowButton';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
+import LazyAvatar from '../components/LazyAvatar';
 import SEO from '../components/SEO';
 
 /** Tapestry on-chain reputation tier — separate from player tier badges */
@@ -658,13 +659,14 @@ export default function Compete() {
                           ) : (
                             <Medal size={12} weight="fill" className={`mx-auto mb-1 sm:mb-1.5 sm:!w-3.5 sm:!h-3.5 ${rank === 2 ? 'text-gray-300' : 'text-emerald-400'}`} />
                           )}
-                          <div className={`mx-auto ${isCenter ? 'w-10 h-10 sm:w-14 sm:h-14' : 'w-8 h-8 sm:w-11 sm:h-11'} rounded-full bg-gray-800 flex items-center justify-center overflow-hidden ring-2 ${accent.ring} mb-1 sm:mb-2`}>
-                            {entry.avatarUrl ? (
-                              <img src={entry.avatarUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <Users size={isCenter ? 18 : 14} weight="fill" className="text-gray-500" />
-                            )}
-                          </div>
+                          <LazyAvatar
+                            src={entry.avatarUrl}
+                            name={entry.username}
+                            size={isCenter ? 'w-10 h-10 sm:w-14 sm:h-14' : 'w-8 h-8 sm:w-11 sm:h-11'}
+                            iconSize={isCenter ? 18 : 14}
+                            className={`mx-auto ring-2 ${accent.ring} mb-1 sm:mb-2`}
+                            placeholderBg="bg-gray-800"
+                          />
                           <div className="text-[11px] sm:text-sm font-semibold text-white truncate">{entry.username || 'Anonymous'}</div>
                           <span className={`inline-block px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold ${tierCfg.bg} ${tierCfg.color} rounded uppercase tracking-wide mt-0.5 sm:mt-1`}>
                             {entry.tier}
@@ -716,13 +718,14 @@ export default function Compete() {
                           </div>
 
                           {/* Avatar */}
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
-                            {entry.avatarUrl ? (
-                              <img src={entry.avatarUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <Users size={14} weight="fill" className="text-gray-500" />
-                            )}
-                          </div>
+                          <LazyAvatar
+                            src={entry.avatarUrl}
+                            name={entry.username}
+                            size="w-7 h-7 sm:w-8 sm:h-8"
+                            iconSize={14}
+                            className="shrink-0"
+                            placeholderBg="bg-gray-800"
+                          />
 
                           {/* Identity */}
                           <div className="flex-1 min-w-0">
