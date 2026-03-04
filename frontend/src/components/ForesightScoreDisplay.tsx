@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import apiClient from '../lib/apiClient';
+import apiClient, { hasSession } from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import {
   Star, Crown, Lightning, TrendUp, Medal, Diamond,
@@ -98,13 +98,13 @@ export default function ForesightScoreDisplay({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isConnected && address) {
+    if (isConnected && hasSession()) {
       fetchFSData();
     } else {
       setLoading(false);
       setFsData(null);
     }
-  }, [isConnected, address]);
+  }, [isConnected]);
 
   const fetchFSData = async () => {
     try {
