@@ -188,9 +188,12 @@ export default function CursorFollower() {
       }
     }
 
+    const bound = new WeakSet<Element>();
     function attachListeners() {
       const els = document.querySelectorAll('a, button, [role="button"], input, select, textarea');
       els.forEach(el => {
+        if (bound.has(el)) return;
+        bound.add(el);
         el.addEventListener('mouseenter', onInteractiveEnter);
         el.addEventListener('mouseleave', onInteractiveLeave);
       });
