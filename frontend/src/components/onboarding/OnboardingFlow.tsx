@@ -21,6 +21,7 @@ import { useOnboarding } from '../../contexts/OnboardingContext';
 interface OnboardingFlowProps {
   onComplete: () => void;
   contestId?: number;
+  onExpandChange?: (expanded: boolean) => void;
 }
 
 const STEPS = [
@@ -68,7 +69,7 @@ const STEPS = [
 
 const PILL_CYCLE_MS = 4000;
 
-export default function OnboardingFlow({ onComplete, contestId }: OnboardingFlowProps) {
+export default function OnboardingFlow({ onComplete, contestId, onExpandChange }: OnboardingFlowProps) {
   const navigate = useNavigate();
   const { markWelcomeSeen, markVisited } = useOnboarding();
   const [visible, setVisible] = useState(false);
@@ -85,6 +86,11 @@ export default function OnboardingFlow({ onComplete, contestId }: OnboardingFlow
     const t = setTimeout(() => setVisible(true), 1200);
     return () => clearTimeout(t);
   }, []);
+
+  // Notify parent of expand state
+  useEffect(() => {
+    onExpandChange?.(isOpen);
+  }, [isOpen, onExpandChange]);
 
   // Auto-cycle when collapsed
   useEffect(() => {

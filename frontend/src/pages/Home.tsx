@@ -414,6 +414,7 @@ export default function Home() {
   const { isConnected, login } = useAuth();
   const { isFirstVisit } = useOnboarding();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingExpanded, setOnboardingExpanded] = useState(false);
   const [xp, setXp] = useState(0);
   const [teamsOnChain, setTeamsOnChain] = useState<number | null>(null);
   const [prizeFormatted, setPrizeFormatted] = useState<string | null>(null);
@@ -454,10 +455,18 @@ export default function Home() {
         <OnboardingFlow
           onComplete={() => setShowOnboarding(false)}
           contestId={contestId ?? undefined}
+          onExpandChange={setOnboardingExpanded}
         />
       )}
-      <LandingPage isConnected={isConnected} login={login} xp={xp}
-        teamsOnChain={teamsOnChain} countdown={countdown} prizeFormatted={prizeFormatted} />
+      <div
+        style={{
+          filter: onboardingExpanded ? 'blur(3px)' : 'blur(0px)',
+          transition: 'filter 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        <LandingPage isConnected={isConnected} login={login} xp={xp}
+          teamsOnChain={teamsOnChain} countdown={countdown} prizeFormatted={prizeFormatted} />
+      </div>
     </>
   );
 }
