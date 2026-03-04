@@ -551,7 +551,7 @@ router.post('/seed-demo-contest', async (req: Request, res: Response) => {
 
 /**
  * Create the single hero launch contest:
- * "Season 0" — FREE, 72h, 500 cap, $225 USD prize pool ($100/$75/$50)
+ * "Season 0" — FREE, 7 days (5d draft + 2d lock), 500 cap, $225 USD prize pool ($100/$75/$50)
  *
  * Prizes are paid out-of-band (real USD/SOL on mainnet). The prize_pool
  * field stores 225 as a display value; the description makes it clear.
@@ -591,9 +591,9 @@ async function seedLaunchContest(): Promise<{ created: boolean; contest: Record<
   }
 
   const now = new Date();
-  // Entries lock after 48h, contest ends at 72h
-  const lockTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-  const endTime = new Date(now.getTime() + 72 * 60 * 60 * 1000);
+  // 5-day draft window, then 2-day scoring lock = 7 days total
+  const lockTime = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+  const endTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const [contest] = await db('prized_contests').insert({
     contest_type_id: freeType.id,
