@@ -238,22 +238,23 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+                className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 ${
                   isActive
-                    ? item.highlight
-                      ? 'text-gold-400'
-                      : 'text-gold-400'
-                    : 'text-gray-500'
+                    ? 'text-gold-400 scale-105'
+                    : 'text-gray-500 active:scale-95'
                 }`}
               >
                 <Icon
                   size={22}
                   weight={isActive ? 'fill' : 'regular'}
-                  className={isActive && item.highlight ? 'drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' : ''}
+                  className={`transition-all duration-200 ${isActive ? 'drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' : ''}`}
                 />
-                <span className={`text-[10px] font-medium ${isActive ? 'text-gold-400' : 'text-gray-500'}`}>
+                <span className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? 'text-gold-400' : 'text-gray-500'}`}>
                   {item.label}
                 </span>
+                {isActive && (
+                  <span className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-gold-400 animate-[scaleIn_0.2s_ease-out]" />
+                )}
               </Link>
             );
           })}

@@ -538,7 +538,7 @@ export default function Progress() {
 
       {/* Quest List - shows in-progress and completed (not claimable) */}
       <div className="space-y-2">
-        {currentQuests.map((quest) => {
+        {currentQuests.map((quest, idx) => {
           const QuestIcon = getQuestIcon(quest.icon);
           const progressPercent = Math.min(100, (quest.progress / quest.target) * 100);
           const isInProgress = !quest.isClaimed && !quest.isCompleted;
@@ -546,9 +546,10 @@ export default function Progress() {
           return (
             <div
               key={quest.id}
-              className={`bg-gray-900/50 rounded-xl border transition-all ${
-                quest.isClaimed ? 'border-gray-700 opacity-60' : 'border-gray-800'
+              className={`bg-gray-900/50 rounded-xl border transition-all opacity-0 animate-[fadeInUp_0.3s_ease-out_forwards] ${
+                quest.isClaimed ? 'border-gray-700 !opacity-60' : 'border-gray-800'
               }`}
+              style={{ animationDelay: `${idx * 60}ms` }}
             >
               <div className="p-4 flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${

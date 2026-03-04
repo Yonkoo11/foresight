@@ -100,10 +100,10 @@ function HighlightCard({
 }: HighlightCardProps) {
   const cardBase = onTeam
     ? 'bg-amber-500/5 border-amber-500/25'
-    : 'bg-gray-900/60 border-gray-800 hover:border-gray-700';
+    : 'bg-gray-900/60 border-gray-800 hover:border-gray-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20';
 
   return (
-    <div className={`rounded-xl border transition-all overflow-hidden ${cardBase}`}>
+    <div className={`rounded-xl border transition-all duration-200 overflow-hidden ${cardBase}`}>
       <div className="p-3">
         {/* Avatar · handle · tier badge */}
         <div className="flex items-center gap-2 mb-2.5">
@@ -629,19 +629,20 @@ export default function Intel() {
                       </span>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {highlights.slice(0, 6).map((tweet) => (
-                        <HighlightCard
-                          key={tweet.id}
-                          tweet={tweet}
-                          onTeam={isOnTeam(tweet.influencer.id)}
-                          scouted={isScouted(tweet.influencer.id)}
-                          scouting={scoutingId === tweet.influencer.id}
-                          draftCount={communityPicks[tweet.influencer.id] || 0}
-                          onScout={() => toggleScout(tweet.influencer.id, tweet.influencer.name)}
-                          engagementLabel={engagementLabel(tweet)}
-                          tierStyle={getTierStyle(tweet.influencer.tier)}
-                          formatNumber={formatNumber}
-                        />
+                      {highlights.slice(0, 6).map((tweet, idx) => (
+                        <div key={tweet.id} className="opacity-0 animate-[fadeInUp_0.3s_ease-out_forwards]" style={{ animationDelay: `${idx * 80}ms` }}>
+                          <HighlightCard
+                            tweet={tweet}
+                            onTeam={isOnTeam(tweet.influencer.id)}
+                            scouted={isScouted(tweet.influencer.id)}
+                            scouting={scoutingId === tweet.influencer.id}
+                            draftCount={communityPicks[tweet.influencer.id] || 0}
+                            onScout={() => toggleScout(tweet.influencer.id, tweet.influencer.name)}
+                            engagementLabel={engagementLabel(tweet)}
+                            tierStyle={getTierStyle(tweet.influencer.tier)}
+                            formatNumber={formatNumber}
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>

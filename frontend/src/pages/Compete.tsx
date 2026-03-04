@@ -706,7 +706,7 @@ export default function Compete() {
                   const isExpanded = expandedPlayerId === entry.userId;
 
                   return (
-                    <div key={entry.userId}>
+                    <div key={entry.userId} className="opacity-0 animate-[fadeIn_0.3s_ease-out_forwards]" style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}>
                       <div
                         className={`group px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer transition-colors duration-150 ${isExpanded ? 'bg-gray-800/40' : 'hover:bg-gray-800/20'}`}
                         onClick={() => setExpandedPlayerId(isExpanded ? null : entry.userId)}
@@ -1091,7 +1091,7 @@ export default function Compete() {
                       <span className="text-[10px] text-gray-600">{allBrowsableContests.length}</span>
                     </div>
                     <div className="rounded-lg border border-gray-800 overflow-hidden divide-y divide-gray-800/60">
-                      {allBrowsableContests.map((contest) => {
+                      {allBrowsableContests.map((contest, idx) => {
                         const config = CONTEST_CONFIG[contest.typeCode] || CONTEST_CONFIG.WEEKLY_STARTER;
                         const Icon = config.icon;
                         const hasEntered = enteredContestIds.has(contest.id);
@@ -1106,7 +1106,8 @@ export default function Compete() {
                               // On mobile, navigate to contest detail
                               if (window.innerWidth < 1024) navigate(`/contest/${contest.id}`);
                             }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-3 text-left transition-colors duration-100 ${
+                            style={{ animationDelay: `${idx * 50}ms` }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-3 text-left transition-all duration-150 opacity-0 animate-[fadeInUp_0.3s_ease-out_forwards] hover:-translate-y-[1px] ${
                               isSelected
                                 ? 'bg-gray-800 border-l-2 border-l-gold-500'
                                 : 'bg-gray-900 hover:bg-gray-800/70 border-l-2 border-l-transparent'

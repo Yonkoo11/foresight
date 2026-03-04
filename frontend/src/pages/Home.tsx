@@ -61,20 +61,18 @@ function ContestPanel({
   return (
     <div className="mt-5 rounded-2xl overflow-hidden border border-gray-800">
       <div className="grid grid-cols-3 divide-x divide-gray-800 bg-gray-900">
-        <div className="px-4 py-3.5">
-          <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Prize Pool</p>
-          <p className="text-sm font-mono font-bold text-white tabular-nums">{prizeFormatted ?? '—'}</p>
-        </div>
-        <div className="px-4 py-3.5">
-          <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1">Entry</p>
-          <p className="text-sm font-mono font-bold text-white">Free</p>
-        </div>
-        <div className="px-4 py-3.5">
-          <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Timer size={9} />Closes
-          </p>
-          <p className="text-sm font-mono font-bold text-white tabular-nums">{countdown || '—'}</p>
-        </div>
+        {[
+          { label: 'Prize Pool', value: prizeFormatted ?? '—', icon: null },
+          { label: 'Entry', value: 'Free', icon: null },
+          { label: 'Closes', value: countdown || '—', icon: <Timer size={9} /> },
+        ].map((col, i) => (
+          <div key={col.label} className="px-4 py-3.5 opacity-0 animate-[fadeIn_0.4s_ease-out_forwards]" style={{ animationDelay: `${0.6 + i * 0.1}s` }}>
+            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1 flex items-center gap-1">
+              {col.icon}{col.label}
+            </p>
+            <p className="text-sm font-mono font-bold text-white tabular-nums">{col.value}</p>
+          </div>
+        ))}
       </div>
       <div className="border-t border-gray-800 bg-gray-950 px-4 py-3.5">
         {isConnected ? (
@@ -255,7 +253,7 @@ function LandingPage({
 
       {/* ═══════════════════════ MOBILE HERO ════════════════════════════ */}
       <section className="lg:hidden pt-4 pb-4 px-3">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 opacity-0 animate-[fadeInUp_0.5s_ease-out_0.1s_forwards]">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-[11px] text-gold-400 font-medium">
             <span className="relative flex h-1.5 w-1.5 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75" />
@@ -270,19 +268,21 @@ function LandingPage({
           </a>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-2 leading-tight tracking-tight">
+        <h1 className="text-3xl font-bold text-white mb-2 leading-tight tracking-tight opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]">
           Back CT calls.{' '}
           <span className="animate-gold-shimmer">Get paid.</span>
         </h1>
-        <p className="text-[13px] text-gray-400 mb-0 leading-relaxed">
+        <p className="text-[13px] text-gray-400 mb-0 leading-relaxed opacity-0 animate-[fadeInUp_0.5s_ease-out_0.35s_forwards]">
           Pick 5 CT influencers. Score their weekly engagement. Compete for SOL.
         </p>
 
-        <ContestPanel isConnected={isConnected} login={login} countdown={countdown}
-          prizeFormatted={prizeFormatted} teamsOnChain={teamsOnChain} />
+        <div className="opacity-0 animate-[fadeInUp_0.5s_ease-out_0.5s_forwards]">
+          <ContestPanel isConnected={isConnected} login={login} countdown={countdown}
+            prizeFormatted={prizeFormatted} teamsOnChain={teamsOnChain} />
+        </div>
 
         {/* Compact formation teaser */}
-        <div className="mt-4">
+        <div className="mt-4 opacity-0 animate-[fadeInUp_0.5s_ease-out_0.65s_forwards]">
           <FormationPreview variant="compact" showStats={false} />
         </div>
       </section>
@@ -291,7 +291,7 @@ function LandingPage({
       <section className="hidden lg:block pt-12 pb-8">
         <div className="grid lg:grid-cols-[1.1fr_1.2fr] gap-12 items-start">
           <div>
-            <div className="flex items-center gap-2 mb-8">
+            <div className="flex items-center gap-2 mb-8 opacity-0 animate-[fadeInUp_0.5s_ease-out_0.1s_forwards]">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-sm text-gold-400 font-medium">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75" />
@@ -306,30 +306,32 @@ function LandingPage({
               </a>
             </div>
 
-            <h1 className="text-5xl xl:text-6xl font-bold text-white leading-[1.05] tracking-tight mb-5">
+            <h1 className="text-5xl xl:text-6xl font-bold text-white leading-[1.05] tracking-tight mb-5 opacity-0 animate-[fadeInUp_0.7s_ease-out_0.2s_forwards]">
               Back CT calls.<br />{' '}
               <span className="animate-gold-shimmer">Get paid.</span>
             </h1>
-            <p className="text-lg text-gray-400 leading-relaxed max-w-sm mb-0">
+            <p className="text-lg text-gray-400 leading-relaxed max-w-sm mb-0 opacity-0 animate-[fadeInUp_0.5s_ease-out_0.45s_forwards]">
               Pick 5 CT influencers. Score their weekly engagement. Compete for SOL prizes.
             </p>
 
-            <ContestPanel isConnected={isConnected} login={login} countdown={countdown}
-              prizeFormatted={prizeFormatted} teamsOnChain={teamsOnChain} />
+            <div className="opacity-0 animate-[fadeInUp_0.5s_ease-out_0.6s_forwards]">
+              <ContestPanel isConnected={isConnected} login={login} countdown={countdown}
+                prizeFormatted={prizeFormatted} teamsOnChain={teamsOnChain} />
+            </div>
 
-            <p className="text-[10px] font-mono text-gray-700 mt-4">
+            <p className="text-[10px] font-mono text-gray-700 mt-4 opacity-0 animate-[fadeIn_0.5s_ease-out_0.8s_forwards]">
               Solana Devnet · Moving to mainnet post-launch · Teams on-chain via Tapestry
             </p>
           </div>
 
-          <div>
+          <div className="opacity-0 animate-[fadeInUp_0.6s_ease-out_0.4s_forwards]">
             <FormationPreview variant="hero" showStats={true} />
           </div>
         </div>
       </section>
 
       {/* ═══════════════════ GAME LOOP STRIP ════════════════════════════ */}
-      <div className="border-t border-gray-800/50 py-4">
+      <div className="border-t border-gray-800/50 py-4 opacity-0 animate-[fadeIn_0.5s_ease-out_0.9s_forwards]">
         <div className="flex items-center justify-center gap-3 md:gap-6 text-[11px] font-mono text-gray-500 uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
             <Target size={12} className="text-gold-400" weight="bold" />

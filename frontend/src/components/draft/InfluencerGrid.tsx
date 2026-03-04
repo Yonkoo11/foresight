@@ -177,7 +177,7 @@ export default function InfluencerGrid({
                     >
                       {/* Selected indicator */}
                       {selected && (
-                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center animate-[scaleIn_0.2s_ease-out]">
                           <Check size={12} weight="bold" className="text-white" />
                         </div>
                       )}
