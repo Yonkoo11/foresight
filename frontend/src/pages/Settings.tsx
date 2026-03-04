@@ -9,10 +9,11 @@ import apiClient, { hasSession } from '../lib/apiClient';
 import { usePrivy } from '@privy-io/react-auth';
 import { useLinkAccount } from '@privy-io/react-auth';
 import {
-  User, SignOut, CheckCircle, Warning, Crown, Image,
+  User, SignOut, CheckCircle, Warning, Crown,
   PencilSimple, X, XLogo, Wallet, Envelope, Link as LinkIcon,
   Star
 } from '@phosphor-icons/react';
+import AvatarPicker from '../components/AvatarPicker';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 import { getXPLevel } from '../utils/xp';
@@ -37,7 +38,7 @@ interface Team {
 }
 
 export default function Settings() {
-  const { address, isConnected, logout, email, twitterHandle, isBackendAuthed } = useAuth();
+  const { address, isConnected, logout, email, twitterHandle, isBackendAuthed, setAvatarUrl: setGlobalAvatarUrl } = useAuth();
   const { user, unlinkTwitter, unlinkEmail, unlinkWallet } = usePrivy();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -63,12 +64,12 @@ export default function Settings() {
 
   // Edit states
   const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+  const [isPickingAvatar, setIsPickingAvatar] = useState(false);
   const [isEditingTeamName, setIsEditingTeamName] = useState(false);
 
   // Form values
   const [usernameInput, setUsernameInput] = useState('');
-  const [avatarUrlInput, setAvatarUrlInput] = useState('');
+  const [savingAvatar, setSavingAvatar] = useState(false);
   const [teamNameInput, setTeamNameInput] = useState('');
 
   // Saving states
@@ -146,9 +147,8 @@ export default function Settings() {
     try {
       setSavingProfile(true);
 
-      const updates: { username?: string; avatarUrl?: string } = {};
+      const updates: { username?: string } = {};
       if (usernameInput !== profile?.username) updates.username = usernameInput;
-      if (avatarUrlInput !== profile?.avatarUrl) updates.avatarUrl = avatarUrlInput;
 
       if (Object.keys(updates).length === 0) {
         showToast('No changes to save', 'error');
@@ -159,7 +159,6 @@ export default function Settings() {
 
       showToast('Profile updated successfully!', 'success');
       setIsEditingUsername(false);
-      setIsEditingAvatar(false);
       await fetchUserData();
     } catch (error) {
       const errorMsg = error instanceof Error && 'response' in error && (error as any).response?.data?.error
@@ -168,6 +167,21 @@ export default function Settings() {
       showToast(errorMsg, 'error');
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleSaveAvatar = async (url: string) => {
+    try {
+      setSavingAvatar(true);
+      await apiClient.patch('/api/users/profile', { avatarUrl: url });
+      showToast('Avatar updated!', 'success');
+      setIsPickingAvatar(false);
+      setGlobalAvatarUrl?.(url);
+      await fetchUserData();
+    } catch (error) {
+      showToast('Failed to update avatar', 'error');
+    } finally {
+      setSavingAvatar(false);
     }
   };
 
@@ -277,55 +291,33 @@ export default function Settings() {
           {/* Avatar */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-400 mb-3">
-              Profile Picture
+              Avatar
             </label>
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold-500 to-gold-700 flex items-center justify-center text-white text-2xl font-bold shadow-soft-lg overflow-hidden">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-20 h-20 rounded-full border-2 border-gold-500 shadow-soft-lg overflow-hidden bg-gray-800">
                 {profile?.avatarUrl ? (
                   <img src={profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <User size={40} weight="bold" />
-                )}
-              </div>
-              <div className="flex-1">
-                {isEditingAvatar ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={avatarUrlInput}
-                      onChange={(e) => setAvatarUrlInput(e.target.value)}
-                      placeholder="Enter image URL..."
-                      className="flex-1 px-4 py-2 bg-gray-900 border-2 border-gray-700 rounded-lg focus:outline-none focus:border-gold-500 text-white"
-                    />
-                    <button
-                      onClick={handleUpdateProfile}
-                      disabled={savingProfile}
-                      className="btn-primary px-4 py-2 flex items-center gap-2"
-                    >
-                      <CheckCircle size={18} weight="bold" />
-                      Save
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsEditingAvatar(false);
-                        setAvatarUrlInput(profile?.avatarUrl || '');
-                      }}
-                      className="btn-ghost px-4 py-2"
-                    >
-                      <X size={18} weight="bold" />
-                    </button>
+                  <div className="w-full h-full bg-gradient-to-br from-gold-500 to-gold-700 flex items-center justify-center">
+                    <User size={40} weight="bold" className="text-white" />
                   </div>
-                ) : (
-                  <button
-                    onClick={() => setIsEditingAvatar(true)}
-                    className="btn-ghost px-4 py-2 flex items-center gap-2"
-                  >
-                    <Image size={18} weight="bold" />
-                    Change Picture
-                  </button>
                 )}
               </div>
+              <button
+                onClick={() => setIsPickingAvatar(!isPickingAvatar)}
+                className="btn-ghost px-4 py-2 flex items-center gap-2 text-sm"
+              >
+                <PencilSimple size={16} weight="bold" />
+                {isPickingAvatar ? 'Close' : 'Change Avatar'}
+              </button>
             </div>
+            {isPickingAvatar && (
+              <AvatarPicker
+                currentUrl={profile?.avatarUrl}
+                onSelect={handleSaveAvatar}
+                saving={savingAvatar}
+              />
+            )}
           </div>
 
           {/* Username */}

@@ -20,6 +20,7 @@ export function usePrivyAuth() {
   const retryCount = useRef(0);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isBackendAuthed, setIsBackendAuthed] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
 
   const syncWithBackend = useCallback(async () => {
     if (hasAttemptedAuth.current) return;
@@ -38,6 +39,7 @@ export function usePrivyAuth() {
       try {
         const meResponse = await apiClient.get('/api/auth/me');
         if (meResponse.status === 200) {
+          setAvatarUrl(meResponse.data?.data?.avatarUrl);
           setIsBackendAuthed(true);
           return;
         }
@@ -51,6 +53,7 @@ export function usePrivyAuth() {
       if (response.data?.success) {
         const at = response.data?.data?.accessToken;
         if (at) sessionStorage.setItem('accessToken', at);
+        setAvatarUrl(response.data?.data?.user?.avatarUrl);
         setIsBackendAuthed(true);
       } else {
         setSyncError('Backend returned unexpected response. Contact support.');
@@ -90,6 +93,7 @@ export function usePrivyAuth() {
     if (!authenticated && lastUserId.current) {
       sessionStorage.removeItem('accessToken');
       setIsBackendAuthed(false);
+      setAvatarUrl(undefined);
       lastUserId.current = undefined;
       hasAttemptedAuth.current = false;
       setSyncError(null);
@@ -130,5 +134,7 @@ export function usePrivyAuth() {
     retrySync,
     syncError,
     isBackendAuthed,
+    avatarUrl,
+    setAvatarUrl,
   };
 }

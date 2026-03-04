@@ -76,7 +76,7 @@ function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
     }
     privyLogin();
   }, [privyLogin]);
-  const { syncError, retrySync, isBackendAuthed: backendAuthed, logout: backendLogout } = usePrivyAuth();
+  const { syncError, retrySync, isBackendAuthed: backendAuthed, logout: backendLogout, avatarUrl, setAvatarUrl } = usePrivyAuth();
 
   // After OAuth, Privy always redirects to the root (customOAuthRedirectUrl: origin).
   // Wait for backend auth to complete before redirecting — navigating too early
@@ -148,12 +148,14 @@ function PrivyAuthBridge({ children }: { children: React.ReactNode }) {
       displayAddress,
       email,
       twitterHandle,
+      avatarUrl,
       displayName,
       isBackendAuthed: backendAuthed,
       login,
       logout: handleLogout,
+      setAvatarUrl,
     };
-  }, [ready, authenticated, address, email, twitterHandle, login, handleLogout, backendAuthed]);
+  }, [ready, authenticated, address, email, twitterHandle, avatarUrl, login, handleLogout, backendAuthed, setAvatarUrl]);
 
   const isSyncing = ready && authenticated && !backendAuthed;
   const [errorDismissed, setErrorDismissed] = useState(false);

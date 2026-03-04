@@ -18,6 +18,18 @@ import tapestryService from '../services/tapestryService';
 import { sendSuccess } from '../utils/response';
 import logger from '../utils/logger';
 
+// Predefined avatar seeds (DiceBear identicon) — must match frontend/src/constants/avatars.ts
+const AVATAR_SEEDS = [
+  'SolanaWhale', 'DeFi_Degen', 'AlphaHunter', 'CT_Maxi', 'GigaBrain',
+  'NFT_Flipper', 'OnChainAnon', 'MevBot_Chad', 'YieldFarmer', 'Ser_Ngmi',
+  'ApeDegen', 'ChartMaster', 'DiamondHand', 'RektProof', 'TokenSniper', 'MoonRunner',
+];
+
+function getRandomAvatarUrl(): string {
+  const seed = AVATAR_SEEDS[Math.floor(Math.random() * AVATAR_SEEDS.length)];
+  return `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}&scale=80`;
+}
+
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PROD = NODE_ENV === 'production';
 
@@ -151,6 +163,7 @@ async function findOrCreateUser(
         created_at: db.fn.now(),
         last_seen_at: db.fn.now(),
         ct_mastery_score: referrerId ? 50 : 0,
+        avatar_url: getRandomAvatarUrl(),
       })
       .returning('*');
 

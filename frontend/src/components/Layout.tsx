@@ -32,7 +32,7 @@ interface NavItem {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { isConnected, address, displayAddress, login, logout } = useAuth();
+  const { isConnected, address, displayAddress, login, logout, avatarUrl } = useAuth();
   const [walletMenuOpen, setWalletMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -143,7 +143,13 @@ export default function Layout({ children }: LayoutProps) {
                   type="button"
                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300 hover:bg-gray-700 hover:border-gray-600 transition-colors"
                 >
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="w-6 h-6 rounded-full bg-gray-700 shrink-0" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gold-500 to-gold-700 flex items-center justify-center shrink-0">
+                      <User size={12} weight="bold" className="text-white" />
+                    </div>
+                  )}
                   <span className="font-mono text-xs">{displayAddress}</span>
                   <CaretDown
                     size={12}

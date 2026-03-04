@@ -13,10 +13,12 @@ export interface AuthState {
   displayAddress: string;
   email?: string;
   twitterHandle?: string;
+  avatarUrl?: string;
   displayName: string;
   isBackendAuthed: boolean;
   login: () => void;
   logout: () => void;
+  setAvatarUrl?: (url: string) => void;
 }
 
 const defaultState: AuthState = {
