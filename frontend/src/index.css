@@ -33,21 +33,6 @@
     user-select: none;
   }
 
-  /* Hide native cursor inside app — custom Flux Tracer replaces it.
-     Scoped to #root so third-party portals (Privy) keep native cursor.
-     Using a transparent 1x1 PNG because cursor:none is unreliable
-     on links/buttons where browsers force cursor:pointer. */
-  #root,
-  #root *,
-  #root a,
-  #root button,
-  #root [role="button"],
-  #root a:hover,
-  #root button:hover,
-  #root [role="button"]:hover {
-    cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==") 0 0, none !important;
-  }
-
   /* Keep inputs and textareas selectable */
   input, textarea, [contenteditable="true"] {
     -webkit-user-select: text;
@@ -444,5 +429,29 @@
 
   .font-mono-data {
     font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  }
+}
+
+/* ========================================
+ * Custom Cursor — hide native cursor
+ * ========================================
+ * MUST be outside @layer to beat Tailwind's
+ * preflight cursor:pointer on a/button.
+ * Scoped to #root so Privy portal keeps native cursor.
+ */
+@media (hover: hover) {
+  #root,
+  #root *,
+  #root a,
+  #root a:hover,
+  #root a:focus,
+  #root button,
+  #root button:hover,
+  #root button:focus,
+  #root [role="button"],
+  #root [role="button"]:hover,
+  #root select,
+  #root label {
+    cursor: none !important;
   }
 }
