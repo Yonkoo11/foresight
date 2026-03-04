@@ -192,34 +192,35 @@ export default function RisingStarsTab() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Rocket size={20} className="text-cyan-400" />
-          <span className="text-sm text-gray-400">
+          <Rocket size={18} className="text-cyan-400" />
+          <span className="text-xs sm:text-sm text-gray-400">
             {stars.length} rising stars discovered
           </span>
         </div>
-        <div className="text-xs text-gray-500">
-          Vote to help us add the best CT talent to the game
+        <div className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">
+          Vote to help us add the best CT talent
         </div>
       </div>
 
       {/* Stars List */}
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {stars.map((star, index) => (
           <div
             key={star.id}
-            className={`p-4 rounded-xl border transition-all ${
+            className={`p-3 sm:p-4 rounded-xl border transition-all ${
               index === 0
                 ? 'bg-gold-500/5 border-gold-500/30'
                 : 'bg-gray-900/50 border-gray-800'
             }`}
           >
-            <div className="flex items-start gap-4">
-              {/* Rank Badge */}
-              <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+            {/* Top row: rank + avatar + name + vote */}
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              {/* Rank */}
+              <div className={`shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center text-[10px] sm:text-sm font-bold ${
                 index === 0
                   ? 'bg-gold-500/20 text-gold-400'
                   : index === 1
@@ -228,122 +229,101 @@ export default function RisingStarsTab() {
                   ? 'bg-amber-700/20 text-amber-600'
                   : 'bg-gray-800 text-gray-500'
               }`}>
-                {index === 0 ? <Crown size={16} weight="fill" /> : `#${index + 1}`}
+                {index === 0 ? <Crown size={14} weight="fill" /> : `#${index + 1}`}
               </div>
 
               {/* Avatar */}
-              <div className="flex-shrink-0">
-                <img
-                  src={getAvatarUrl(star.handle, star.avatar)}
-                  alt={star.name || star.handle}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              </div>
+              <img
+                src={getAvatarUrl(star.handle, star.avatar)}
+                alt={star.name || star.handle}
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover shrink-0"
+              />
 
-              {/* Info */}
+              {/* Name + handle */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-white truncate">
-                    {star.name || `@${star.handle}`}
-                  </h3>
-                  <a
-                    href={`https://x.com/${star.handle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-gray-500 hover:text-white"
-                  >
-                    @{star.handle}
-                  </a>
-                </div>
-
-                {star.bio && (
-                  <p className="text-sm text-gray-400 line-clamp-1 mb-2">{star.bio}</p>
-                )}
-
-                {/* Stats */}
-                <div className="flex flex-wrap items-center gap-4 text-xs">
-                  <div className="flex items-center gap-1 text-gray-500">
-                    <Users size={12} />
-                    {formatNumber(star.followers)} followers
-                  </div>
-                  <div className="flex items-center gap-1 text-emerald-400">
-                    <TrendUp size={12} />
-                    {star.growthRate.toFixed(1)}% growth
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-500">
-                    <Lightning size={12} />
-                    {star.avgLikes.toFixed(0)} avg likes
-                  </div>
-                  {star.viralTweets > 0 && (
-                    <div className="flex items-center gap-1 text-orange-400">
-                      <Fire size={12} />
-                      {star.viralTweets} viral
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-[10px] text-gray-600 mt-1">
-                  Discovered {formatDate(star.discoveredAt)}
-                </div>
+                <h3 className="text-sm sm:text-base font-semibold text-white truncate">
+                  {star.name || `@${star.handle}`}
+                </h3>
+                <a
+                  href={`https://x.com/${star.handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] sm:text-xs text-gray-500 hover:text-white"
+                >
+                  @{star.handle}
+                </a>
               </div>
 
-              {/* Voting */}
-              <div className="flex flex-col items-center gap-2">
-                {/* Vote Score */}
-                <div className={`text-lg font-bold ${
+              {/* Vote buttons — inline */}
+              <div className="shrink-0 flex items-center gap-1">
+                <button
+                  onClick={() => handleVote(star.id, 'for')}
+                  disabled={votingId === star.id}
+                  className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                    star.userVote === 'for'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      : 'bg-gray-800 text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10'
+                  }`}
+                >
+                  <ThumbsUp size={14} weight={star.userVote === 'for' ? 'fill' : 'regular'} />
+                </button>
+                <span className={`text-xs sm:text-sm font-bold font-mono min-w-[20px] text-center ${
                   star.voteScore > 0 ? 'text-emerald-400' : star.voteScore < 0 ? 'text-rose-400' : 'text-gray-500'
                 }`}>
-                  {star.voteScore > 0 ? '+' : ''}{star.voteScore}
-                </div>
-
-                {/* Vote Buttons */}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleVote(star.id, 'for')}
-                    disabled={votingId === star.id}
-                    className={`p-2 rounded-lg transition-colors ${
-                      star.userVote === 'for'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                        : 'bg-gray-800 text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10'
-                    }`}
-                  >
-                    <ThumbsUp size={16} weight={star.userVote === 'for' ? 'fill' : 'regular'} />
-                  </button>
-                  <button
-                    onClick={() => handleVote(star.id, 'against')}
-                    disabled={votingId === star.id}
-                    className={`p-2 rounded-lg transition-colors ${
-                      star.userVote === 'against'
-                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                        : 'bg-gray-800 text-gray-500 hover:text-rose-400 hover:bg-rose-500/10'
-                    }`}
-                  >
-                    <ThumbsDown size={16} weight={star.userVote === 'against' ? 'fill' : 'regular'} />
-                  </button>
-                </div>
-
-                {/* Vote counts */}
-                <div className="flex items-center gap-2 text-[10px] text-gray-600">
-                  <span className="text-emerald-500/70">{star.votesFor}</span>
-                  <span>/</span>
-                  <span className="text-rose-500/70">{star.votesAgainst}</span>
-                </div>
+                  {star.voteScore}
+                </span>
+                <button
+                  onClick={() => handleVote(star.id, 'against')}
+                  disabled={votingId === star.id}
+                  className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                    star.userVote === 'against'
+                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                      : 'bg-gray-800 text-gray-500 hover:text-rose-400 hover:bg-rose-500/10'
+                  }`}
+                >
+                  <ThumbsDown size={14} weight={star.userVote === 'against' ? 'fill' : 'regular'} />
+                </button>
               </div>
+            </div>
+
+            {/* Bio */}
+            {star.bio && (
+              <p className="text-xs text-gray-400 line-clamp-1 mb-1.5 ml-8 sm:ml-11">{star.bio}</p>
+            )}
+
+            {/* Stats row */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs ml-8 sm:ml-11">
+              <span className="flex items-center gap-0.5 text-gray-500">
+                <Users size={10} /> {formatNumber(star.followers)}
+              </span>
+              <span className="flex items-center gap-0.5 text-emerald-400">
+                <TrendUp size={10} /> {star.growthRate.toFixed(1)}%
+              </span>
+              <span className="flex items-center gap-0.5 text-gray-500">
+                <Lightning size={10} /> {star.avgLikes.toFixed(0)} avg
+              </span>
+              {star.viralTweets > 0 && (
+                <span className="flex items-center gap-0.5 text-orange-400">
+                  <Fire size={10} /> {star.viralTweets} viral
+                </span>
+              )}
+              <span className="text-gray-600">
+                {formatDate(star.discoveredAt)}
+              </span>
             </div>
           </div>
         ))}
       </div>
 
       {/* Info */}
-      <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
-        <h4 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
+      <div className="p-3 sm:p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
+        <h4 className="text-xs sm:text-sm font-semibold text-white mb-1.5 sm:mb-2 flex items-center gap-2">
           <Rocket size={14} className="text-cyan-400" />
           How Rising Stars Works
         </h4>
-        <ul className="space-y-1 text-xs text-gray-400">
+        <ul className="space-y-1 text-[10px] sm:text-xs text-gray-400">
           <li>Vote for influencers you think should be added to the game</li>
           <li>Top voted stars get reviewed and added as draftable players</li>
-          <li>Discover tomorrow's top performers before everyone else</li>
         </ul>
       </div>
     </div>

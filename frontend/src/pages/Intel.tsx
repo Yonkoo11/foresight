@@ -420,10 +420,10 @@ export default function Intel() {
     { id: 'all', label: 'All' },
   ];
 
-  const mainTabs: { id: MainTab; label: string; icon: React.ElementType }[] = [
-    { id: 'feed', label: 'Feed', icon: Newspaper },
-    { id: 'profiles', label: 'Profiles', icon: UsersFour },
-    { id: 'rising', label: 'Rising Stars', icon: Rocket },
+  const mainTabs: { id: MainTab; label: string; shortLabel: string; icon: React.ElementType }[] = [
+    { id: 'feed', label: 'Feed', shortLabel: 'Feed', icon: Newspaper },
+    { id: 'profiles', label: 'Profiles', shortLabel: 'Profiles', icon: UsersFour },
+    { id: 'rising', label: 'Rising Stars', shortLabel: 'Rising', icon: Rocket },
   ];
 
   // Handle compare from ProfilesTab
@@ -450,23 +450,24 @@ export default function Intel() {
         keywords="crypto twitter feed, CT influencer tracker, crypto influencer analytics, twitter engagement metrics, crypto research tool"
         path="/feed"
       />
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
 
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
-                <Newspaper size={28} weight="fill" className="text-gray-300" />
+        {/* Header — compact on mobile */}
+        <div className="mb-3 sm:mb-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
+                <Newspaper size={20} weight="fill" className="text-gray-300 sm:hidden" />
+                <Newspaper size={28} weight="fill" className="text-gray-300 hidden sm:block" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">CT Intelligence</h1>
-                <p className="text-sm text-gray-400">
+                <h1 className="text-lg sm:text-2xl font-bold text-white">CT Intelligence</h1>
+                <p className="text-xs sm:text-sm text-gray-400 hidden sm:block">
                   Research command center for Crypto Twitter
                 </p>
               </div>
             </div>
-            {/* FS Reward Badge */}
+            {/* FS Reward Badge — desktop only */}
             {isConnected && (
               <div className={`hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                 rewardEarned
@@ -506,22 +507,23 @@ export default function Intel() {
             )}
           </div>
 
-          {/* Main Tab Navigation */}
-          <div className="flex gap-1 p-1 bg-gray-900 rounded-xl mb-4">
+          {/* Main Tab Navigation — tighter on mobile */}
+          <div className="flex gap-1 p-1 bg-gray-900 rounded-xl mb-3 sm:mb-4">
             {mainTabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                     activeTab === tab.id
                       ? 'bg-gray-700 text-white'
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                   }`}
                 >
-                  <Icon size={18} weight={activeTab === tab.id ? 'fill' : 'regular'} />
-                  {tab.label}
+                  <Icon size={16} weight={activeTab === tab.id ? 'fill' : 'regular'} />
+                  <span className="sm:hidden">{tab.shortLabel}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
@@ -531,11 +533,11 @@ export default function Intel() {
         {/* Tab Content */}
         {activeTab === 'feed' && (
           <>
-            {/* Feed Filters */}
-            <div className="mb-4">
+            {/* Feed Filters — compact rows */}
+            <div className="mb-3 sm:mb-4 space-y-2">
               {/* Time Filter */}
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1 text-sm text-gray-500">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="hidden sm:flex items-center gap-1 text-sm text-gray-500">
                   <Clock size={14} />
                   <span>Time:</span>
                 </div>
@@ -544,7 +546,7 @@ export default function Intel() {
                     <button
                       key={tab.id}
                       onClick={() => setTimeFilter(tab.id)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium transition-all ${
                         timeFilter === tab.id
                           ? 'bg-gray-700 text-white'
                           : 'text-gray-500 hover:text-gray-300'
@@ -556,8 +558,8 @@ export default function Intel() {
                 </div>
               </div>
 
-              {/* Tier Filter Tabs */}
-              <div className="flex gap-1 overflow-x-auto pb-2">
+              {/* Tier Filter Tabs — scrollable */}
+              <div className="flex gap-1 overflow-x-auto scrollbar-hide">
                 {tierTabs.map((tab) => {
                   const Icon = tab.icon;
                   const isTeamTab = tab.id === 'team';
@@ -567,7 +569,7 @@ export default function Intel() {
                     <button
                       key={tab.id}
                       onClick={() => setTierFilter(tab.id)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                      className={`flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                         tierFilter === tab.id
                           ? isTeamTab
                             ? 'bg-gold-500/20 text-gold-400 border border-gold-500/40'
@@ -577,10 +579,10 @@ export default function Intel() {
                           : 'bg-gray-800/50 text-gray-400 border border-transparent hover:border-gray-700'
                       }`}
                     >
-                      {Icon && <Icon size={14} weight="fill" />}
+                      {Icon && <Icon size={12} weight="fill" />}
                       {tab.label}
                       {isTeamTab && teamInfluencerIds.length > 0 && (
-                        <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-gold-500/30 rounded">
+                        <span className="ml-0.5 px-1 py-0.5 text-[10px] bg-gold-500/30 rounded">
                           {teamInfluencerIds.length}
                         </span>
                       )}
@@ -701,65 +703,60 @@ export default function Intel() {
                       return (
                         <div
                           key={tweet.id}
-                          className={`p-4 hover:bg-gray-800/30 transition-colors ${
+                          className={`p-3 sm:p-4 hover:bg-gray-800/30 transition-colors ${
                             onTeam ? 'border-l-2 border-l-gold-500' : ''
                           }`}
                         >
-                          <div className="flex gap-3">
-                            <div className="relative flex-shrink-0">
+                          <div className="flex gap-2.5 sm:gap-3">
+                            <div className="relative shrink-0">
                               <img
                                 src={getAvatarUrl(tweet.influencer.handle, tweet.influencer.avatar)}
                                 alt={tweet.influencer.name}
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                               />
                               {onTeam && (
-                                <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gold-500 flex items-center justify-center">
-                                  <Trophy size={10} weight="fill" className="text-gray-950" />
+                                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-gold-500 flex items-center justify-center">
+                                  <Trophy size={8} weight="fill" className="text-gray-950" />
                                 </div>
                               )}
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <span className="font-semibold text-white text-sm">
+                              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-0.5 sm:mb-1">
+                                <span className="font-semibold text-white text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">
                                   {tweet.influencer.name}
                                 </span>
-                                <span className="text-xs text-gray-500">@{tweet.influencer.handle}</span>
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${tierStyle.bg} ${tierStyle.text}`}>
+                                <span className="text-[10px] sm:text-xs text-gray-500 truncate">@{tweet.influencer.handle}</span>
+                                <span className={`text-[10px] px-1 sm:px-1.5 py-0.5 rounded font-bold ${tierStyle.bg} ${tierStyle.text}`}>
                                   {tweet.influencer.tier}
                                 </span>
-                                {onTeam && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-400 font-medium">
-                                    YOUR TEAM
-                                  </span>
-                                )}
-                                <span className="text-xs text-gray-600 ml-auto">
+                                <span className="text-[10px] sm:text-xs text-gray-600 ml-auto shrink-0">
                                   {getTimeAgo(tweet.createdAt)}
                                 </span>
                               </div>
 
-                              <p className="text-sm text-gray-300 mb-2">{tweet.text}</p>
+                              <p className="text-xs sm:text-sm text-gray-300 mb-1.5 sm:mb-2 line-clamp-3">{tweet.text}</p>
 
-                              <div className="flex items-center gap-4 text-xs text-gray-500 font-mono tabular-nums">
-                                <span className="flex items-center gap-1">
-                                  <Heart size={12} className="text-pink-500/70" />
+                              <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-gray-500 font-mono tabular-nums">
+                                <span className="flex items-center gap-0.5 sm:gap-1">
+                                  <Heart size={10} className="text-pink-500/70" />
                                   {formatNumber(tweet.likes)}
                                 </span>
-                                <span className="flex items-center gap-1">
-                                  <Repeat size={12} className="text-green-500/70" />
+                                <span className="flex items-center gap-0.5 sm:gap-1">
+                                  <Repeat size={10} className="text-green-500/70" />
                                   {formatNumber(tweet.retweets)}
                                 </span>
-                                <span className="flex items-center gap-1">
-                                  <ChatCircle size={12} className="text-blue-500/70" />
+                                <span className="flex items-center gap-0.5 sm:gap-1">
+                                  <ChatCircle size={10} className="text-blue-500/70" />
                                   {formatNumber(tweet.replies)}
                                 </span>
-                                <span className="flex items-center gap-1">
-                                  <Eye size={12} className="text-gray-400" />
+                                <span className="flex items-center gap-0.5 sm:gap-1">
+                                  <Eye size={10} className="text-gray-400" />
                                   {formatNumber(tweet.views)}
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-800/50">
+                              <div className="flex items-center gap-3 mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-gray-800/50">
                                 {onTeam ? (
                                   <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
                                     <Lightning size={12} weight="fill" />
