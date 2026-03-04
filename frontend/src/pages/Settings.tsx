@@ -294,7 +294,7 @@ export default function Settings() {
               Avatar
             </label>
             <div className="flex items-center gap-4 mb-3">
-              <div className="w-20 h-20 rounded-full shadow-soft-lg overflow-hidden bg-gray-800">
+              <div className="w-20 h-20 rounded-full shadow-soft-lg overflow-hidden bg-[#1A1A24] ring-2 ring-zinc-700">
                 {profile?.avatarUrl ? (
                   <img src={profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (

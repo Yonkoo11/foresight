@@ -184,28 +184,56 @@ export default function ShareTeamCard({
   const botRow = sortedPicks.slice(3, 5);
 
   // ─── The formation card (display only — Canvas handles the image) ──
+  // Matches the football-pitch style from generateTeamCard.ts
   const formationCard = (
-    <div className="relative w-[380px]" style={{
-      aspectRatio: '530/776',
-      backgroundImage: 'url(/card-frame-gold.png)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      borderRadius: 12,
-      overflow: 'hidden',
+    <div className="relative w-[380px] rounded-2xl overflow-hidden" style={{
+      aspectRatio: '600/750',
+      background: '#0A0A0F',
     }}>
-      {/* Content positioned within the frame's interior */}
-      <div className="absolute inset-0 flex flex-col items-center justify-between"
-        style={{ top: '13%', bottom: '15%', left: '13%', right: '13%' }}>
+      {/* Pitch gradient overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(to bottom, rgba(6,78,59,0.35) 0%, rgba(17,24,39,0.6) 50%, rgba(10,10,15,1) 100%)',
+      }} />
+
+      {/* Radial emerald glow */}
+      <div className="absolute inset-0" style={{
+        background: 'radial-gradient(circle at center, rgba(16,185,129,0.08) 0%, transparent 70%)',
+      }} />
+
+      {/* Pitch lines (SVG) */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 750" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Center circle */}
+        <circle cx="300" cy="375" r="80" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+        {/* Center dot */}
+        <circle cx="300" cy="375" r="3" fill="rgba(255,255,255,0.08)" />
+        {/* Half line */}
+        <line x1="30" y1="375" x2="570" y2="375" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+        {/* Top arc */}
+        <path d="M 210 0 A 90 90 0 0 1 390 0" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
+        {/* Bottom arc */}
+        <path d="M 210 750 A 90 90 0 0 0 390 750" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
+        {/* Corner brackets */}
+        <path d="M 12 32 L 12 12 L 32 12" stroke="rgba(255,255,255,0.06)" strokeWidth="2" fill="none" />
+        <path d="M 568 32 L 568 12 L 548 12" stroke="rgba(255,255,255,0.06)" strokeWidth="2" fill="none" />
+        <path d="M 12 718 L 12 738 L 32 738" stroke="rgba(255,255,255,0.06)" strokeWidth="2" fill="none" />
+        <path d="M 568 718 L 568 738 L 548 738" stroke="rgba(255,255,255,0.06)" strokeWidth="2" fill="none" />
+      </svg>
+
+      {/* Gold top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[3px]" style={{
+        background: 'linear-gradient(90deg, #F59E0B, #FBBF24, #F59E0B)',
+      }} />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-between h-full px-6 py-6">
 
         {/* Header */}
         <div className="flex flex-col items-center">
-          <img src="/logo.svg" alt="" style={{ width: 56, height: 32, objectFit: 'contain' }} />
-          <div style={{ color: '#F59E0B', fontSize: 13, fontWeight: 700, letterSpacing: '4px', marginTop: 1 }}>
+          <div style={{ color: '#F59E0B', fontSize: 18, fontWeight: 700, letterSpacing: '3px' }}>
             FORESIGHT
           </div>
-          <div style={{ height: 1.5, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.7), #F59E0B, rgba(245,158,11,0.7), transparent)', width: 120, margin: '3px 0 0' }} />
           {contestName && (
-            <div className="text-[9px] text-gray-400 tracking-widest uppercase mt-1">
+            <div className="text-[9px] text-gray-500 tracking-widest uppercase mt-1">
               {contestName}
             </div>
           )}
@@ -238,7 +266,6 @@ export default function ShareTeamCard({
               {rank && <span className="text-white font-bold">#{rank}</span>}
             </div>
           )}
-          <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.25), transparent)', marginBottom: 4 }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             {username ? (
               <div className="flex items-center gap-1.5">
