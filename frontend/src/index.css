@@ -438,20 +438,12 @@
  * MUST be outside @layer to beat Tailwind's
  * preflight cursor:pointer on a/button.
  * Scoped to #root so Privy portal keeps native cursor.
+ * Touch devices: CursorFollower.tsx bails early so the
+ * invisible cursor has no effect on mobile.
  */
-@media (hover: hover) {
-  #root,
-  #root *,
-  #root a,
-  #root a:hover,
-  #root a:focus,
-  #root button,
-  #root button:hover,
-  #root button:focus,
-  #root [role="button"],
-  #root [role="button"]:hover,
-  #root select,
-  #root label {
-    cursor: none !important;
-  }
+#root,
+#root *,
+#root *::before,
+#root *::after {
+  cursor: none !important;
 }

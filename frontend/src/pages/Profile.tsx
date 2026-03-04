@@ -938,29 +938,14 @@ export default function Profile() {
                             <p className="text-xs text-gray-500 text-center py-2">Pick details not available</p>
                           )}
 
-                          {/* Score breakdown */}
+                          {/* Score summary — intentionally vague to prevent gaming */}
                           <div className="pt-2 border-t border-gray-800">
-                            <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wider">Score Breakdown</div>
                             {!hasResult ? (
                               <p className="text-xs text-gray-600 italic">Scores update every 6 hours &middot; Final when contest ends</p>
                             ) : (
-                              <div className="grid grid-cols-4 gap-2">
-                                <div className="bg-gray-800/40 rounded-lg p-2 text-center">
-                                  <div className="text-sm font-bold font-mono tabular-nums text-white">{Math.round(entry.scoreBreakdown.activity)}</div>
-                                  <div className="text-xs text-gray-500 mt-0.5">Activity</div>
-                                </div>
-                                <div className="bg-gray-800/40 rounded-lg p-2 text-center">
-                                  <div className="text-sm font-bold font-mono tabular-nums text-gray-200">{Math.round(entry.scoreBreakdown.engagement)}</div>
-                                  <div className="text-xs text-gray-500 mt-0.5">Engage</div>
-                                </div>
-                                <div className="bg-gray-800/40 rounded-lg p-2 text-center">
-                                  <div className="text-sm font-bold font-mono tabular-nums text-emerald-400">{Math.round(entry.scoreBreakdown.growth)}</div>
-                                  <div className="text-xs text-gray-500 mt-0.5">Growth</div>
-                                </div>
-                                <div className="bg-gray-800/40 rounded-lg p-2 text-center">
-                                  <div className="text-sm font-bold font-mono tabular-nums text-gold-400">{Math.round(entry.scoreBreakdown.viral)}</div>
-                                  <div className="text-xs text-gray-500 mt-0.5">Viral</div>
-                                </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Total Score</span>
+                                <span className="text-sm font-bold font-mono tabular-nums text-gold-400">{Math.round(entry.score)} pts</span>
                               </div>
                             )}
                           </div>

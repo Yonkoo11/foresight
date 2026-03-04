@@ -151,16 +151,16 @@ export default function InfluencerDetailModal({
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Scouting Report</h3>
             <p className="text-sm text-gray-300 leading-relaxed">
               {influencer.tier === 'S' && (
-                <>Elite-tier. {influencer.follower_count ? `${formatNumber(influencer.follower_count)} followers` : 'Massive following'} with high viral ceiling. Best suited for your <span className="text-gold-400 font-medium">Captain slot</span> where they earn 2.0x points.</>
+                <>Elite-tier. {influencer.follower_count ? `${formatNumber(influencer.follower_count)} followers` : 'Massive following'} with high ceiling. Best suited for your <span className="text-gold-400 font-medium">Captain slot</span> where they earn 2.0x points.</>
               )}
               {influencer.tier === 'A' && (
-                <>Strong performer with {influencer.engagement_rate ? `${influencer.engagement_rate.toFixed(1)}% engagement` : 'above-average engagement'}. {influencer.total_points ? `${influencer.total_points} career points` : 'Reliable scorer'} — good captain candidate if budget is tight.</>
+                <>Strong performer with consistent output. Good captain candidate if budget is tight — pairs well with B and C-tier value picks.</>
               )}
               {influencer.tier === 'B' && (
-                <>Mid-tier value pick at <span className="text-emerald-400">{influencer.price} pts</span>. {influencer.total_points ? `${influencer.total_points} pts` : 'Solid'} — pairs well with an S or A-tier captain to stay under budget.</>
+                <>Mid-tier value pick at <span className="text-emerald-400">{influencer.price} pts</span>. Pairs well with an S or A-tier captain to stay under budget.</>
               )}
               {influencer.tier === 'C' && (
-                <>Budget pick at <span className="text-emerald-400">{influencer.price} pts</span> — lowest draft cost in the pool. Stack 3-4 of these to free up budget for an elite captain. <span className="text-gray-500">Lower points ceiling.</span></>
+                <>Budget pick at <span className="text-emerald-400">{influencer.price} pts</span> — lowest draft cost in the pool. Stack 3-4 of these to free up budget for an elite captain.</>
               )}
             </p>
           </div>

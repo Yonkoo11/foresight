@@ -1,0 +1,539 @@
+/*
+  Atmosphere Effects - Copy/paste ready implementations
+  Brand: Crypto Casino Dark with Gold (#F59E0B) accents
+  Target: Premium dark theme with subtle animations
+*/
+
+/* ============================================================================
+   1. ANIMATED GRADIENT BACKGROUNDS (Production Ready)
+   ============================================================================ */
+
+.bg-gradient-animated {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 15, 1) 0%,
+    rgba(30, 41, 59, 0.8) 25%,
+    rgba(10, 10, 15, 1) 50%,
+    rgba(25, 35, 50, 0.9) 75%,
+    rgba(10, 10, 15, 1) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease-in-out infinite;
+  will-change: background-position;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .bg-gradient-animated {
+    animation: none;
+    background-position: 0% 50%;
+  }
+}
+
+/* Mobile optimization - slower for efficiency */
+@media (max-width: 768px) {
+  .bg-gradient-animated {
+    animation-duration: 20s;
+  }
+}
+
+/* ============================================================================
+   2. PREMIUM RADIAL GRADIENT (Multiple Orbs) - Polymarket Style
+   ============================================================================ */
+
+.bg-premium-radial {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background:
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(245, 158, 11, 0.15) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(245, 158, 11, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(30, 41, 59, 1) 0%,
+      rgba(10, 10, 15, 1) 100%
+    );
+  background-size:
+    300% 300%,
+    250% 250%,
+    100% 100%;
+  animation:
+    float-orb-1 8s ease-in-out infinite,
+    float-orb-2 12s ease-in-out infinite;
+  will-change: background-position;
+}
+
+@keyframes float-orb-1 {
+  0% {
+    background-position: 0% 0%, 50% 50%, 0 0;
+  }
+  50% {
+    background-position: 100% 100%, -50% -50%, 0 0;
+  }
+  100% {
+    background-position: 0% 0%, 50% 50%, 0 0;
+  }
+}
+
+@keyframes float-orb-2 {
+  0% {
+    background-position: 50% 50%, 0% 0%, 0 0;
+  }
+  50% {
+    background-position: -50% -50%, 100% 100%, 0 0;
+  }
+  100% {
+    background-position: 50% 50%, 0% 0%, 0 0;
+  }
+}
+
+/* ============================================================================
+   3. NOISE & TEXTURE OVERLAY (SVG feTurbulence - Inline)
+   ============================================================================ */
+
+.noise-overlay::before,
+.bg-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeBlend mode='screen' in='SourceGraphic'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: soft-light;
+  z-index: 1;
+}
+
+/* Alternative: Fixed position for full page */
+.bg-noise-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeBlend mode='screen' in='SourceGraphic'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+}
+
+/* Fine-grained variant (more grainy) */
+.noise-fine::before {
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilterFine'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeBlend mode='screen' in='SourceGraphic'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilterFine)' fill='%23000000'/%3E%3C/svg%3E");
+}
+
+/* Strong variant (premium gold surfaces) */
+.noise-strong::before {
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+}
+
+/* ============================================================================
+   4. EXPANDABLE PILL PATTERN (Interactive)
+   ============================================================================ */
+
+.pill-expandable {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #1a1a24;
+  border: 1px solid #27272a;
+  border-radius: 9999px;
+  color: #a1a1aa;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left center;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.pill-expandable:hover {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #f59e0b;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.pill-expandable:active {
+  transform: scale(0.98);
+}
+
+/* Icon inside pill */
+.pill-icon {
+  display: inline-flex;
+  font-size: 1rem;
+}
+
+/* Text inside pill */
+.pill-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   5. SMART EXPANDABLE TOOLTIP
+   ============================================================================ */
+
+.smart-tooltip {
+  display: inline-block;
+  position: relative;
+}
+
+.tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #1a1a24;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  color: #a1a1aa;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tooltip-trigger:hover {
+  background: linear-gradient(
+    135deg,
+    #1a1a24 0%,
+    #27272a 100%
+  );
+  border-color: #f59e0b;
+  color: #f59e0b;
+  box-shadow:
+    inset 0 0 0 1px rgba(245, 158, 11, 0.2),
+    0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+.tooltip-content {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: #12121a;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #27272a;
+}
+
+/* Using :has() selector (modern browsers) */
+.smart-tooltip:has(.tooltip-trigger:hover) .tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Fallback for older browsers */
+.tooltip-trigger:hover ~ .tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-content p {
+  margin: 0;
+  color: #fafafa;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.tooltip-content .secondary {
+  color: #71717a;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* ============================================================================
+   6. FLOATING PARTICLES (Pure CSS)
+   ============================================================================ */
+
+.particle-field {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(245, 158, 11, 0.4);
+  border-radius: 50%;
+  opacity: 0.5;
+  filter: blur(1px);
+  will-change: transform;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(var(--drift, 0)) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.particle {
+  animation: float-up var(--duration) linear infinite;
+}
+
+/* Randomized particles (generate with SCSS or inline styles) */
+.particle:nth-child(1) { --duration: 8s; --drift: 50px; left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { --duration: 10s; --drift: -70px; left: 20%; animation-delay: -2s; }
+.particle:nth-child(3) { --duration: 12s; --drift: 100px; left: 30%; animation-delay: -4s; }
+.particle:nth-child(4) { --duration: 9s; --drift: -80px; left: 40%; animation-delay: -6s; }
+.particle:nth-child(5) { --duration: 11s; --drift: 60px; left: 50%; animation-delay: -8s; }
+.particle:nth-child(6) { --duration: 13s; --drift: -100px; left: 60%; animation-delay: -10s; }
+.particle:nth-child(7) { --duration: 8.5s; --drift: 75px; left: 70%; animation-delay: -12s; }
+.particle:nth-child(8) { --duration: 10.5s; --drift: -50px; left: 80%; animation-delay: -14s; }
+.particle:nth-child(9) { --duration: 12.5s; --drift: 90px; left: 90%; animation-delay: -16s; }
+.particle:nth-child(10) { --duration: 9.5s; --drift: -60px; left: 15%; animation-delay: -18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none;
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .particle {
+    width: 1px;
+    height: 1px;
+    opacity: 0.3;
+  }
+}
+
+/* ============================================================================
+   7. GLOWING PARTICLE VARIANT (Premium Effect)
+   ============================================================================ */
+
+.particle.glow {
+  width: 4px;
+  height: 4px;
+  background: #f59e0b;
+  box-shadow:
+    0 0 4px rgba(245, 158, 11, 0.8),
+    0 0 12px rgba(245, 158, 11, 0.4),
+    inset 0 0 4px rgba(255, 255, 255, 0.3);
+  animation:
+    float-up var(--duration) linear infinite,
+    glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    filter: blur(1px);
+  }
+  50% {
+    opacity: 0.8;
+    filter: blur(0.5px);
+  }
+}
+
+/* ============================================================================
+   8. COMBINED: FULL ATMOSPHERE CONTAINER
+   ============================================================================ */
+
+.atmosphere-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #0a0a0f;
+  overflow: hidden;
+}
+
+.atmosphere-base {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.atmosphere-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0a0a0f, #1a1a24, #0a0a0f);
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease-in-out infinite;
+  will-change: background-position;
+}
+
+.atmosphere-noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeBlend mode='screen' in='SourceGraphic'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+}
+
+.atmosphere-content {
+  position: relative;
+  z-index: 3;
+}
+
+/* ============================================================================
+   9. UTILITY CLASSES FOR QUICK APPLICATION
+   ============================================================================ */
+
+.surface-with-noise {
+  position: relative;
+  background: #12121a;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+}
+
+.surface-with-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' seed='2' stitchTiles='stitch'/%3E%3CfeBlend mode='screen' in='SourceGraphic'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilter)' fill='%23000000'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: soft-light;
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.gold-text {
+  color: #fcd34d;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   10. RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .pill-expandable {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .tooltip-content {
+    font-size: 0.75rem;
+  }
+
+  .bg-gradient-animated {
+    animation-duration: 20s;
+  }
+}
+
+@media (max-width: 480px) {
+  .pill-expandable {
+    gap: 0.25rem;
+  }
+
+  .smart-tooltip {
+    position: relative;
+  }
+
+  .tooltip-content {
+    position: fixed;
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ============================================================================
+   11. ACCESSIBILITY - RESPECT USER PREFERENCES
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  /* Fallback for light mode users who navigate here */
+  .bg-gradient-animated,
+  .bg-premium-radial {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+  }
+}

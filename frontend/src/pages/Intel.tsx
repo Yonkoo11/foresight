@@ -394,11 +394,14 @@ export default function Intel() {
   const isOnTeam = (influencerId: number) => teamInfluencerIds.includes(influencerId);
   const isScouted = (influencerId: number) => scoutedIds.includes(influencerId);
 
-  // Real engagement score from DB — formatted for display
+  // Vague engagement label — hide exact scores to prevent gaming
   const engagementLabel = (tweet: Tweet): string => {
     const score = tweet.engagementScore;
     if (!score || score === 0) return '—';
-    return formatNumber(score);
+    if (score >= 10000) return 'Viral';
+    if (score >= 1000) return 'High';
+    if (score >= 100) return 'Good';
+    return 'Low';
   };
 
   const filteredTweets = getFilteredTweets();
@@ -761,7 +764,7 @@ export default function Intel() {
                                 {onTeam ? (
                                   <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
                                     <Lightning size={12} weight="fill" />
-                                    {tweet.engagementScore > 0 ? `${formatNumber(tweet.engagementScore)} score` : 'On your team'}
+                                    On your team
                                   </span>
                                 ) : (
                                   <button

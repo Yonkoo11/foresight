@@ -17,7 +17,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getRarityInfo } from '../utils/rarities';
 import PotentialWinningsModal from '../components/onboarding/PotentialWinningsModal';
 import FormationPreview from '../components/FormationPreview';
-import ScoreBreakdown from '../components/ScoreBreakdown';
+
 import apiClient, { hasSession } from '../lib/apiClient';
 
 interface Contest {
@@ -1131,25 +1131,13 @@ export default function ContestDetail() {
                   </div>
                 </div>
 
-                {/* Score breakdown — only show when score has been calculated */}
-                {myEntry.score > 0 && myEntry.scoreBreakdown && (() => {
-                  const bd = typeof myEntry.scoreBreakdown === 'string'
-                    ? (() => { try { return JSON.parse(myEntry.scoreBreakdown as string); } catch { return {}; } })()
-                    : myEntry.scoreBreakdown;
-                  const captainPlayer = myEntry.team?.find(p => p.isCaptain);
-                  const baseScore = bd && (bd.activity ?? 0) + (bd.engagement ?? 0) + (bd.growth ?? 0) + (bd.viral ?? 0);
-                  const captainBonus = baseScore && myEntry.score > 0
-                    ? Math.max(0, myEntry.score - baseScore)
-                    : undefined;
-                  return (
-                    <ScoreBreakdown
-                      breakdown={bd ?? {}}
-                      captainBonus={captainBonus}
-                      total={Math.round(myEntry.score)}
-                      className="mt-4"
-                    />
-                  );
-                })()}
+                {/* Total score — component breakdown hidden to prevent gaming */}
+                {myEntry.score > 0 && (
+                  <div className="mt-4 rounded-xl bg-gray-800/50 border border-gray-700 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Team Score</span>
+                    <span className="text-lg font-bold font-mono tabular-nums text-gold-400">{Math.round(myEntry.score)} pts</span>
+                  </div>
+                )}
               </div>
             )}
           {/* Next Week banner — show for finalized recurring leagues */}

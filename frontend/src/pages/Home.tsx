@@ -166,11 +166,10 @@ function LeaderboardPreview({ visible }: { visible: boolean }) {
 
 // ─── Scoring Explainer ────────────────────────────────────────────────────────
 
-const SCORING_CATS = [
-  { label: 'Activity',   val: 32, max: 35 },
-  { label: 'Engagement', val: 54, max: 60 },
-  { label: 'Growth',     val: 38, max: 40 },
-  { label: 'Viral',      val: 21, max: 25 },
+const SCORING_FEATURES = [
+  { label: 'Multi-factor scoring', desc: 'We track real engagement, not vanity metrics' },
+  { label: 'Anti-gaming', desc: 'Proprietary algorithm resists bots & fake engagement' },
+  { label: 'Daily updates', desc: 'Scores refresh every 6 hours during contests' },
 ];
 
 function ScoringExplainer({ visible, animate }: { visible: boolean; animate: boolean }) {
@@ -188,35 +187,25 @@ function ScoringExplainer({ visible, animate }: { visible: boolean; animate: boo
       </div>
 
       <div className="px-5 py-4 space-y-3">
-        {SCORING_CATS.map((cat, i) => {
-          const pct = Math.round((cat.val / cat.max) * 100);
-          return (
-            <div key={cat.label}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider">{cat.label}</span>
-                <span className="text-[10px] font-mono text-gray-300 tabular-nums">
-                  {cat.val}<span className="text-gray-600">/{cat.max}</span>
-                </span>
-              </div>
-              <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full bg-gold-500/60 rounded-full ${animate ? 'animate-bar-fill' : ''}`}
-                  style={{ width: `${pct}%`, animationDelay: animate ? `${200 + i * 60}ms` : '0ms' }}
-                />
-              </div>
+        {SCORING_FEATURES.map((feat, i) => (
+          <div key={feat.label} className={`flex items-start gap-3 ${animate ? 'opacity-0 animate-[fadeInUp_0.3s_ease-out_forwards]' : ''}`} style={animate ? { animationDelay: `${200 + i * 80}ms` } : undefined}>
+            <div className="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 shrink-0" />
+            <div>
+              <span className="text-xs font-medium text-white">{feat.label}</span>
+              <p className="text-[10px] text-gray-500 mt-0.5">{feat.desc}</p>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
-      {/* Captain bonus + total */}
+      {/* Captain bonus */}
       <div className="px-5 py-3.5 border-t border-gray-800 bg-gray-950/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Crown size={12} className="text-gold-400" weight="fill" />
             <span className="text-[10px] text-gray-400">Captain earns <strong className="text-white">2×</strong> points</span>
           </div>
-          <span className="text-sm font-mono font-bold text-gold-400 tabular-nums">145 pts</span>
+          <span className="text-[10px] font-mono text-gray-500">Pick wisely</span>
         </div>
       </div>
     </div>
