@@ -6,7 +6,7 @@
 
 ## THE HOOK (Say This Everywhere)
 
-> "Draft CT influencers. Highest engagement = points. $225 in prizes. No NFTs. Free entry. Devnet live Monday."
+> "Draft CT influencers. Highest engagement = points. $150 in prizes. No NFTs. Free entry. Devnet live Monday."
 
 ---
 
@@ -18,7 +18,7 @@
 | **Contest entries** | 150+ |
 | **Discord members** | 300+ by day 7 |
 | **X followers** | 500 by day 7 |
-| **Prize pool** | $225 (100/75/50 split) |
+| **Prize pool** | $150 (75/50/25 split) |
 | **Referral bonus (first 3 days)** | 5x XP multiplier |
 
 ---
@@ -30,7 +30,7 @@ Duration: Mon 00:00 UTC → Wed 23:59 UTC (72 hours)
 Entry fee: FREE
 Team size: 5 influencers (1 captain = 2.0x multiplier)
 Budget: 150 draft points
-Prizes: $100 / $75 / $50
+Prizes: $75 / $50 / $25
 
 Scoring:
 - Activity (0-35 pts)
@@ -53,7 +53,7 @@ Draft the 5 CT influencers you think will trend hardest.
 Engagement = points.
 
 First contest Monday.
-Free entry. $225 pool.
+Free entry. $150 pool.
 Who's drafting first?
 
 [Add FormationPreview screenshot]
@@ -64,7 +64,7 @@ Who's drafting first?
 🚀 LIVE: Foresight is OPEN
 
 Draft your 5 CT influencers. Captain gets 2.0x.
-$225 in prizes: $100/$75/$50.
+$150 in prizes: $75/$50/$25.
 
 No NFTs. No bots. Fully on-chain.
 
@@ -90,7 +90,7 @@ Can you crack top 3? 36 hours left.
 ⏰ 12 HOURS REMAINING
 
 Your chance to draft.
-Your chance to win $100.
+Your chance to win $75.
 
 Last 500 spots. Final hours.
 
@@ -101,9 +101,9 @@ Play now: [link]
 ```
 🏆 RESULTS: Foresight Launch Contest
 
-1st: $100
-2nd: $75
-3rd: $50
+1st: $75
+2nd: $50
+3rd: $25
 
 Congrats @[winner]! Prize claimed.
 
@@ -125,7 +125,7 @@ We're launching Foresight this Monday — a fantasy sports game where you're one
 
 Players draft teams of 5 CTs. Their engagement on Twitter determines scores.
 
-First contest: FREE entry, $225 prizes.
+First contest: FREE entry, $150 prizes.
 
 We're giving 20 influencers early access to build their teams today.
 If you want to play, reply here or hop in our Discord: [link]
@@ -251,7 +251,7 @@ Codes look like: FRIEND123ABC
 
 **Post-win notification:**
 ```
-🏆 You won $100!
+🏆 You won $75!
 
 Share your victory & invite friends to compete.
 
@@ -303,7 +303,7 @@ Thanks for patience. 🙏
 ### Prize claim fails
 ```
 Prize airdrop had a minor delay (not critical).
-[Winner name] is receiving their $100 SOL now.
+[Winner name] is receiving their $75 SOL now.
 All payments happening on-chain [TX link].
 Transparency > speed. Sorry for the delay.
 ```
