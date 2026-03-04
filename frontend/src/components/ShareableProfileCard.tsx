@@ -393,13 +393,17 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
     }
 
     // Desktop: copy image to clipboard + open Twitter composer
+    const pasteKey = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘V' : 'Ctrl+V';
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': cachedBlob })]);
-      showToast('Image copied! Paste into your tweet with Ctrl+V', 'success');
+      showToast(`Image copied — paste it in your tweet (${pasteKey})`, 'success');
+      setTimeout(() => window.open(tweetUrl, '_blank'), 600);
     } catch {
-      showToast('Save the image first, then attach it to your tweet', 'info');
+      // Clipboard failed — download instead
+      downloadBlob(cachedBlob, `foresight-${data?.username || 'profile'}.png`);
+      showToast('Image saved — attach it to your tweet', 'info');
+      setTimeout(() => window.open(tweetUrl, '_blank'), 600);
     }
-    window.open(tweetUrl, '_blank');
   };
 
   const handleSave = async () => {
@@ -601,7 +605,7 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
           : <><Copy size={14} />Copy profile link</>}
       </button>
       <p className="text-center text-[11px] text-gray-600 mt-2 leading-tight">
-        Image is copied to clipboard — paste into your tweet
+        Image is copied to clipboard — paste into your tweet ({/Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘V' : 'Ctrl+V'})
       </p>
     </div>
   );

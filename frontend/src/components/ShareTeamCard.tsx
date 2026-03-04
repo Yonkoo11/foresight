@@ -119,14 +119,19 @@ export default function ShareTeamCard({
       }
     }
 
-    // Desktop: copy image to clipboard + open Twitter composer (no auto-download)
+    // Desktop: copy image to clipboard + open Twitter composer
+    const pasteKey = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘V' : 'Ctrl+V';
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      showToast('Image copied! Paste into your tweet with Ctrl+V', 'success');
+      showToast(`Image copied — paste it in your tweet (${pasteKey})`, 'success');
+      // Brief delay so user sees the toast before Twitter opens
+      setTimeout(() => window.open(twitterUrl, '_blank'), 600);
     } catch {
-      showToast('Save the image first, then attach it to your tweet', 'info');
+      // Clipboard failed — download instead
+      downloadBlob(blob);
+      showToast('Image saved — attach it to your tweet', 'info');
+      setTimeout(() => window.open(twitterUrl, '_blank'), 600);
     }
-    window.open(twitterUrl, '_blank');
   };
 
   const handleDownload = async () => {
