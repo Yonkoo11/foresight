@@ -195,9 +195,16 @@ export default function CursorFollower() {
       });
     }
 
+    function onMouseEnter(e: MouseEvent) {
+      target.current = { x: e.clientX, y: e.clientY };
+      pos.current = { x: e.clientX, y: e.clientY };
+      ringPos.current = { x: e.clientX, y: e.clientY };
+      show();
+    }
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseleave', hide);
-    document.addEventListener('mouseenter', show);
+    document.addEventListener('mouseenter', onMouseEnter);
     document.addEventListener('mousedown', onMouseDown);
 
     attachListeners();
@@ -275,7 +282,7 @@ export default function CursorFollower() {
       cancelAnimationFrame(animRef.current);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseleave', hide);
-      document.removeEventListener('mouseenter', show);
+      document.removeEventListener('mouseenter', onMouseEnter);
       document.removeEventListener('mousedown', onMouseDown);
       observer.disconnect();
       // Clean up particles
