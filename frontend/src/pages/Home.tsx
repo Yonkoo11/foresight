@@ -258,7 +258,7 @@ function LandingPage({
         </div>
 
         <h1 className="text-3xl font-bold text-white mb-2 leading-tight tracking-tight opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]">
-          Draft CT calls.{' '}
+          Draft your favourite influencer.{' '}
           <span className="animate-gold-shimmer">Get paid.</span>
         </h1>
         <p className="text-[13px] text-gray-400 mb-0 leading-relaxed opacity-0 animate-[fadeInUp_0.5s_ease-out_0.35s_forwards]">
@@ -295,8 +295,8 @@ function LandingPage({
               </a>
             </div>
 
-            <h1 className="text-5xl xl:text-6xl font-bold text-white leading-[1.05] tracking-tight mb-5 opacity-0 animate-[fadeInUp_0.7s_ease-out_0.2s_forwards]">
-              Draft CT calls.<br />{' '}
+            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-[1.08] tracking-tight mb-5 opacity-0 animate-[fadeInUp_0.7s_ease-out_0.2s_forwards]">
+              Draft your favourite influencer.<br />{' '}
               <span className="animate-gold-shimmer">Get paid.</span>
             </h1>
             <p className="text-lg text-gray-400 leading-relaxed max-w-sm mb-0 opacity-0 animate-[fadeInUp_0.5s_ease-out_0.45s_forwards]">
