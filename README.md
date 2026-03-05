@@ -1,6 +1,6 @@
 # Foresight
 
-Fantasy sports for Crypto Twitter. Draft teams of real CT influencers, earn points based on their actual Twitter engagement, and compete against other players for prizes.
+A social conviction game on Solana. Draft a squad of CT influencers, score based on their real Twitter engagement, and compete for SOL prizes.
 
 **Live at [ct-foresight.xyz](https://ct-foresight.xyz)**
 

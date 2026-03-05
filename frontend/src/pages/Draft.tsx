@@ -135,9 +135,11 @@ export default function Draft() {
     if (!contest?.lockTime) return null;
     const diff = new Date(contest.lockTime).getTime() - Date.now();
     if (diff <= 0) return 'LOCKED';
-    const hours = Math.floor(diff / 3600000);
+    const days  = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
     const mins  = Math.floor((diff % 3600000) / 60000);
     const secs  = Math.floor((diff % 60000) / 1000);
+    if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${mins}m`;
     if (mins >= 5) return `${mins}m`;
     return `${mins}m ${secs}s`;

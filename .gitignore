@@ -72,10 +72,7 @@ REDESIGN_PROGRESS.md
 !backend/README.md
 !frontend/README.md
 !contracts/README.md
-!SECURITY_AUDIT.md
-!AUDIT_FINDINGS.md
 !SECURITY.md
-!docs/LAUNCH_PLAYBOOK_2026.md
-!docs/LAUNCH_QUICK_REFERENCE.md
-!docs/LAUNCH_OPS_GUIDE.md
-!GROWTH_STRATEGY_SUMMARY.md
+
+# Contracts secrets
+contracts/.env
