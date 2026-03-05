@@ -35,6 +35,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../hooks/useAuth';
 import LazyAvatar from '../components/LazyAvatar';
 import SEO from '../components/SEO';
+import InfluencerGrid from '../components/draft/InfluencerGrid';
 
 /** Tapestry on-chain reputation tier — separate from player tier badges */
 function getReputationTier(rank: number, total: number): { label: string; color: string } {
@@ -46,7 +47,7 @@ function getReputationTier(rank: number, total: number): { label: string; color:
   return                   { label: 'Active',   color: 'text-gray-400' };
 }
 
-type MainTab = 'rankings' | 'contests';
+type MainTab = 'rankings' | 'contests' | 'players';
 type RankingsSubTab = 'fs' | 'fantasy' | 'xp';
 type FsTimeframe = 'all_time' | 'season' | 'weekly' | 'referral' | 'friends';
 type ContestFilter = 'all' | 'free' | 'weekly' | 'daily';
@@ -166,6 +167,8 @@ export default function Compete() {
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
   const [prizeRules, setPrizeRules] = useState<{ rank: number; percentage: number; label: string }[]>([]);
   const [, setTimeTick] = useState(0); // forces re-render for live countdowns
+  const [playerInfluencers, setPlayerInfluencers] = useState<{ id: number; name: string; handle: string; profile_image_url?: string; tier: string; price: number; follower_count?: number; fs_rating?: number; daily_tweets?: number; archetype?: string }[]>([]);
+  const [playersLoaded, setPlayersLoaded] = useState(false);
 
   // Fetch live SOL price
   useEffect(() => {
@@ -206,6 +209,25 @@ export default function Compete() {
     if (mainTab === 'rankings') {
       setFsOffset(0);
       fetchRankingsData(0);
+    } else if (mainTab === 'players') {
+      if (!playersLoaded) {
+        apiClient.get('/api/league/influencers').then(res => {
+          const data = res.data.influencers.map((i: any) => ({
+            id: i.id,
+            name: i.name || i.display_name || '',
+            handle: i.handle || i.twitter_handle || '',
+            profile_image_url: i.profile_image_url || i.avatar_url,
+            tier: i.tier,
+            price: typeof i.price === 'string' ? parseFloat(i.price) : i.price,
+            follower_count: i.follower_count,
+            fs_rating: typeof i.fs_rating === 'string' ? parseInt(i.fs_rating || '0') : (i.fs_rating || 0),
+            daily_tweets: typeof i.daily_tweets === 'string' ? parseInt(i.daily_tweets || '0') : (i.daily_tweets || 0),
+            archetype: i.archetype,
+          }));
+          setPlayerInfluencers(data);
+          setPlayersLoaded(true);
+        }).catch(() => {});
+      }
     } else {
       fetchContestsData();
     }
@@ -491,6 +513,22 @@ export default function Compete() {
             {(filteredContests.length + signatureContests.length) > 0 && (
               <span className="px-1.5 py-0.5 rounded-full bg-gray-950/30 text-[10px] sm:text-xs">
                 {filteredContests.length + signatureContests.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setMainTab('players')}
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+              mainTab === 'players'
+                ? 'bg-gold-500 text-gray-950 shadow-lg shadow-gold-500/20'
+                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800 hover:text-white'
+            }`}
+          >
+            <Users size={14} weight={mainTab === 'players' ? 'fill' : 'regular'} />
+            Players
+            {playerInfluencers.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-gray-950/30 text-[10px] sm:text-xs">
+                {playerInfluencers.length}
               </span>
             )}
           </button>
@@ -1424,6 +1462,28 @@ export default function Compete() {
                 )}
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Players Tab — Browse influencer cards */}
+      {mainTab === 'players' && (
+        <div>
+          {!playersLoaded ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="h-24 rounded-lg bg-gray-800 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <InfluencerGrid
+              influencers={playerInfluencers}
+              selectedIds={[]}
+              captainId={null}
+              remainingBudget={999}
+              onSelect={() => {}}
+              onSetCaptain={() => {}}
+            />
           )}
         </div>
       )}

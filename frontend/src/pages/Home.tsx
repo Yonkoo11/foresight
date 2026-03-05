@@ -262,7 +262,7 @@ function LandingPage({
           <span className="animate-gold-shimmer">Get paid.</span>
         </h1>
         <p className="text-[13px] text-gray-400 mb-0 leading-relaxed opacity-0 animate-[fadeInUp_0.5s_ease-out_0.35s_forwards]">
-          Pick 5 CT influencers. Score their weekly engagement. Compete for SOL.
+          Draft your favourite influencer. Get paid.
         </p>
 
         <div className="opacity-0 animate-[fadeInUp_0.5s_ease-out_0.5s_forwards]">
@@ -300,7 +300,7 @@ function LandingPage({
               <span className="animate-gold-shimmer">Get paid.</span>
             </h1>
             <p className="text-lg text-gray-400 leading-relaxed max-w-sm mb-0 opacity-0 animate-[fadeInUp_0.5s_ease-out_0.45s_forwards]">
-              Pick 5 CT influencers. Score their weekly engagement. Compete for SOL prizes.
+              Draft your favourite influencer. Get paid.
             </p>
 
             <div className="opacity-0 animate-[fadeInUp_0.5s_ease-out_0.6s_forwards]">

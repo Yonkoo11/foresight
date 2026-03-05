@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { MagnifyingGlass, Plus, Check, TrendUp, Users, Fire, Info } from '@phosphor-icons/react';
+import { MagnifyingGlass, Plus, Check, Users, Fire, Info } from '@phosphor-icons/react';
 import InfluencerDetailModal from './InfluencerDetailModal';
 import LazyAvatar from '../LazyAvatar';
 
@@ -16,8 +16,8 @@ interface Influencer {
   tier: string;
   price: number;
   follower_count?: number;
-  engagement_rate?: number;
-  total_points?: number;
+  fs_rating?: number;
+  daily_tweets?: number;
   archetype?: string;
 }
 
@@ -205,10 +205,10 @@ export default function InfluencerGrid({
                               {(inf.follower_count / 1000).toFixed(0)}K
                             </span>
                           )}
-                          {inf.total_points && (
+                          {inf.fs_rating != null && inf.fs_rating > 0 && (
                             <span className="flex items-center gap-0.5">
                               <Fire size={10} />
-                              {inf.total_points}
+                              {inf.fs_rating}
                             </span>
                           )}
                         </div>

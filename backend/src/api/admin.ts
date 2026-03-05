@@ -695,26 +695,34 @@ router.post('/refresh-influencers', async (req: Request, res: Response) => {
 
         const avgLikesPerTweet = tweetsAnalyzed > 0 ? totalLikes / tweetsAnalyzed : 0;
         const avgRTsPerTweet = tweetsAnalyzed > 0 ? totalRTs / tweetsAnalyzed : 0;
+        // Engagement rate = avg interactions per tweet / followers × 100
+        // Include replies in engagement calc for a more complete picture
+        const avgInteractions = tweetsAnalyzed > 0 ? (totalLikes + totalRTs) / tweetsAnalyzed : 0;
         const engagementRate = profile.data.followers > 0
-          ? ((totalLikes + totalRTs) / (profile.data.followers * Math.max(1, tweetsAnalyzed))) * 100
+          ? (avgInteractions / profile.data.followers) * 100
           : 0;
 
-        const activityScore = Math.min(35, tweetsAnalyzed * 1.5);
-        const engagementScore = Math.min(60, Math.sqrt(avgLikesPerTweet) * 1.5);
-        const totalScore = Math.round(activityScore + engagementScore);
+        // FS Rating (0-100) — approximates contest scoring potential
+        const dailyTweets = Math.round(tweetsAnalyzed / 7);
+        const activityFactor = Math.min(25, dailyTweets * 4);
+        const engagementFactor = Math.min(40, Math.sqrt(avgLikesPerTweet) * 1.8 + Math.sqrt(avgRTsPerTweet) * 2.2);
+        const influenceFactor = Math.min(35, Math.log10(profile.data.followers + 1) * 5.5);
+        const consistencyMod = Math.min(1.2, 0.8 + (engagementRate / 100) * 0.4);
+        const fsRating = Math.min(100, Math.max(0, Math.round(
+          (activityFactor + engagementFactor + influenceFactor) * consistencyMod
+        )));
 
         await db('influencers').where('id', inf.id).update({
           follower_count: profile.data.followers,
           engagement_rate: Math.round(engagementRate * 100) / 100,
-          daily_tweets: Math.round(tweetsAnalyzed / 7),
+          daily_tweets: dailyTweets,
           avg_likes: Math.round(avgLikesPerTweet),
           avg_retweets: Math.round(avgRTsPerTweet),
-          total_points: totalScore,
-          form_score: Math.min(100, totalScore + 30),
+          fs_rating: fsRating,
           updated_at: new Date(),
         });
 
-        console.log(`[refresh] ✅ @${inf.twitter_handle}: ${profile.data.followers.toLocaleString()} followers | Score: ${totalScore}`);
+        console.log(`[refresh] ✅ @${inf.twitter_handle}: ${profile.data.followers.toLocaleString()} followers | FS Rating: ${fsRating}`);
         success++;
       } catch (err) {
         console.log(`[refresh] ❌ @${inf.twitter_handle}: ${(err as Error).message}`);

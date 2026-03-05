@@ -664,27 +664,9 @@ router.get('/influencers', async (req: Request, res: Response) => {
         'influencers.follower_count',
         'influencers.avg_likes',
         'influencers.avg_retweets',
+        'influencers.fs_rating',
         db.raw('COALESCE(influencer_metrics.daily_tweets, influencers.daily_tweets, 0) as daily_tweets'),
-        db.raw('COALESCE(influencer_metrics.engagement_rate, influencers.engagement_rate, 0) as engagement_rate'),
-        db.raw(`
-          CASE
-            WHEN influencer_metrics.daily_tweets > 8 THEN 95
-            WHEN influencer_metrics.daily_tweets > 5 THEN 85
-            WHEN influencer_metrics.daily_tweets > 2 THEN 75
-            ELSE 65
-          END as form_score
-        `),
-        db.raw(`
-          ROUND(
-            influencers.price +
-            (COALESCE(influencer_metrics.follower_count, influencers.follower_count, 0) / 1000000.0) * 5 +
-            COALESCE(influencer_metrics.daily_tweets, 0) * 2 +
-            (COALESCE(influencer_metrics.likes_count, 0) +
-             COALESCE(influencer_metrics.retweets_count, 0) +
-             COALESCE(influencer_metrics.replies_count, 0)) * 0.01 *
-            (1 + COALESCE(influencer_metrics.engagement_rate, 0) / 100.0)
-          ) as total_points
-        `)
+        db.raw('COALESCE(influencer_metrics.engagement_rate, influencers.engagement_rate, 0) as engagement_rate')
       );
 
     // Compute archetype for each influencer from available metrics

@@ -34,8 +34,8 @@ interface Influencer {
   follower_count?: number;
   avg_likes?: number;
   avg_retweets?: number;
-  engagement_rate?: number;
-  total_points?: number;
+  fs_rating?: number;
+  daily_tweets?: number;
   archetype?: string;
 }
 
@@ -52,8 +52,8 @@ interface InfluencerApiResponse {
   follower_count?: number;
   avg_likes?: number;
   avg_retweets?: number;
-  engagement_rate?: string | number;
-  total_points?: string | number;
+  fs_rating?: string | number;
+  daily_tweets?: string | number;
   archetype?: string;
 }
 
@@ -207,8 +207,8 @@ export default function Draft() {
         follower_count: i.follower_count,
         avg_likes: i.avg_likes || 0,
         avg_retweets: i.avg_retweets || 0,
-        engagement_rate: typeof i.engagement_rate === 'string' ? parseFloat(i.engagement_rate || '0') : (i.engagement_rate || 0),
-        total_points: typeof i.total_points === 'string' ? parseInt(i.total_points || '0') : (i.total_points || 0),
+        fs_rating: typeof i.fs_rating === 'string' ? parseInt(i.fs_rating || '0') : (i.fs_rating || 0),
+        daily_tweets: typeof i.daily_tweets === 'string' ? parseInt(i.daily_tweets || '0') : (i.daily_tweets || 0),
         archetype: i.archetype,
       }));
       setInfluencers(data);
@@ -505,7 +505,7 @@ export default function Draft() {
               handle: p.handle,
               tier: p.tier,
               profile_image_url: p.profile_image_url,
-              total_points: p.total_points,
+              total_points: p.fs_rating,
               isCaptain: p.id === captainId,
             }))}
             captainId={captainId}

@@ -2,7 +2,7 @@
  * InfluencerDetailModal - Shows detailed stats for an influencer
  */
 
-import { X, XLogo, TrendUp, Users, Fire, ChartLineUp, Crown, Heart, ArrowsClockwise, Coins } from '@phosphor-icons/react';
+import { X, XLogo, Users, Fire, ChartLineUp, Crown, Heart, ArrowsClockwise, Coins } from '@phosphor-icons/react';
 import LazyAvatar from '../LazyAvatar';
 
 interface Influencer {
@@ -13,8 +13,8 @@ interface Influencer {
   tier: string;
   price: number;
   follower_count?: number;
-  engagement_rate?: number;
-  total_points?: number;
+  fs_rating?: number;
+  daily_tweets?: number;
   avg_likes?: number;
   avg_retweets?: number;
 }
@@ -115,16 +115,16 @@ export default function InfluencerDetailModal({
               color="text-gray-400"
             />
             <StatCard
-              icon={<TrendUp size={16} />}
-              label="Eng. Rate"
-              value={influencer.engagement_rate ? `${influencer.engagement_rate.toFixed(1)}%` : '—'}
-              color="text-cyan-400"
+              icon={<Fire size={16} />}
+              label="FS Rating"
+              value={influencer.fs_rating != null ? `${influencer.fs_rating}/100` : '—'}
+              color="text-gold-400"
             />
             <StatCard
-              icon={<Fire size={16} />}
-              label="Total Pts"
-              value={influencer.total_points ? String(influencer.total_points) : '—'}
-              color="text-gold-400"
+              icon={<ChartLineUp size={16} />}
+              label="Tweets/Day"
+              value={influencer.daily_tweets != null ? String(influencer.daily_tweets) : '—'}
+              color="text-cyan-400"
             />
             <StatCard
               icon={<Heart size={16} />}
@@ -150,17 +150,17 @@ export default function InfluencerDetailModal({
           <div className="bg-gray-800/50 rounded-lg p-3 mb-5">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Scouting Report</h3>
             <p className="text-sm text-gray-300 leading-relaxed">
-              {influencer.tier === 'S' && (
-                <>Elite-tier. {influencer.follower_count ? `${formatNumber(influencer.follower_count)} followers` : 'Massive following'} with high ceiling. Best suited for your <span className="text-gold-400 font-medium">Captain slot</span> where they earn 2.0x points.</>
+              {(influencer.fs_rating ?? 0) >= 80 && (
+                <>Elite potential. {influencer.follower_count ? `${formatNumber(influencer.follower_count)} followers` : 'Massive following'} with high ceiling. Best suited for your <span className="text-gold-400 font-medium">Captain slot</span> where they earn 2.0x points.</>
               )}
-              {influencer.tier === 'A' && (
+              {(influencer.fs_rating ?? 0) >= 60 && (influencer.fs_rating ?? 0) < 80 && (
                 <>Strong performer with consistent output. Good captain candidate if budget is tight — pairs well with B and C-tier value picks.</>
               )}
-              {influencer.tier === 'B' && (
-                <>Mid-tier value pick at <span className="text-emerald-400">{influencer.price} pts</span>. Pairs well with an S or A-tier captain to stay under budget.</>
+              {(influencer.fs_rating ?? 0) >= 40 && (influencer.fs_rating ?? 0) < 60 && (
+                <>Solid value at <span className="text-emerald-400">{influencer.price} pts</span>. Pairs well with an elite captain to stay under budget.</>
               )}
-              {influencer.tier === 'C' && (
-                <>Budget pick at <span className="text-emerald-400">{influencer.price} pts</span> — lowest draft cost in the pool. Stack 3-4 of these to free up budget for an elite captain.</>
+              {(influencer.fs_rating ?? 0) < 40 && (
+                <>Budget-friendly at <span className="text-emerald-400">{influencer.price} pts</span>. Stack 3-4 of these to free up budget for an elite captain.</>
               )}
             </p>
           </div>
