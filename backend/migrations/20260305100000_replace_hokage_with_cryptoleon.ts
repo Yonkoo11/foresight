@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
     .update({
       twitter_handle: 'Crypto_Leon_',
       display_name: 'CryptoLeon',
-      profile_image_url: null,
+      avatar_url: null,
       follower_count: 0,
       engagement_rate: 0,
       updated_at: knex.fn.now(),
@@ -23,7 +23,7 @@ export async function down(knex: Knex): Promise<void> {
     .update({
       twitter_handle: '73IV_',
       display_name: 'Hokage',
-      profile_image_url: null,
+      avatar_url: null,
       follower_count: 0,
       engagement_rate: 0,
       updated_at: knex.fn.now(),
