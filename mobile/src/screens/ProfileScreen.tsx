@@ -7,22 +7,25 @@ import {
   RefreshControl,
   TouchableOpacity,
   Image,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { colors, elevation, textLevels, borders, brandAlpha } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
 import { useForesightScore } from '../hooks/useForesightScore';
 import { useQuestSummary } from '../hooks/useQuests';
 import { useSKRBalance } from '../hooks/useSKR';
+import { useSolBalance } from '../hooks/useSolBalance';
 import { haptics } from '../utils/haptics';
-import { truncateAddress, formatNumber } from '../utils/formatting';
+import { truncateAddress, formatNumber, formatSOL } from '../utils/formatting';
 import { TIER_CONFIG } from '../types';
+import { AnimatedNumber } from '../components/AnimatedNumber';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 function getTierColor(tier: string): string {
@@ -36,6 +39,7 @@ export default function ProfileScreen() {
   const { data: fs, isLoading: fsLoading, refetch: refetchFS } = useForesightScore(isAuthenticated);
   const { data: quests } = useQuestSummary(isAuthenticated);
   const { data: skr, isLoading: skrLoading } = useSKRBalance(user?.walletAddress);
+  const { data: solBalance } = useSolBalance(user?.walletAddress);
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -82,6 +86,20 @@ export default function ProfileScreen() {
     haptics.success();
   }, [user?.referralCode]);
 
+  const shareScore = async () => {
+    haptics.light();
+    const score = fs?.totalScore ?? 0;
+    const tier = fs?.tier ?? 'C';
+    const tierLabel = TIER_CONFIG[tier as keyof typeof TIER_CONFIG]?.label ?? tier;
+    try {
+      await Share.share({
+        message: `I'm ${tierLabel} tier with a ${formatNumber(score)} Foresight Score on CT Foresight! Draft your CT dream team and compete.\n\nhttps://ct-foresight.xyz/profile`,
+      });
+    } catch {
+      // user cancelled
+    }
+  };
+
   const tierProgress = fs?.tierProgress;
   const tierColor = fs ? getTierColor(fs.tier) : textLevels.muted;
 
@@ -123,6 +141,12 @@ export default function ProfileScreen() {
               color={copied ? colors.success : textLevels.muted}
             />
           </TouchableOpacity>
+          {solBalance != null && solBalance > 0 && (
+            <View style={styles.solBadge}>
+              <MaterialCommunityIcons name="circle" size={8} color={colors.success} />
+              <Text style={styles.solBadgeText}>◎ {formatSOL(solBalance)} SOL</Text>
+            </View>
+          )}
           {user?.isFoundingMember && user.foundingMemberNumber && (
             <View style={styles.founderBadge}>
               <MaterialCommunityIcons name="star-four-points" size={14} color={colors.brand} />
@@ -145,7 +169,7 @@ export default function ProfileScreen() {
         ) : fs ? (
           <View style={styles.scoreCard}>
             <Text style={styles.scoreLabel}>Foresight Score</Text>
-            <Text style={styles.scoreValue}>{formatNumber(fs.totalScore)}</Text>
+            <AnimatedNumber value={fs.totalScore} style={styles.scoreValue} />
             <View style={styles.tierRow}>
               <View style={[styles.tierDot, { backgroundColor: tierColor }]} />
               <Text style={[styles.tierName, { color: tierColor }]}>
@@ -177,6 +201,10 @@ export default function ProfileScreen() {
             <Text style={styles.rankRow}>
               {fs.allTimeRank > 0 ? `#${formatNumber(fs.allTimeRank)}` : 'Unranked'} All-Time  {'\u00B7'}  {fs.seasonRank > 0 ? `#${formatNumber(fs.seasonRank)}` : 'Unranked'} Season
             </Text>
+            <TouchableOpacity style={styles.shareScoreBtn} onPress={shareScore} activeOpacity={0.7}>
+              <MaterialCommunityIcons name="share-variant" size={16} color={textLevels.secondary} />
+              <Text style={styles.shareScoreBtnText}>Share Score</Text>
+            </TouchableOpacity>
           </View>
         ) : null}
 
@@ -278,7 +306,7 @@ export default function ProfileScreen() {
   );
 }
 
-const BRAND_BG = 'rgba(245,158,11,0.12)';
+const BRAND_BG = brandAlpha['12'];
 const cardBase = {
   backgroundColor: elevation.surface,
   borderWidth: 1,
@@ -298,6 +326,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs, minHeight: TOUCH_MIN,
   },
   address: { ...typography.caption, fontSize: 13, color: textLevels.muted },
+  solBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    backgroundColor: elevation.surface, borderWidth: 1, borderColor: borders.subtle,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.xs + 2, borderRadius: 8,
+    marginTop: spacing.sm,
+  },
+  solBadgeText: { ...typography.mono, fontSize: 13, fontWeight: '600', color: textLevels.primary },
   founderBadge: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm,
     backgroundColor: BRAND_BG, paddingHorizontal: 10, paddingVertical: spacing.xs, borderRadius: spacing.md,
@@ -316,7 +351,7 @@ const styles = StyleSheet.create({
   tierDot: { width: spacing.sm, height: spacing.sm, borderRadius: spacing.xs },
   tierName: { ...typography.bodySm, fontWeight: '600' },
   multiBadge: {
-    backgroundColor: 'rgba(245,158,11,0.15)', paddingHorizontal: 6,
+    backgroundColor: brandAlpha['15'], paddingHorizontal: 6,
     paddingVertical: 2, borderRadius: 6, marginLeft: spacing.xs,
   },
   multiBadgeText: { ...typography.caption, fontSize: 11, fontWeight: '700', color: colors.brand },
@@ -327,6 +362,12 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, backgroundColor: colors.brand, borderRadius: 3 },
   progressText: { ...typography.caption, color: textLevels.muted, marginTop: 6 },
   rankRow: { ...typography.bodySm, fontSize: 13, color: textLevels.secondary, marginTop: spacing.md },
+  shareScoreBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    marginTop: spacing.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.md,
+    backgroundColor: elevation.elevated, borderRadius: spacing.sm, minHeight: 36,
+  },
+  shareScoreBtnText: { ...typography.caption, fontWeight: '600', color: textLevels.secondary },
   statsGrid: {
     flexDirection: 'row', flexWrap: 'wrap',
     paddingHorizontal: spacing.lg, marginTop: spacing.lg, gap: 10,

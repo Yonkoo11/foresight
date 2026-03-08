@@ -16,7 +16,8 @@ export function useInfluencers(params?: { tier?: string; search?: string; sortBy
         id: inf.id,
         handle: inf.handle ?? inf.twitter_handle ?? '',
         name: inf.name ?? inf.display_name ?? '',
-        avatar: inf.profile_image_url ?? inf.avatar_url ?? inf.avatar ?? '',
+        avatar: (inf.profile_image_url ?? inf.avatar_url ?? inf.avatar)
+          || `https://unavatar.io/x/${inf.handle ?? inf.twitter_handle ?? ''}`,
         tier: inf.tier ?? 'C',
         price: inf.price ?? 0,
         totalPoints: inf.fs_rating ?? inf.total_points ?? 0,

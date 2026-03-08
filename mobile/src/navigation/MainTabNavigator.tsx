@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors } from '../constants/colors';
+import { colors, elevation, borders } from '../constants/colors';
 import { haptics } from '../utils/haptics';
 import { useActiveContests } from '../hooks/useContests';
 import HomeScreen from '../screens/HomeScreen';
@@ -30,8 +30,8 @@ export function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.cardBorder,
+          backgroundColor: elevation.surface,
+          borderTopColor: borders.subtle,
           borderTopWidth: 1,
           paddingBottom: bottomPadding,
           paddingTop: 8,

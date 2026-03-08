@@ -4,28 +4,65 @@ import {
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useMobileWallet } from '../utils/useMobileWallet';
 import { useAuth } from '../providers/AuthProvider';
 import api from '../services/api';
-import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { colors, elevation, textLevels, borders, brandAlpha, cyanAlpha } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { haptics } from '../utils/haptics';
+import type { RootStackParamList } from '../navigation/RootNavigator';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type LoginMethod = 'idle' | 'wallet';
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function AuthScreen() {
   const { signIn } = useMobileWallet();
   const { login } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<Nav>();
+  const route = useRoute<RouteProp<RootStackParamList, 'Auth'>>();
   const [activeMethod, setActiveMethod] = useState<LoginMethod>('idle');
   const [error, setError] = useState<string | null>(null);
 
   const isLoading = activeMethod !== 'idle';
 
-  // ── Wallet Connect (MWA / SIWS) ──────────────────────────────
+  // Press animation for CTA button
+  const buttonScale = useSharedValue(1);
+  const buttonAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const onPressIn = () => {
+    buttonScale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
+  };
+  const onPressOut = () => {
+    buttonScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
+
+  // ── Post-auth redirect ────────────────────────────────────
+  const handlePostAuth = useCallback(() => {
+    const returnTo = route.params?.returnTo;
+    const returnParams = route.params?.returnParams;
+    if (returnTo && returnTo !== 'Auth') {
+      navigation.replace(returnTo as any, returnParams);
+    } else {
+      navigation.goBack();
+    }
+  }, [navigation, route.params]);
+
+  // ── Wallet Connect (MWA / SIWS) ──────────────────────────
   const handleWalletConnect = useCallback(async () => {
     try {
       setActiveMethod('wallet');
@@ -56,7 +93,7 @@ export default function AuthScreen() {
           response.data.data.refreshToken,
           response.data.data.user,
         );
-        navigation.goBack();
+        handlePostAuth();
       }
     } catch (err: any) {
       haptics.error();
@@ -64,9 +101,9 @@ export default function AuthScreen() {
     } finally {
       setActiveMethod('idle');
     }
-  }, [signIn, login, navigation]);
+  }, [signIn, login, handlePostAuth]);
 
-  // ── Skip / Browse as Guest ────────────────────────────────────
+  // ── Skip / Browse as Guest ────────────────────────────────
   const handleSkip = useCallback(() => {
     haptics.selection();
     navigation.goBack();
@@ -85,22 +122,50 @@ export default function AuthScreen() {
         {/* Drag handle for modal */}
         <View style={styles.dragHandle} />
 
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>CT</Text>
-          <Text style={styles.logoSubtext}>FORESIGHT</Text>
-        </View>
+        {/* Ambient glow behind logo */}
+        <Animated.View entering={FadeIn.duration(600)} style={styles.glowContainer}>
+          <View style={styles.glowOuter} />
+          <View style={styles.glowInner} />
+        </Animated.View>
 
-        <Text style={styles.tagline}>Draft. Compete. Win.</Text>
+        {/* Logo */}
+        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.logoContainer}>
+          <Text style={styles.logoLine}>
+            <Text style={styles.logoAccent}>CT</Text>
+            <Text style={styles.logoName}> FORESIGHT</Text>
+          </Text>
+        </Animated.View>
+
+        <Animated.Text entering={FadeInDown.delay(200).duration(400)} style={styles.tagline}>
+          Draft. Compete. Win.
+        </Animated.Text>
+
+        {/* Feature pills */}
+        <Animated.View entering={FadeInDown.delay(300).duration(400)} style={styles.pillRow}>
+          <View style={styles.pill}>
+            <MaterialCommunityIcons name="shield-sword" size={14} color={colors.brand} />
+            <Text style={styles.pillText}>Fantasy CT</Text>
+          </View>
+          <View style={[styles.pill, styles.pillCyan]}>
+            <MaterialCommunityIcons name="trophy" size={14} color={colors.cyan} />
+            <Text style={[styles.pillText, { color: colors.cyan }]}>Win SOL</Text>
+          </View>
+          <View style={styles.pill}>
+            <MaterialCommunityIcons name="chart-line" size={14} color={colors.brand} />
+            <Text style={styles.pillText}>Track Scores</Text>
+          </View>
+        </Animated.View>
 
         {/* ── Login Options ─────────────────────── */}
-        <View style={styles.options}>
+        <Animated.View entering={FadeInDown.delay(400).duration(400)} style={styles.options}>
           {/* Wallet Connect */}
-          <TouchableOpacity
-            style={styles.optionButton}
+          <AnimatedTouchable
+            style={[styles.optionButton, buttonAnimStyle]}
             onPress={handleWalletConnect}
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}
             disabled={isLoading}
-            activeOpacity={0.8}
+            activeOpacity={1}
           >
             {activeMethod === 'wallet' ? (
               <ActivityIndicator color={colors.background} size="small" />
@@ -110,33 +175,35 @@ export default function AuthScreen() {
                 <Text style={styles.optionButtonText}>Connect Wallet</Text>
               </>
             )}
-          </TouchableOpacity>
+          </AnimatedTouchable>
 
           {/* Powered-by badge */}
           <View style={styles.mwaBadge}>
             <MaterialCommunityIcons name="shield-check" size={14} color={colors.textMuted} />
             <Text style={styles.mwaBadgeText}>Powered by Mobile Wallet Adapter</Text>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Error message */}
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         {/* Skip */}
-        <TouchableOpacity
-          style={styles.skipButton}
-          onPress={handleSkip}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.skipText}>Browse as guest</Text>
-        </TouchableOpacity>
+        <Animated.View entering={FadeInDown.delay(500).duration(400)}>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleSkip}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.skipText}>Browse as guest</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
-        <View style={styles.footer}>
+        <Animated.View entering={FadeInDown.delay(600).duration(400)} style={styles.footer}>
           <View style={styles.solBadge}>
             <MaterialCommunityIcons name="circle" size={8} color={colors.success} />
             <Text style={styles.footerText}>Solana Mobile</Text>
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -162,31 +229,79 @@ const styles = StyleSheet.create({
     marginBottom: spacing['2xl'],
     opacity: 0.4,
   },
+
+  // Ambient glow
+  glowContainer: {
+    position: 'absolute',
+    top: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glowOuter: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: brandAlpha['6'],
+  },
+  glowInner: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: brandAlpha['10'],
+  },
+
+  // Logo
   logoContainer: {
     alignItems: 'center',
     marginBottom: spacing.md,
     marginTop: spacing['3xl'],
   },
-  logoText: {
-    ...typography.display,
-    fontSize: 56,
-    fontWeight: '700',
-    color: colors.brand,
-    letterSpacing: 6,
+  logoLine: {
+    flexDirection: 'row',
   },
-  logoSubtext: {
-    ...typography.h2,
-    fontSize: 20,
+  logoAccent: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: colors.brand,
+    letterSpacing: 2,
+  },
+  logoName: {
+    fontSize: 36,
     fontWeight: '700',
     color: textLevels.primary,
-    letterSpacing: 8,
-    marginTop: -4,
+    letterSpacing: 3,
   },
   tagline: {
     ...typography.h2,
     color: textLevels.secondary,
     letterSpacing: 1,
-    marginBottom: spacing['2xl'] + spacing.sm,
+    marginBottom: spacing.xl,
+  },
+
+  // Feature pills
+  pillRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing['2xl'],
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: brandAlpha['8'],
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: 20,
+  },
+  pillCyan: {
+    backgroundColor: cyanAlpha['10'],
+  },
+  pillText: {
+    ...typography.caption,
+    fontWeight: '600',
+    color: colors.brand,
   },
 
   // Options
@@ -204,6 +319,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     width: '100%',
     minHeight: 56,
+    shadowColor: colors.brand,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
   },
   optionButtonText: {
     ...typography.body,

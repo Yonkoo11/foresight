@@ -29,7 +29,18 @@ export function useFSLeaderboard(type: 'all_time' | 'season' | 'weekly' = 'seaso
     queryKey: ['fs-leaderboard', type],
     queryFn: async (): Promise<{ entries: LeaderboardEntry[]; total: number }> => {
       const { data } = await api.get('/api/v2/fs/leaderboard', { params: { type, limit } });
-      return data.data;
+      const raw = data.data;
+      // API returns `score` and `rank: null` — normalize to LeaderboardEntry shape
+      const entries: LeaderboardEntry[] = (raw.entries ?? []).map((e: any, i: number) => ({
+        rank: e.rank ?? i + 1,
+        userId: e.userId ?? '',
+        username: e.username ?? 'Anonymous',
+        avatar: e.avatarUrl ?? e.avatar,
+        totalScore: e.totalScore ?? e.score ?? 0,
+        tier: e.tier,
+        percentile: e.percentile,
+      }));
+      return { entries, total: raw.total ?? entries.length };
     },
     enabled,
   });

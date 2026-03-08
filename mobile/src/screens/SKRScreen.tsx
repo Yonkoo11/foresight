@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { colors, elevation, textLevels, borders, brandAlpha } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
@@ -202,7 +202,7 @@ const s = StyleSheet.create({
   tierDot: { width: 10, height: 10, borderRadius: 5 },
   tierName: { ...typography.body, fontWeight: '700' },
   multiplierBadge: {
-    backgroundColor: colors.brand + '22', paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 6,
+    backgroundColor: brandAlpha['12'], paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 6,
   },
   multiplierText: { ...typography.caption, color: colors.brand, fontWeight: '700' },
   nextTierText: { ...typography.caption, fontSize: 13, color: textLevels.muted, marginTop: spacing.xs },

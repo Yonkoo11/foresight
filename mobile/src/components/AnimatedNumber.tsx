@@ -14,12 +14,25 @@ import { typography } from '../constants/typography';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
+// Worklet-safe number formatter (toLocaleString not reliable in Hermes/worklets)
+function formatWithCommas(n: number): string {
+  'worklet';
+  const rounded = Math.round(n);
+  const str = String(Math.abs(rounded));
+  let result = '';
+  let count = 0;
+  for (let i = str.length - 1; i >= 0; i--) {
+    if (count > 0 && count % 3 === 0) result = ',' + result;
+    result = str[i] + result;
+    count++;
+  }
+  return rounded < 0 ? '-' + result : result;
+}
+
 interface AnimatedNumberProps {
   value: number;
   /** Duration in ms (default 800) */
   duration?: number;
-  /** Format function (default: toLocaleString) */
-  format?: (n: number) => string;
   /** Text style */
   style?: TextStyle | TextStyle[];
   /** Prefix string (e.g., "#", "$") */
@@ -31,7 +44,6 @@ interface AnimatedNumberProps {
 export function AnimatedNumber({
   value,
   duration = 800,
-  format,
   style,
   prefix = '',
   suffix = '',
@@ -45,10 +57,8 @@ export function AnimatedNumber({
     });
   }, [value, duration, animatedValue]);
 
-  const formatFn = format || ((n: number) => Math.round(n).toLocaleString());
-
   const animatedProps = useAnimatedProps(() => {
-    const text = `${prefix}${formatFn(animatedValue.value)}${suffix}`;
+    const text = `${prefix}${formatWithCommas(animatedValue.value)}${suffix}`;
     return {
       text,
       defaultValue: text,

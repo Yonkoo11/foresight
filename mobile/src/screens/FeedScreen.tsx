@@ -7,12 +7,11 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { colors, elevation, textLevels, borders, brandAlpha } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
@@ -50,7 +49,6 @@ export default function FeedScreen() {
     }
   }, [isAuthenticated]);
 
-  const [loadingMore, setLoadingMore] = useState(false);
   const tweets = useMemo(() => feedData?.tweets ?? [], [feedData]);
   const highlightTweets = useMemo(() => {
     if (activeFilter === 'all') return highlights ?? feedData?.highlights ?? [];
@@ -177,17 +175,6 @@ export default function FeedScreen() {
               colors={[colors.brand]}
             />
           }
-          onEndReached={() => {
-            // Show loading indicator briefly for perceived infinite scroll
-            if (tweets.length > 0 && !loadingMore) {
-              setLoadingMore(true);
-              setTimeout(() => setLoadingMore(false), 800);
-            }
-          }}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={loadingMore ? (
-            <ActivityIndicator color={colors.brand} style={{ paddingVertical: 20 }} />
-          ) : null}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="newspaper-variant-outline" size={40} color={textLevels.muted} />
@@ -498,7 +485,7 @@ const styles = StyleSheet.create({
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    backgroundColor: brandAlpha['10'],
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: spacing.md + 2,

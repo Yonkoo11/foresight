@@ -58,3 +58,38 @@ export const borders = {
   strong: 'rgba(255, 255, 255, 0.15)',
   hover: 'rgba(255, 255, 255, 0.20)',
 } as const;
+
+// Brand color alpha variants (eliminates hardcoded rgba(245,158,11,...))
+export const brandAlpha = {
+  '6': 'rgba(245, 158, 11, 0.06)',
+  '8': 'rgba(245, 158, 11, 0.08)',
+  '10': 'rgba(245, 158, 11, 0.10)',
+  '12': 'rgba(245, 158, 11, 0.12)',
+  '15': 'rgba(245, 158, 11, 0.15)',
+  '20': 'rgba(245, 158, 11, 0.20)',
+  '33': 'rgba(245, 158, 11, 0.20)',
+  '44': 'rgba(245, 158, 11, 0.27)',
+} as const;
+
+// Success color alpha variants
+export const successAlpha = {
+  '12': 'rgba(16, 185, 129, 0.12)',
+  '15': 'rgba(16, 185, 129, 0.15)',
+} as const;
+
+// Cyan alpha variants
+export const cyanAlpha = {
+  '10': 'rgba(6, 182, 212, 0.10)',
+} as const;
+
+// Muted color alpha variant
+export const mutedAlpha = {
+  '15': 'rgba(161, 161, 170, 0.15)',
+} as const;
+
+// Shared rank colors for leaderboards (gold/silver/bronze)
+export const RANK_COLORS: Record<number, string> = {
+  1: '#F59E0B',  // Gold
+  2: '#C0C0C0',  // Silver (was #A1A1AA in some screens)
+  3: '#CD7F32',  // Bronze
+} as const;

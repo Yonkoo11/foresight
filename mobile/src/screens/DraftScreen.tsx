@@ -24,10 +24,12 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useInfluencers } from '../hooks/useInfluencers';
-import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { colors, elevation, textLevels, borders, brandAlpha, successAlpha } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { TIER_CONFIG } from '../types';
+import { useOnboarding } from '../hooks/useOnboarding';
+import { OnboardingTip } from '../components/OnboardingTip';
 import type { Influencer } from '../types';
 import { useAuth } from '../providers/AuthProvider';
 import { haptics } from '../utils/haptics';
@@ -179,7 +181,7 @@ function PickerCard({ influencer: inf, isPicked, isDisabled, onAdd, onLongPress 
       <TouchableOpacity
         style={[
           s.addBtn,
-          isPicked && { backgroundColor: colors.success + '22', borderColor: colors.success },
+          isPicked && { backgroundColor: successAlpha['12'], borderColor: colors.success },
           isDisabled && !isPicked && { backgroundColor: elevation.surface, borderColor: borders.default },
         ]}
         onPress={onAdd}
@@ -311,7 +313,7 @@ function BudgetBar({ shakeAnim, remaining, budget, spent, overBudgetMsg }: {
     const color = interpolateColor(
       budgetProgress.value,
       [0, 60, 85, 100],
-      ['#10B981', '#10B981', '#F59E0B', '#F43F5E'],
+      [colors.success, colors.success, colors.brand, colors.error],
     );
     return {
       width: `${budgetProgress.value}%` as any,
@@ -359,6 +361,7 @@ export default function DraftScreen() {
   const shakeAnim = useSharedValue(0);
   const searchInputRef = useRef<TextInput>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const draftTip = useOnboarding('draft_hint');
 
   const openSheet = useCallback((inf: Influencer) => {
     haptics.impact();
@@ -462,7 +465,7 @@ export default function DraftScreen() {
   const handleSubmit = useCallback(async () => {
     if (!isAuthenticated) {
       haptics.impact();
-      (navigation as any).navigate('Auth');
+      (navigation as any).navigate('Auth', { returnTo: 'Draft', returnParams: { contestId } });
       return;
     }
     const filled = picks.filter(Boolean) as Influencer[];
@@ -517,6 +520,17 @@ export default function DraftScreen() {
         spent={spent}
         overBudgetMsg={overBudgetMsg}
       />
+
+      {draftTip.visible && (
+        <View style={{ paddingHorizontal: spacing.lg }}>
+          <OnboardingTip
+            icon="account-group"
+            title="Draft Your Team"
+            message="Pick 5 influencers within budget. Tap a player in formation to make them captain for 2x points."
+            onDismiss={draftTip.dismiss}
+          />
+        </View>
+      )}
 
       {/* Formation */}
       <View style={s.formation}>
@@ -635,7 +649,7 @@ export default function DraftScreen() {
           origin={{ x: -10, y: 0 }}
           fadeOut
           autoStart
-          colors={[colors.brand, colors.cyan, '#10B981', '#F59E0B', '#EF4444']}
+          colors={[colors.brand, colors.cyan, colors.success, colors.brand, colors.error]}
         />
       )}
     </SafeAreaView>
@@ -712,7 +726,7 @@ const s = StyleSheet.create({
   cardScore: { ...typography.caption, color: textLevels.muted },
   addBtn: {
     width: TOUCH_MIN, height: TOUCH_MIN, borderRadius: TOUCH_MIN / 2, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: colors.brand + '22', borderWidth: 1, borderColor: colors.brand,
+    backgroundColor: brandAlpha['12'], borderWidth: 1, borderColor: colors.brand,
   },
 
   // Misc
