@@ -45,8 +45,21 @@ export function useContestDetail(contestId: string) {
   return useQuery({
     queryKey: ['contest', contestId],
     queryFn: async () => {
-      const { data } = await api.get(`/api/v2/contests/${contestId}/leaderboard`);
-      return data.data;
+      const { data } = await api.get(`/api/v2/contests/${contestId}`);
+      const contest = data.data?.contest;
+      // Also fetch entries for the leaderboard
+      const entriesRes = await api.get(`/api/v2/contests/${contestId}/entries`);
+      const entries = entriesRes.data?.data?.entries ?? [];
+      return {
+        ...contest,
+        entries,
+        prizePool: contest?.prizePool ?? 0,
+        prizePoolFormatted: contest?.prizePoolFormatted,
+        totalEntries: entries.length,
+        status: contest?.status ?? 'open',
+        endDate: contest?.endTime ?? contest?.endDate ?? new Date().toISOString(),
+        lockTime: contest?.lockTime,
+      };
     },
     enabled: !!contestId,
   });
@@ -56,8 +69,23 @@ export function useContestLeaderboard(contestId: string) {
   return useQuery({
     queryKey: ['contest-leaderboard', contestId],
     queryFn: async (): Promise<{ entries: LeaderboardEntry[]; prizePool: number; totalEntries: number }> => {
-      const { data } = await api.get(`/api/v2/contests/${contestId}/leaderboard`);
-      return data.data;
+      const { data } = await api.get(`/api/v2/contests/${contestId}/entries`);
+      const entries = data.data?.entries ?? [];
+      // Get contest for prize pool
+      const contestRes = await api.get(`/api/v2/contests/${contestId}`);
+      const contest = contestRes.data?.data?.contest;
+      return {
+        entries: entries.map((e: any, i: number) => ({
+          rank: e.rank ?? i + 1,
+          userId: e.userId ?? '',
+          username: e.username ?? 'Unknown',
+          walletAddress: e.walletAddress ?? '',
+          totalScore: e.score ?? 0,
+          prizeAmount: e.prizeAmount ?? 0,
+        })),
+        prizePool: contest?.prizePool ?? 0,
+        totalEntries: entries.length,
+      };
     },
     enabled: !!contestId,
   });

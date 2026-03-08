@@ -444,9 +444,8 @@ export default function DraftScreen() {
     const captain = picks[captainIndex] ?? filled[0];
     setIsSubmitting(true);
     try {
-      await api.post(`/api/v2/contests/${contestId}/team`, {
-        teamName: name,
-        influencerIds: filled.map((i) => i.id),
+      await api.post(`/api/v2/contests/${contestId}/enter-free`, {
+        teamIds: filled.map((i) => i.id),
         captainId: captain.id,
       });
       haptics.success();
