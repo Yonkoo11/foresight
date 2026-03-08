@@ -15,7 +15,7 @@ import { colors } from '../constants/colors';
 import { useAuth } from '../providers/AuthProvider';
 import { useCTFeed, useHighlights } from '../hooks/useFeed';
 import { useTrackActivity } from '../hooks/useForesightScore';
-import { formatNumber } from '../utils/formatting';
+import { formatNumber, getAvatarColor } from '../utils/formatting';
 import { haptics } from '../utils/haptics';
 import type { Tweet } from '../types';
 
@@ -187,7 +187,7 @@ function HighlightCard({ tweet, isTop }: { tweet: Tweet; isTop: boolean }) {
     <View style={[styles.highlightCard, isTop && styles.highlightCardTop]}>
       {/* Author row */}
       <View style={styles.highlightAuthor}>
-        <View style={styles.highlightAvatar}>
+        <View style={[styles.highlightAvatar, { backgroundColor: getAvatarColor(tweet.authorHandle ?? 'unknown') }]}>
           <Text style={styles.highlightAvatarLetter}>
             {tweet.authorHandle?.charAt(0).toUpperCase() ?? '?'}
           </Text>
@@ -215,7 +215,7 @@ function TweetCard({ tweet }: { tweet: Tweet }) {
   return (
     <View style={styles.tweetCard}>
       {/* Avatar */}
-      <View style={styles.tweetAvatar}>
+      <View style={[styles.tweetAvatar, { backgroundColor: getAvatarColor(tweet.authorHandle ?? 'unknown') }]}>
         <Text style={styles.tweetAvatarLetter}>
           {tweet.authorHandle?.charAt(0).toUpperCase() ?? '?'}
         </Text>

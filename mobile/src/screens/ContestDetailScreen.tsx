@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import { colors } from '../constants/colors';
 import { useAuth } from '../providers/AuthProvider';
 import { useContestLeaderboard, useActiveContests } from '../hooks/useContests';
 import { useMyEntry } from '../hooks/useMyEntry';
-import { formatNumber, timeUntil } from '../utils/formatting';
+import { formatNumber, timeUntil, getAvatarColor } from '../utils/formatting';
 import { haptics } from '../utils/haptics';
 import { LiveDot } from '../components/LiveDot';
 import type { LeaderboardEntry } from '../types';
@@ -30,19 +30,6 @@ const RANK_COLORS: Record<number, string> = {
   2: '#A1A1AA',
   3: '#CD7F32',
 };
-
-const AVATAR_COLORS = [
-  '#F59E0B', '#06B6D4', '#10B981', '#F43F5E',
-  '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
-];
-
-function getAvatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
 
 // --- Contest Header Card ---
 
@@ -156,6 +143,7 @@ export default function ContestDetailScreen() {
   const contest = contests.find((c) => c.id === contestId);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [showMyTeam, setShowMyTeam] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -171,8 +159,8 @@ export default function ContestDetailScreen() {
       return;
     }
     if (hasEntered) {
-      // Already entered — scroll to their entry in leaderboard
-      // (Don't open blank draft screen)
+      haptics.selection();
+      setShowMyTeam((v) => !v);
       return;
     }
     navigation.navigate('Draft', { contestId });
@@ -316,6 +304,20 @@ export default function ContestDetailScreen() {
                 {hasEntered ? `Entered: ${myEntry?.teamName ?? 'My Team'}` : 'Draft Your Team'}
               </Text>
             </TouchableOpacity>
+
+            {/* My Team (expandable) */}
+            {hasEntered && showMyTeam && (
+              <View style={styles.myTeamSection}>
+                <Text style={styles.sectionTitle}>Your Team</Text>
+                <Text style={styles.myTeamHandle}>{myEntry?.teamName ?? 'My Team'}</Text>
+                {(myEntry as any)?.picks?.map((pick: any, i: number) => (
+                  <View key={i} style={styles.myTeamRow}>
+                    <Text style={styles.myTeamHandle}>@{pick.handle ?? pick.name ?? `Pick ${i + 1}`}</Text>
+                    {pick.isCaptain && <Text style={styles.captainLabel}>CPT</Text>}
+                  </View>
+                ))}
+              </View>
+            )}
 
             {/* Leaderboard Header */}
             {entries.length > 0 && (
@@ -601,5 +603,34 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontSize: 15,
     fontWeight: '700' as const,
+  },
+  myTeamSection: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  myTeamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    gap: 8,
+  },
+  myTeamHandle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  captainLabel: {
+    color: colors.brand,
+    fontSize: 10,
+    fontWeight: '800',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
   },
 });

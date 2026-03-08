@@ -32,23 +32,23 @@ const animate = () => LayoutAnimation.configureNext(LayoutAnimation.Presets.ease
 
 // --- Formation Slot ---
 
-function FormationSlot({ influencer: inf, isCaptain, onTap, onRemove }: {
+function FormationSlot({ influencer: inf, isCaptain, onTap, onRemove, onEmptyTap }: {
   influencer: Influencer | null; index: number; isCaptain: boolean;
-  onTap: () => void; onRemove: () => void;
+  onTap: () => void; onRemove: () => void; onEmptyTap?: () => void;
 }) {
   const sz = isCaptain ? 72 : 64;
   const tierColor = inf ? TIER_CONFIG[inf.tier].color : colors.cardBorder;
 
   if (!inf) {
     return (
-      <View style={[s.slotWrap, { width: sz + 24 }]}>
+      <TouchableOpacity style={[s.slotWrap, { width: sz + 24 }]} onPress={onEmptyTap} activeOpacity={0.6}>
         <View style={[s.emptySlot, { width: sz, height: sz, borderRadius: sz / 2 }]}>
-          <Text style={[s.emptyIcon, isCaptain && { color: colors.brand, fontSize: 26 }]}>?</Text>
+          <Text style={[s.emptyIcon, isCaptain && { color: colors.brand, fontSize: 26 }]}>+</Text>
         </View>
         <Text style={[s.slotHandle, isCaptain && { color: colors.brand }]}>
           {isCaptain ? 'Captain' : 'Pick'}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   }
 
@@ -191,6 +191,7 @@ export default function DraftScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [overBudgetMsg, setOverBudgetMsg] = useState('');
   const shakeAnim = useRef(new Animated.Value(0)).current;
+  const searchInputRef = useRef<TextInput>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const openSheet = useCallback((inf: Influencer) => {
@@ -358,6 +359,7 @@ export default function DraftScreen() {
                 isCaptain={captainIndex === idx}
                 onTap={() => toggleCaptain(idx)}
                 onRemove={() => removeInfluencer(idx)}
+                onEmptyTap={() => { haptics.selection(); searchInputRef.current?.focus(); }}
               />
             ))}
           </View>
@@ -374,6 +376,7 @@ export default function DraftScreen() {
           <View style={s.searchBar}>
             <MaterialCommunityIcons name="magnify" size={18} color={colors.textMuted} style={{ marginRight: 6 }} />
             <TextInput
+              ref={searchInputRef}
               style={s.searchInput}
               placeholder="Search influencers..."
               placeholderTextColor={colors.textMuted}

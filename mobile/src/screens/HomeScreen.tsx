@@ -18,7 +18,7 @@ import { useForesightScore, useDailyStatus } from '../hooks/useForesightScore';
 import { useActiveContests } from '../hooks/useContests';
 import { useInfluencers } from '../hooks/useInfluencers';
 import { useQuestSummary } from '../hooks/useQuests';
-import { formatSOL, formatNumber, timeUntil } from '../utils/formatting';
+import { formatSOL, formatNumber, timeUntil, getAvatarColor } from '../utils/formatting';
 import { haptics } from '../utils/haptics';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import type { Contest, Influencer } from '../types';
@@ -87,7 +87,7 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>GM, {displayName}</Text>
           </View>
           <TouchableOpacity
-            style={styles.avatar}
+            style={[styles.avatar, { backgroundColor: getAvatarColor(displayName) }]}
             onPress={() => {
               haptics.selection();
               if (isAuthenticated) {

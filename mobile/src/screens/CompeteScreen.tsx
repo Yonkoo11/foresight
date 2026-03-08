@@ -12,10 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../constants/colors';
+import { useAuth } from '../providers/AuthProvider';
 import { LiveDot } from '../components/LiveDot';
 import { useActiveContests } from '../hooks/useContests';
 import { useFSLeaderboard } from '../hooks/useForesightScore';
-import { formatNumber, timeUntil } from '../utils/formatting';
+import { formatNumber, timeUntil, getAvatarColor } from '../utils/formatting';
 import { haptics } from '../utils/haptics';
 import type { Contest, LeaderboardEntry } from '../types';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -36,19 +37,6 @@ const RANK_COLORS: Record<number, string> = {
   2: '#A1A1AA',
   3: '#CD7F32',
 };
-
-const AVATAR_COLORS = [
-  '#F59E0B', '#06B6D4', '#10B981', '#F43F5E',
-  '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
-];
-
-function getAvatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
 
 // --- ContestCard ---
 
@@ -106,7 +94,7 @@ function ContestCard({
 
 // --- LeaderboardRow ---
 
-function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
+function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isCurrentUser?: boolean }) {
   const isTop3 = entry.rank <= 3;
   const rankColor = RANK_COLORS[entry.rank] ?? colors.text;
   const borderColor = RANK_COLORS[entry.rank];
@@ -129,6 +117,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
         isTop3 && borderColor
           ? { borderLeftWidth: 3, borderLeftColor: borderColor }
           : null,
+        isCurrentUser && { backgroundColor: 'rgba(245, 158, 11, 0.08)', borderLeftWidth: 3, borderLeftColor: colors.brand },
       ]}
     >
       <Text
@@ -149,6 +138,11 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
           <Text style={styles.username} numberOfLines={1}>
             {entry.username}
           </Text>
+          {isCurrentUser && (
+            <View style={{ backgroundColor: colors.brand, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+              <Text style={{ color: colors.background, fontSize: 9, fontWeight: '800' }}>YOU</Text>
+            </View>
+          )}
           {tier && (
             <View
               style={[
@@ -189,6 +183,7 @@ function EmptyContests() {
 
 export default function CompeteScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('contests');
   const [lbType, setLbType] = useState<LeaderboardType>('season');
 
@@ -239,11 +234,12 @@ export default function CompeteScreen() {
     [handleContestPress],
   );
 
+  const currentUserId = user?.id;
   const renderLeaderboardItem = useCallback(
     ({ item }: { item: LeaderboardEntry }) => (
-      <LeaderboardRow entry={item} />
+      <LeaderboardRow entry={item} isCurrentUser={item.userId === currentUserId} />
     ),
-    [],
+    [currentUserId],
   );
 
   return (

@@ -1,8 +1,9 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, RefreshControl,
+  View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { colors } from '../constants/colors';
 import { useAuth } from '../providers/AuthProvider';
@@ -12,6 +13,7 @@ import { formatNumber } from '../utils/formatting';
 const TIER_ORDER = ['bronze', 'silver', 'gold'] as const;
 
 export default function SKRScreen() {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { data: skr, isLoading, refetch } = useSKRBalance(user?.walletAddress);
 
@@ -144,6 +146,16 @@ export default function SKRScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Earn CTA */}
+        <TouchableOpacity
+          style={s.earnCta}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="trophy-outline" size={20} color={colors.background} />
+          <Text style={s.earnCtaText}>Earn SKR by placing in contests</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -226,4 +238,10 @@ const s = StyleSheet.create({
   infoContent: { flex: 1 },
   infoTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 4 },
   infoText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  earnCta: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, backgroundColor: colors.brand, borderRadius: 12, paddingVertical: 14,
+    marginTop: 24,
+  },
+  earnCtaText: { color: colors.background, fontSize: 15, fontWeight: '700' },
 });
