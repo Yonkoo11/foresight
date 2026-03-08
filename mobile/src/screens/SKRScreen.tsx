@@ -89,16 +89,18 @@ export default function SKRScreen() {
               </View>
 
               {/* Progress bar for current/next tier */}
-              {isCurrent && skr?.nextTier && (
-                <View style={s.progressWrap}>
-                  <View style={s.progressTrack}>
-                    <View style={[s.progressFill, {
-                      backgroundColor: t.color,
-                      width: `${Math.min(100, ((skr.balance - t.min) / (TIERS[TIER_ORDER[TIER_ORDER.indexOf(tierKey) + 1] ?? tierKey].min - t.min)) * 100)}%`,
-                    }]} />
+              {isCurrent && skr?.nextTier && (() => {
+                const nextKey = TIER_ORDER[TIER_ORDER.indexOf(tierKey) + 1];
+                const range = nextKey ? TIERS[nextKey].min - t.min : 1;
+                const pct = Math.min(100, ((skr.balance - t.min) / (range || 1)) * 100);
+                return (
+                  <View style={s.progressWrap}>
+                    <View style={s.progressTrack}>
+                      <View style={[s.progressFill, { backgroundColor: t.color, width: `${pct}%` }]} />
+                    </View>
                   </View>
-                </View>
-              )}
+                );
+              })()}
 
               <View style={s.benefitsList}>
                 <BenefitRow

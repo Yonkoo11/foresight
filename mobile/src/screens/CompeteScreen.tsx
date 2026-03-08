@@ -40,7 +40,7 @@ const RANK_COLORS: Record<number, string> = {
 
 // --- ContestCard ---
 
-function ContestCard({
+const ContestCard = React.memo(function ContestCard({
   contest,
   onPress,
 }: {
@@ -90,11 +90,11 @@ function ContestCard({
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 // --- LeaderboardRow ---
 
-function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isCurrentUser?: boolean }) {
+const LeaderboardRow = React.memo(function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isCurrentUser?: boolean }) {
   const isTop3 = entry.rank <= 3;
   const rankColor = RANK_COLORS[entry.rank] ?? colors.text;
   const borderColor = RANK_COLORS[entry.rank];
@@ -163,7 +163,7 @@ function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isC
       </Text>
     </View>
   );
-}
+});
 
 // --- EmptyContests ---
 

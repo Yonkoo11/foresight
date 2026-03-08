@@ -47,6 +47,7 @@ export default function FeedScreen() {
     }
   }, [isAuthenticated]);
 
+  const [loadingMore, setLoadingMore] = useState(false);
   const tweets = useMemo(() => feedData?.tweets ?? [], [feedData]);
   const highlightTweets = useMemo(() => {
     if (activeFilter === 'all') return highlights ?? feedData?.highlights ?? [];
@@ -168,6 +169,17 @@ export default function FeedScreen() {
               colors={[colors.brand]}
             />
           }
+          onEndReached={() => {
+            // Show loading indicator briefly for perceived infinite scroll
+            if (tweets.length > 0 && !loadingMore) {
+              setLoadingMore(true);
+              setTimeout(() => setLoadingMore(false), 800);
+            }
+          }}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? (
+            <ActivityIndicator color={colors.brand} style={{ paddingVertical: 20 }} />
+          ) : null}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="newspaper-variant-outline" size={40} color={colors.textMuted} />
@@ -175,6 +187,8 @@ export default function FeedScreen() {
               <Text style={styles.emptySubtext}>Pull to refresh or try a different filter</Text>
             </View>
           }
+          maxToRenderPerBatch={10}
+          windowSize={5}
         />
       )}
     </SafeAreaView>
@@ -212,7 +226,7 @@ function HighlightCard({ tweet, isTop }: { tweet: Tweet; isTop: boolean }) {
 }
 
 // ─── Tweet Card ───────────────────────────────────────────────────────
-function TweetCard({ tweet }: { tweet: Tweet }) {
+const TweetCard = React.memo(function TweetCard({ tweet }: { tweet: Tweet }) {
   return (
     <View style={styles.tweetCard}>
       {/* Avatar */}
@@ -243,7 +257,7 @@ function TweetCard({ tweet }: { tweet: Tweet }) {
       </View>
     </View>
   );
-}
+});
 
 // ─── Small Engagement Stat ────────────────────────────────────────────
 function EngagementStat({ icon, count }: { icon: string; count: number }) {
