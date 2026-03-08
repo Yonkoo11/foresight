@@ -254,17 +254,17 @@ export default function Profile() {
             if (tId) {
               apiClient.get(`/api/tapestry/social-counts/${tId}`)
                 .then((r) => { if (r.data?.data) setSocialCounts(prev => ({ ...prev, followers: r.data.data.followers ?? 0 })); })
-                .catch(() => {});
+                .catch((e) => console.warn('[Profile] social counts fetch failed:', e?.message));
               apiClient.get('/api/tapestry/my-following')
                 .then((r) => { if (r.data?.data?.following) setSocialCounts(prev => ({ ...prev, following: r.data.data.following.length })); })
-                .catch(() => {});
+                .catch((e) => console.warn('[Profile] following fetch failed:', e?.message));
               apiClient.get(`/api/tapestry/content/${tId}`)
                 .then((r) => { if (r.data?.data?.content) setTapestryContent(r.data.data.content); })
-                .catch(() => {});
+                .catch((e) => console.warn('[Profile] tapestry content fetch failed:', e?.message));
             }
           }
         })
-        .catch(() => {});
+        .catch((e) => console.warn('[Profile] tapestry status fetch failed:', e?.message));
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {

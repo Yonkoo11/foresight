@@ -9,7 +9,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useMobileWallet } from '../utils/useMobileWallet';
 import { useAuth } from '../providers/AuthProvider';
 import api from '../services/api';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { haptics } from '../utils/haptics';
 
 type LoginMethod = 'idle' | 'wallet';
@@ -148,59 +150,63 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingBottom: 40,
+    paddingHorizontal: spacing['2xl'],
+    paddingBottom: spacing['3xl'],
   },
   dragHandle: {
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.textMuted,
-    marginTop: 12,
-    marginBottom: 32,
+    backgroundColor: textLevels.muted,
+    marginTop: spacing.md,
+    marginBottom: spacing['2xl'],
     opacity: 0.4,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
+    marginTop: spacing['3xl'],
   },
   logoText: {
+    ...typography.display,
     fontSize: 56,
-    fontWeight: '800',
+    fontWeight: '700',
     color: colors.brand,
     letterSpacing: 6,
   },
   logoSubtext: {
+    ...typography.h2,
     fontSize: 20,
     fontWeight: '700',
-    color: colors.text,
+    color: textLevels.primary,
     letterSpacing: 8,
     marginTop: -4,
   },
   tagline: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textSecondary,
+    ...typography.h2,
+    color: textLevels.secondary,
     letterSpacing: 1,
-    marginBottom: 40,
+    marginBottom: spacing['2xl'] + spacing.sm,
   },
 
   // Options
   options: {
     width: '100%',
-    gap: 12,
+    gap: spacing.md,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: spacing.md,
     backgroundColor: colors.brand,
-    paddingVertical: 18,
+    paddingVertical: spacing.lg + 2,
     borderRadius: 14,
     width: '100%',
+    minHeight: 56,
   },
   optionButtonText: {
+    ...typography.body,
     color: colors.background,
     fontSize: 17,
     fontWeight: '800',
@@ -210,52 +216,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    marginTop: 12,
+    gap: spacing.xs + 2,
+    marginTop: spacing.md,
   },
   mwaBadgeText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: '500',
+    ...typography.caption,
+    color: textLevels.muted,
   },
 
   // Error
   errorText: {
+    ...typography.bodySm,
     color: colors.error,
-    fontSize: 14,
-    marginTop: 16,
+    marginTop: spacing.lg,
     textAlign: 'center',
   },
 
   // Skip
   skipButton: {
-    marginTop: 28,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    marginTop: spacing['2xl'],
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    minHeight: TOUCH_MIN,
+    justifyContent: 'center',
   },
   skipText: {
-    color: colors.textMuted,
+    ...typography.bodySm,
+    color: textLevels.muted,
     fontSize: 15,
-    fontWeight: '500',
   },
 
   // Footer
   footer: {
-    marginTop: 32,
+    marginTop: spacing['2xl'],
     alignItems: 'center',
   },
   solBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: spacing.xs + 2,
+    backgroundColor: elevation.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: borders.subtle,
   },
   footerText: {
-    color: colors.textMuted,
-    fontSize: 12,
+    ...typography.caption,
+    color: textLevels.muted,
     fontWeight: '600',
   },
 });

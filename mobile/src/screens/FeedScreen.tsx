@@ -9,9 +9,12 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
 import { useCTFeed, useHighlights } from '../hooks/useFeed';
 import { useTrackActivity } from '../hooks/useForesightScore';
@@ -124,6 +127,7 @@ export default function FeedScreen() {
               style={[styles.filterTab, activeFilter === f.key && styles.filterTabActive]}
               activeOpacity={0.7}
               onPress={() => onFilterPress(f.key)}
+              hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
             >
               <Text
                 style={[styles.filterText, activeFilter === f.key && styles.filterTextActive]}
@@ -156,7 +160,11 @@ export default function FeedScreen() {
         <FlatList
           data={tweets}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <TweetCard tweet={item} />}
+          renderItem={({ item, index }) => (
+            <Animated.View entering={FadeInDown.delay(Math.min(index * 50, 250)).duration(300)}>
+              <TweetCard tweet={item} />
+            </Animated.View>
+          )}
           ListHeaderComponent={ListHeader}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           contentContainerStyle={styles.feedContent}
@@ -182,7 +190,7 @@ export default function FeedScreen() {
           ) : null}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="newspaper-variant-outline" size={40} color={colors.textMuted} />
+              <MaterialCommunityIcons name="newspaper-variant-outline" size={40} color={textLevels.muted} />
               <Text style={styles.emptyText}>No tweets yet</Text>
               <Text style={styles.emptySubtext}>Pull to refresh or try a different filter</Text>
             </View>
@@ -266,7 +274,7 @@ function EngagementStat({ icon, count }: { icon: string; count: number }) {
       <MaterialCommunityIcons
         name={icon as any}
         size={14}
-        color={colors.textMuted}
+        color={textLevels.muted}
       />
       <Text style={styles.engagementCount}>{formatNumber(count)}</Text>
     </View>
@@ -277,47 +285,50 @@ function EngagementStat({ icon, count }: { icon: string; count: number }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: elevation.base,
   },
 
   // Header
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   title: {
+    ...typography.h1,
     fontSize: 28,
     fontWeight: '800',
-    color: colors.text,
+    color: textLevels.primary,
   },
 
   // Filter tabs
   filterRow: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.cardBorder,
+    borderBottomColor: borders.subtle,
   },
   filterScroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    gap: 8,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
   },
   filterTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: borders.default,
+    minHeight: TOUCH_MIN,
+    justifyContent: 'center',
   },
   filterTabActive: {
     backgroundColor: colors.brand,
     borderColor: colors.brand,
   },
   filterText: {
-    fontSize: 14,
+    ...typography.bodySm,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
   },
   filterTextActive: {
     color: colors.black,
@@ -325,29 +336,26 @@ const styles = StyleSheet.create({
 
   // Highlights section
   highlightsSection: {
-    paddingTop: 16,
-    marginBottom: 8,
+    paddingTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    ...typography.label,
+    color: textLevels.secondary,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
   },
   highlightsScroll: {
-    paddingHorizontal: 20,
-    gap: 12,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.md,
   },
   highlightCard: {
     width: 280,
-    backgroundColor: colors.card,
-    borderRadius: 12,
+    backgroundColor: elevation.surface,
+    borderRadius: spacing.md,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    padding: 14,
+    borderColor: borders.default,
+    padding: spacing.md + 2, // ~14px, closest to original
   },
   highlightCardTop: {
     borderColor: colors.brand,
@@ -356,64 +364,61 @@ const styles = StyleSheet.create({
   highlightAuthor: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   highlightAvatar: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.surface,
+    backgroundColor: elevation.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
   highlightAvatarLetter: {
-    fontSize: 12,
+    ...typography.caption,
     fontWeight: '700',
     color: colors.brand,
   },
   highlightHandle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
+    ...typography.h2,
     flex: 1,
   },
   highlightText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.textSecondary,
+    ...typography.bodySm,
+    color: textLevels.secondary,
     marginBottom: 10,
   },
 
   // Feed
   feedContent: {
-    paddingBottom: 32,
+    paddingBottom: spacing['2xl'],
   },
   separator: {
     height: 1,
-    backgroundColor: colors.cardBorder,
-    marginHorizontal: 20,
+    backgroundColor: borders.subtle,
+    marginHorizontal: spacing.xl,
   },
 
   // Tweet card
   tweetCard: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    gap: 12,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md + 2, // ~14px
+    gap: spacing.md,
   },
   tweetAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
+    width: TOUCH_MIN,
+    height: TOUCH_MIN,
+    borderRadius: TOUCH_MIN / 2,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: borders.default,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tweetAvatarLetter: {
-    fontSize: 14,
+    ...typography.bodySm,
     fontWeight: '700',
     color: colors.cyan,
   },
@@ -424,70 +429,69 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   tweetHandle: {
-    fontSize: 14,
+    ...typography.bodySm,
     fontWeight: '700',
-    color: colors.text,
+    color: textLevels.primary,
     flexShrink: 1,
   },
   timestamp: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginLeft: 8,
+    ...typography.caption,
+    color: textLevels.muted,
+    marginLeft: spacing.sm,
   },
   tweetText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.textSecondary,
+    ...typography.body,
+    color: textLevels.secondary,
     marginBottom: 10,
   },
   tweetEngagement: {
     flexDirection: 'row',
-    gap: 16,
+    gap: spacing.lg,
   },
 
   // Engagement stat
   engagementRow: {
     flexDirection: 'row',
-    gap: 14,
+    gap: spacing.md + 2, // ~14px, closest to original
   },
   engagementStat: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
   },
   engagementCount: {
-    fontSize: 12,
-    color: colors.textMuted,
+    ...typography.caption,
+    color: textLevels.muted,
     fontVariant: ['tabular-nums'],
   },
 
   // Skeleton loading
   skeletonContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
   },
   skeletonCard: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+    gap: spacing.md,
+    marginBottom: spacing.xl,
   },
   skeletonAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
+    width: TOUCH_MIN,
+    height: TOUCH_MIN,
+    borderRadius: TOUCH_MIN / 2,
+    backgroundColor: elevation.surface,
   },
   skeletonBody: {
     flex: 1,
-    gap: 8,
+    gap: spacing.sm,
   },
   skeletonLine: {
-    height: 12,
+    height: spacing.md,
     borderRadius: 6,
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
   },
 
   // Error banner
@@ -497,13 +501,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
     borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    gap: 8,
+    paddingHorizontal: spacing.md + 2,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+    minHeight: TOUCH_MIN,
   },
   errorBannerText: {
-    fontSize: 13,
+    ...typography.bodySm,
     fontWeight: '600',
     color: colors.brand,
   },
@@ -513,15 +518,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 80,
-    gap: 8,
+    gap: spacing.sm,
   },
   emptyText: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
   },
   emptySubtext: {
+    ...typography.caption,
     fontSize: 13,
-    color: colors.textMuted,
+    color: textLevels.muted,
   },
 });

@@ -129,8 +129,12 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isConnected) return;
 
+    let timeoutId: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+
     // Generate new event every 3-8 seconds
     const generateEvent = () => {
+      if (cancelled) return;
       const event = generateMockEvent();
 
       setEvents((prev) => [event, ...prev].slice(0, 50)); // Keep last 50 events
@@ -141,11 +145,14 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
 
       // Schedule next event
       const nextDelay = Math.random() * 5000 + 3000; // 3-8 seconds
-      return setTimeout(generateEvent, nextDelay);
+      timeoutId = setTimeout(generateEvent, nextDelay);
     };
 
-    const timeout = generateEvent();
-    return () => clearTimeout(timeout);
+    timeoutId = setTimeout(generateEvent, Math.random() * 5000 + 3000);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [isConnected]);
 
   // Fluctuate online users count

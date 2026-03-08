@@ -1,34 +1,49 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  Image, Alert, Animated, LayoutAnimation, Platform, UIManager,
+  Image, Alert, Platform,
   KeyboardAvoidingView, ActivityIndicator, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
+import ReanimatedLib, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withRepeat,
+  withSequence,
+  interpolateColor,
+  Easing,
+  FadeIn,
+  FadeOut,
+} from 'react-native-reanimated';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useInfluencers } from '../hooks/useInfluencers';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { TIER_CONFIG } from '../types';
 import type { Influencer } from '../types';
 import { useAuth } from '../providers/AuthProvider';
 import { haptics } from '../utils/haptics';
 import { formatNumber } from '../utils/formatting';
+import { Badge } from '../components/ui/Badge';
+import { StatCard } from '../components/ui/StatCard';
 import api from '../services/api';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+const AnimatedView = ReanimatedLib.createAnimatedComponent(View);
+const AnimatedPressable = ReanimatedLib.createAnimatedComponent(Pressable);
 
 const DEFAULT_BUDGET = 150;
 const TEAM = 5;
 const TIERS = ['', 'S', 'A', 'B', 'C'] as const;
 const TIER_LABELS = ['All', 'S', 'A', 'B', 'C'];
-const animate = () => LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+const PRESS_SPRING = { damping: 15, stiffness: 300 };
 
 // --- Formation Slot ---
 
@@ -37,11 +52,37 @@ function FormationSlot({ influencer: inf, isCaptain, onTap, onRemove, onEmptyTap
   onTap: () => void; onRemove: () => void; onEmptyTap?: () => void;
 }) {
   const sz = isCaptain ? 72 : 64;
-  const tierColor = inf ? TIER_CONFIG[inf.tier].color : colors.cardBorder;
+  const tierColor = inf ? TIER_CONFIG[inf.tier].color : borders.default;
+
+  // Captain border pulse
+  const pulseProgress = useSharedValue(0);
+
+  useEffect(() => {
+    if (inf && isCaptain) {
+      pulseProgress.value = withRepeat(
+        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true,
+      );
+    } else {
+      pulseProgress.value = 0;
+    }
+  }, [inf, isCaptain, pulseProgress]);
+
+  const captainBorderStyle = useAnimatedStyle(() => {
+    if (!inf || !isCaptain) return {};
+    const opacity = 0.6 + pulseProgress.value * 0.4; // 0.6 -> 1.0
+    return { opacity };
+  });
 
   if (!inf) {
     return (
-      <TouchableOpacity style={[s.slotWrap, { width: sz + 24 }]} onPress={onEmptyTap} activeOpacity={0.6}>
+      <TouchableOpacity
+        style={[s.slotWrap, { width: sz + 24 }]}
+        onPress={onEmptyTap}
+        activeOpacity={0.6}
+        hitSlop={spacing.xs}
+      >
         <View style={[s.emptySlot, { width: sz, height: sz, borderRadius: sz / 2 }]}>
           <Text style={[s.emptyIcon, isCaptain && { color: colors.brand, fontSize: 26 }]}>+</Text>
         </View>
@@ -53,30 +94,43 @@ function FormationSlot({ influencer: inf, isCaptain, onTap, onRemove, onEmptyTap
   }
 
   return (
-    <View style={[s.slotWrap, { width: sz + 24 }]}>
-      <TouchableOpacity activeOpacity={0.7} onPress={onTap}>
-        <View style={{
-          width: sz, height: sz, borderRadius: sz / 2, justifyContent: 'center',
-          alignItems: 'center', borderColor: isCaptain ? colors.brand : tierColor,
-          borderWidth: isCaptain ? 3 : 2,
-        }}>
-          <Image
-            source={{ uri: inf.avatar }}
-            style={{ width: sz - 6, height: sz - 6, borderRadius: (sz - 6) / 2, backgroundColor: colors.surface }}
-          />
-          {isCaptain && (
+    <AnimatedView
+      style={[s.slotWrap, { width: sz + 24 }]}
+      entering={FadeIn.duration(250).springify().damping(12).stiffness(200)}
+      exiting={FadeOut.duration(200)}
+    >
+      <Pressable onPress={onTap}>
+        {isCaptain ? (
+          <AnimatedView style={[{
+            width: sz, height: sz, borderRadius: sz / 2, justifyContent: 'center',
+            alignItems: 'center', borderColor: colors.brand, borderWidth: 3,
+          }, captainBorderStyle]}>
+            <Image
+              source={{ uri: inf.avatar }}
+              style={{ width: sz - 6, height: sz - 6, borderRadius: (sz - 6) / 2, backgroundColor: elevation.surface }}
+            />
             <View style={s.captainBadge}>
               <Text style={s.captainBadgeText}>2x</Text>
             </View>
-          )}
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={s.removeBtn} onPress={onRemove} hitSlop={8}>
-        <Text style={s.removeBtnText}>x</Text>
+          </AnimatedView>
+        ) : (
+          <View style={{
+            width: sz, height: sz, borderRadius: sz / 2, justifyContent: 'center',
+            alignItems: 'center', borderColor: tierColor, borderWidth: 2,
+          }}>
+            <Image
+              source={{ uri: inf.avatar }}
+              style={{ width: sz - 6, height: sz - 6, borderRadius: (sz - 6) / 2, backgroundColor: elevation.surface }}
+            />
+          </View>
+        )}
+      </Pressable>
+      <TouchableOpacity style={s.removeBtn} onPress={onRemove} hitSlop={12}>
+        <MaterialCommunityIcons name="close" size={14} color={colors.white} />
       </TouchableOpacity>
       <Text style={s.slotHandle} numberOfLines={1}>@{inf.handle}</Text>
       <View style={[s.tierDot, { backgroundColor: tierColor }]} />
-    </View>
+    </AnimatedView>
   );
 }
 
@@ -86,9 +140,25 @@ function PickerCard({ influencer: inf, isPicked, isDisabled, onAdd, onLongPress 
   influencer: Influencer; isPicked: boolean; isDisabled: boolean; onAdd: () => void; onLongPress: () => void;
 }) {
   const tc = TIER_CONFIG[inf.tier];
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = useCallback(() => {
+    scale.value = withSpring(0.97, PRESS_SPRING);
+  }, [scale]);
+
+  const handlePressOut = useCallback(() => {
+    scale.value = withSpring(1, PRESS_SPRING);
+  }, [scale]);
+
   return (
-    <Pressable
-      style={[s.card, isPicked && { opacity: 0.5 }]}
+    <AnimatedPressable
+      style={[s.card, isPicked && { opacity: 0.5 }, animatedStyle]}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       onLongPress={onLongPress}
       delayLongPress={400}
     >
@@ -99,9 +169,7 @@ function PickerCard({ influencer: inf, isPicked, isDisabled, onAdd, onLongPress 
         <Text style={s.cardHandle} numberOfLines={1}>@{inf.handle}</Text>
         <View style={s.cardMeta}>
           <Text style={s.cardName} numberOfLines={1}>{inf.name}</Text>
-          <View style={[s.cardTierBadge, { backgroundColor: tc.bg }]}>
-            <Text style={[s.cardTierText, { color: tc.color }]}>{tc.label}</Text>
-          </View>
+          <Badge tier={inf.tier as 'S' | 'A' | 'B' | 'C'} size="sm" />
         </View>
       </View>
       <View style={s.cardRight}>
@@ -112,21 +180,20 @@ function PickerCard({ influencer: inf, isPicked, isDisabled, onAdd, onLongPress 
         style={[
           s.addBtn,
           isPicked && { backgroundColor: colors.success + '22', borderColor: colors.success },
-          isDisabled && !isPicked && { backgroundColor: colors.surface, borderColor: colors.cardBorder },
+          isDisabled && !isPicked && { backgroundColor: elevation.surface, borderColor: borders.default },
         ]}
         onPress={onAdd}
         disabled={isDisabled && !isPicked}
         activeOpacity={0.6}
+        hitSlop={spacing.xs}
       >
-        <Text style={[
-          s.addBtnText,
-          isPicked && { color: colors.success, fontSize: 16 },
-          isDisabled && !isPicked && { color: colors.textMuted },
-        ]}>
-          {isPicked ? '\u2713' : '+'}
-        </Text>
+        <MaterialCommunityIcons
+          name={isPicked ? 'check' : 'plus'}
+          size={20}
+          color={isPicked ? colors.success : isDisabled && !isPicked ? textLevels.muted : colors.brand}
+        />
       </TouchableOpacity>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -145,31 +212,129 @@ function InfluencerSheetContent({ influencer }: { influencer: Influencer }) {
           <Text style={s.sheetHandle}>@{influencer.handle}</Text>
           <Text style={s.sheetName}>{influencer.name}</Text>
         </View>
-        <View style={[s.sheetTierBadge, { backgroundColor: tc.bg }]}>
-          <Text style={[s.sheetTierText, { color: tc.color }]}>{tc.label}</Text>
-        </View>
+        <Badge tier={influencer.tier as 'S' | 'A' | 'B' | 'C'} size="md" />
       </View>
 
       {/* Stats grid */}
       <View style={s.sheetStats}>
-        <View style={s.sheetStatItem}>
-          <Text style={s.sheetStatValue}>{formatNumber(influencer.totalPoints)}</Text>
-          <Text style={s.sheetStatLabel}>Total Points</Text>
-        </View>
-        <View style={s.sheetStatItem}>
-          <Text style={s.sheetStatValue}>{influencer.price} cr</Text>
-          <Text style={s.sheetStatLabel}>Cost</Text>
-        </View>
-        <View style={s.sheetStatItem}>
-          <Text style={s.sheetStatValue}>{formatNumber(influencer.followers)}</Text>
-          <Text style={s.sheetStatLabel}>Followers</Text>
-        </View>
-        <View style={s.sheetStatItem}>
-          <Text style={s.sheetStatValue}>{influencer.engagementRate.toFixed(1)}%</Text>
-          <Text style={s.sheetStatLabel}>Engagement</Text>
-        </View>
+        <StatCard
+          label="Total Points"
+          value={formatNumber(influencer.totalPoints)}
+          icon="chart-line"
+        />
+        <StatCard
+          label="Cost"
+          value={`${influencer.price} cr`}
+          icon="currency-usd"
+          iconColor={colors.brand}
+        />
+        <StatCard
+          label="Followers"
+          value={formatNumber(influencer.followers)}
+          icon="account-group"
+        />
+        <StatCard
+          label="Engagement"
+          value={`${influencer.engagementRate.toFixed(1)}%`}
+          icon="lightning-bolt"
+        />
       </View>
     </View>
+  );
+}
+
+// --- Submit Button (Reanimated press) ---
+
+function SubmitButton({ canSubmit, isSubmitting, onPress }: {
+  canSubmit: boolean; isSubmitting: boolean; onPress: () => void;
+}) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = useCallback(() => {
+    if (canSubmit) scale.value = withSpring(0.95, PRESS_SPRING);
+  }, [canSubmit, scale]);
+
+  const handlePressOut = useCallback(() => {
+    scale.value = withSpring(1, PRESS_SPRING);
+  }, [scale]);
+
+  return (
+    <AnimatedPressable
+      style={[
+        s.submitBtn,
+        !canSubmit && { backgroundColor: elevation.surface },
+        canSubmit && {
+          shadowColor: colors.brand,
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+        },
+        animatedStyle,
+      ]}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={onPress}
+      disabled={!canSubmit}
+    >
+      {isSubmitting ? (
+        <ActivityIndicator color={colors.background} size="small" />
+      ) : (
+        <Text style={[s.submitText, !canSubmit && { color: textLevels.muted }]}>Submit Team</Text>
+      )}
+    </AnimatedPressable>
+  );
+}
+
+// --- Budget Bar (Reanimated) ---
+
+function BudgetBar({ shakeAnim, remaining, budget, spent, overBudgetMsg }: {
+  shakeAnim: ReturnType<typeof useSharedValue<number>>;
+  remaining: number; budget: number; spent: number; overBudgetMsg: string;
+}) {
+  const budgetPct = Math.min((spent / budget) * 100, 100);
+
+  const budgetProgress = useSharedValue(budgetPct);
+
+  useEffect(() => {
+    budgetProgress.value = withTiming(budgetPct, { duration: 400, easing: Easing.out(Easing.cubic) });
+  }, [budgetPct, budgetProgress]);
+
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeAnim.value }],
+  }));
+
+  const fillStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      budgetProgress.value,
+      [0, 60, 85, 100],
+      ['#10B981', '#10B981', '#F59E0B', '#F43F5E'],
+    );
+    return {
+      width: `${budgetProgress.value}%` as any,
+      backgroundColor: color,
+    };
+  });
+
+  return (
+    <AnimatedView style={[s.budget, shakeStyle]}>
+      <View style={s.budgetRow}>
+        <Text style={s.budgetLabel}>BUDGET</Text>
+        <Text style={s.budgetValue}>
+          <Text style={{ color: remaining < 15 ? colors.error : colors.brand }}>{remaining}</Text>
+          <Text style={{ color: textLevels.muted }}> / {budget}</Text>
+        </Text>
+      </View>
+      <View style={s.budgetTrack}>
+        <AnimatedView style={[s.budgetFill, fillStyle]} />
+      </View>
+      {overBudgetMsg !== '' && (
+        <Text style={s.overBudgetMsg}>{overBudgetMsg}</Text>
+      )}
+    </AnimatedView>
   );
 }
 
@@ -191,7 +356,7 @@ export default function DraftScreen() {
   const [sheetInfluencer, setSheetInfluencer] = useState<Influencer | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [overBudgetMsg, setOverBudgetMsg] = useState('');
-  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const shakeAnim = useSharedValue(0);
   const searchInputRef = useRef<TextInput>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -243,22 +408,22 @@ export default function DraftScreen() {
     if (inf.price > remaining) {
       haptics.error();
       setOverBudgetMsg(`${inf.handle} costs ${inf.price} cr — ${remaining} remaining`);
-      Animated.sequence([
-        Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-      ]).start();
+      shakeAnim.value = withTiming(10, { duration: 50 }, () => {
+        shakeAnim.value = withTiming(-10, { duration: 50 }, () => {
+          shakeAnim.value = withTiming(0, { duration: 50 });
+        });
+      });
       setTimeout(() => setOverBudgetMsg(''), 2500);
       return;
     }
     const slot = picks.findIndex((p) => p === null);
     if (slot === -1) { haptics.error(); return; }
-    animate(); haptics.selection();
+    haptics.selection();
     const next = [...picks]; next[slot] = inf; setPicks(next);
   }, [picks, pickedIds, remaining]);
 
   const removeInfluencer = useCallback((idx: number) => {
-    animate(); haptics.light();
+    haptics.light();
     const next = [...picks]; next[idx] = null; setPicks(next);
     if (captainIndex === idx) {
       const newCaptain = picks.findIndex((p, i) => p !== null && i !== idx);
@@ -345,24 +510,13 @@ export default function DraftScreen() {
   return (
     <SafeAreaView style={s.root} edges={['bottom']}>
       {/* Budget */}
-      <Animated.View style={[s.budget, { transform: [{ translateX: shakeAnim }] }]}>
-        <View style={s.budgetRow}>
-          <Text style={s.budgetLabel}>Budget</Text>
-          <Text style={{ fontSize: 14, fontWeight: '700' }}>
-            <Text style={{ color: remaining < 15 ? colors.error : colors.brand }}>{remaining}</Text>
-            <Text style={{ color: colors.textMuted }}> / {BUDGET}</Text>
-          </Text>
-        </View>
-        <View style={s.budgetTrack}>
-          <View style={[s.budgetFill, {
-            width: `${(spent / BUDGET) * 100}%`,
-            backgroundColor: remaining < 15 ? colors.error : colors.brand,
-          }]} />
-        </View>
-        {overBudgetMsg !== '' && (
-          <Text style={s.overBudgetMsg}>{overBudgetMsg}</Text>
-        )}
-      </Animated.View>
+      <BudgetBar
+        shakeAnim={shakeAnim}
+        remaining={remaining}
+        budget={BUDGET}
+        spent={spent}
+        overBudgetMsg={overBudgetMsg}
+      />
 
       {/* Formation */}
       <View style={s.formation}>
@@ -433,12 +587,12 @@ export default function DraftScreen() {
 
       {/* Bottom Bar */}
       <View style={s.bottom}>
-        <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flex: 1, gap: spacing.xs }}>
           {canSubmit && (
             <TextInput
               style={s.teamNameInput}
               placeholder="Team name..."
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={textLevels.muted}
               value={teamName}
               onChangeText={setTeamName}
               maxLength={30}
@@ -446,25 +600,17 @@ export default function DraftScreen() {
             />
           )}
           {!canSubmit && (
-            <View style={{ gap: 4 }}>
+            <View style={{ gap: spacing.xs }}>
               <Text style={s.pickCount}>{pickCount}/{TEAM} Picks</Text>
               <View style={s.dots}>
                 {Array.from({ length: TEAM }).map((_, i) => (
-                  <View key={i} style={[s.dot, { backgroundColor: picks[i] ? colors.brand : colors.surface }]} />
+                  <View key={i} style={[s.dot, { backgroundColor: picks[i] ? colors.brand : elevation.surface }]} />
                 ))}
               </View>
             </View>
           )}
         </View>
-        <TouchableOpacity
-          style={[s.submitBtn, !canSubmit && { backgroundColor: colors.surface }]}
-          onPress={handleSubmit} disabled={!canSubmit} activeOpacity={0.75}>
-          {isSubmitting ? (
-            <ActivityIndicator color={colors.background} size="small" />
-          ) : (
-            <Text style={[s.submitText, !canSubmit && { color: colors.textMuted }]}>Submit Team</Text>
-          )}
-        </TouchableOpacity>
+        <SubmitButton canSubmit={canSubmit} isSubmitting={isSubmitting} onPress={handleSubmit} />
       </View>
 
       {/* Influencer Detail Bottom Sheet */}
@@ -474,8 +620,8 @@ export default function DraftScreen() {
         snapPoints={[300]}
         enablePanDownToClose
         onClose={() => setSheetInfluencer(null)}
-        backgroundStyle={{ backgroundColor: colors.card }}
-        handleIndicatorStyle={{ backgroundColor: colors.textMuted }}
+        backgroundStyle={{ backgroundColor: elevation.elevated }}
+        handleIndicatorStyle={{ backgroundColor: textLevels.muted }}
       >
         <BottomSheetView>
           {sheetInfluencer && <InfluencerSheetContent influencer={sheetInfluencer} />}
@@ -502,25 +648,26 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
 
   // Budget
-  budget: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
-  budgetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  budgetLabel: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  budgetTrack: { height: 4, backgroundColor: colors.surface, borderRadius: 2, overflow: 'hidden' },
+  budget: { paddingHorizontal: spacing.lg + spacing.xs, paddingTop: spacing.sm, paddingBottom: spacing.md },
+  budgetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs + 2 },
+  budgetLabel: { ...typography.label, color: textLevels.secondary },
+  budgetValue: { ...typography.mono, fontWeight: '700' },
+  budgetTrack: { height: 4, backgroundColor: elevation.surface, borderRadius: 2, overflow: 'hidden' },
   budgetFill: { height: 4, borderRadius: 2 },
-  overBudgetMsg: { color: colors.error, fontSize: 12, fontWeight: '600', marginTop: 4, textAlign: 'center' },
+  overBudgetMsg: { ...typography.caption, color: colors.error, fontWeight: '600', marginTop: spacing.xs, textAlign: 'center' },
 
   // Formation
-  formation: { paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', gap: 8 },
-  formationHint: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', marginBottom: 4, letterSpacing: 0.3 },
-  captainHint: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginBottom: 2, textAlign: 'center' },
-  formationRow: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
-  slotWrap: { alignItems: 'center', gap: 4 },
+  formation: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, alignItems: 'center', gap: spacing.sm },
+  formationHint: { ...typography.bodySm, color: textLevels.secondary, fontWeight: '600', marginBottom: spacing.xs, letterSpacing: 0.3 },
+  captainHint: { ...typography.caption, color: textLevels.muted, fontWeight: '500', marginBottom: 2, textAlign: 'center' },
+  formationRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xl },
+  slotWrap: { alignItems: 'center', gap: spacing.xs },
   emptySlot: {
-    borderWidth: 2, borderColor: colors.cardBorder, borderStyle: 'dashed',
-    justifyContent: 'center', alignItems: 'center', backgroundColor: colors.card,
+    borderWidth: 2, borderColor: borders.default, borderStyle: 'dashed',
+    justifyContent: 'center', alignItems: 'center', backgroundColor: elevation.surface,
   },
-  emptyIcon: { color: colors.textMuted, fontSize: 22, fontWeight: '700', opacity: 0.5 },
-  slotHandle: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', maxWidth: 80, textAlign: 'center' },
+  emptyIcon: { color: textLevels.muted, fontSize: 22, fontWeight: '700', opacity: 0.5 },
+  slotHandle: { ...typography.caption, color: textLevels.secondary, maxWidth: 80, textAlign: 'center' },
   tierDot: { width: 6, height: 6, borderRadius: 3 },
   captainBadge: {
     position: 'absolute', top: -6, right: -6, backgroundColor: colors.brand,
@@ -528,87 +675,76 @@ const s = StyleSheet.create({
   },
   captainBadgeText: { color: colors.background, fontSize: 9, fontWeight: '800' },
   removeBtn: {
-    position: 'absolute', top: -2, right: 4, width: 18, height: 18, borderRadius: 9,
+    position: 'absolute', top: -4, right: 0, width: 28, height: 28, borderRadius: 14,
     backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
-  removeBtnText: { color: colors.white, fontSize: 10, fontWeight: '800', lineHeight: 12 },
 
   // Picker
-  picker: { flex: 1, borderTopWidth: 1, borderTopColor: colors.cardBorder },
-  searchWrap: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  picker: { flex: 1, borderTopWidth: 1, borderTopColor: borders.subtle },
+  searchWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
   searchBar: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card,
-    borderRadius: 10, borderWidth: 1, borderColor: colors.cardBorder, paddingHorizontal: 12, height: 40,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: elevation.surface,
+    borderRadius: 10, borderWidth: 1, borderColor: borders.default, paddingHorizontal: spacing.md, height: TOUCH_MIN,
   },
-  searchInput: { flex: 1, color: colors.text, fontSize: 14, paddingVertical: 0 },
-  tierTabs: { flexDirection: 'row', paddingHorizontal: 16, paddingBottom: 10, gap: 8 },
+  searchInput: { flex: 1, color: textLevels.primary, ...typography.bodySm, paddingVertical: 0 },
+  tierTabs: { flexDirection: 'row', paddingHorizontal: spacing.lg, paddingBottom: spacing.sm + 2, gap: spacing.sm },
   tierTab: {
-    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
-    borderWidth: 1, borderColor: colors.cardBorder,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 16,
+    borderWidth: 1, borderColor: borders.default, minHeight: 36,
+    justifyContent: 'center', alignItems: 'center',
   },
-  tierTabText: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+  tierTabText: { ...typography.caption, fontWeight: '600', color: textLevels.muted },
 
-  // Card
+  // Picker Card
   card: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card,
-    marginHorizontal: 16, marginBottom: 8, borderRadius: 8, borderWidth: 1,
-    borderColor: colors.cardBorder, paddingHorizontal: 12, paddingVertical: 10, gap: 10,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: elevation.surface,
+    marginHorizontal: spacing.lg, marginBottom: spacing.sm, borderRadius: 8, borderWidth: 1,
+    borderColor: borders.subtle, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, gap: spacing.sm + 2,
   },
-  cardAvatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
+  cardAvatar: { width: TOUCH_MIN, height: TOUCH_MIN, borderRadius: 22, borderWidth: 2, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
   cardAvatarImg: { width: 40, height: 40, borderRadius: 20 },
   cardInfo: { flex: 1, gap: 2 },
-  cardHandle: { color: colors.text, fontSize: 14, fontWeight: '700' },
-  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  cardName: { color: colors.textSecondary, fontSize: 12, maxWidth: 100 },
-  cardTierBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
-  cardTierText: { fontSize: 10, fontWeight: '700' },
+  cardHandle: { ...typography.bodySm, color: textLevels.primary, fontWeight: '700' },
+  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs + 2 },
+  cardName: { ...typography.caption, color: textLevels.secondary, maxWidth: 100 },
   cardRight: { alignItems: 'flex-end', gap: 2 },
-  cardPrice: { color: colors.brand, fontSize: 13, fontWeight: '700' },
-  cardScore: { color: colors.textMuted, fontSize: 11 },
+  cardPrice: { ...typography.mono, color: colors.brand },
+  cardScore: { ...typography.caption, color: textLevels.muted },
   addBtn: {
-    width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
+    width: TOUCH_MIN, height: TOUCH_MIN, borderRadius: TOUCH_MIN / 2, justifyContent: 'center', alignItems: 'center',
     backgroundColor: colors.brand + '22', borderWidth: 1, borderColor: colors.brand,
   },
-  addBtnText: { color: colors.brand, fontSize: 18, fontWeight: '700', lineHeight: 20 },
 
   // Misc
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
-  empty: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 40 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: spacing['3xl'] },
+  empty: { ...typography.bodySm, color: textLevels.muted, textAlign: 'center', paddingVertical: spacing['3xl'] },
 
   // Bottom
   bottom: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1,
-    borderTopColor: colors.cardBorder, backgroundColor: colors.card,
+    paddingHorizontal: spacing.lg + spacing.xs, paddingVertical: spacing.md, borderTopWidth: 1,
+    borderTopColor: borders.subtle, backgroundColor: elevation.surface,
   },
   teamNameInput: {
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder,
-    borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: colors.text,
-    fontSize: 14, fontWeight: '600',
+    backgroundColor: elevation.surface, borderWidth: 1, borderColor: borders.default,
+    borderRadius: 8, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, color: textLevels.primary,
+    ...typography.bodySm, fontWeight: '600',
   },
-  pickCount: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  dots: { flexDirection: 'row', gap: 4 },
+  pickCount: { ...typography.caption, color: textLevels.secondary, fontWeight: '600' },
+  dots: { flexDirection: 'row', gap: spacing.xs },
   dot: { width: 8, height: 8, borderRadius: 4 },
   submitBtn: {
-    backgroundColor: colors.brand, paddingHorizontal: 24, paddingVertical: 12,
-    borderRadius: 10, minWidth: 130, alignItems: 'center',
+    backgroundColor: colors.brand, paddingHorizontal: spacing.xl, paddingVertical: spacing.md,
+    borderRadius: 10, minWidth: 130, minHeight: TOUCH_MIN, alignItems: 'center', justifyContent: 'center',
   },
-  submitText: { color: colors.background, fontSize: 15, fontWeight: '800' },
+  submitText: { ...typography.body, color: colors.background, fontWeight: '800' },
 
   // Bottom Sheet
-  sheetContent: { paddingHorizontal: 20, paddingBottom: 24 },
-  sheetHeader: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12, marginBottom: 20 },
-  sheetAvatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, overflow: 'hidden' as const, justifyContent: 'center' as const, alignItems: 'center' as const },
+  sheetContent: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg + spacing.xs },
+  sheetAvatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' },
   sheetAvatarImg: { width: 52, height: 52, borderRadius: 26 },
-  sheetHandle: { color: colors.text, fontSize: 16, fontWeight: '700' as const },
-  sheetName: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
-  sheetTierBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  sheetTierText: { fontSize: 12, fontWeight: '700' as const },
-  sheetStats: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 12 },
-  sheetStatItem: {
-    flex: 1, minWidth: '40%' as any, backgroundColor: colors.surface,
-    borderRadius: 10, padding: 12, alignItems: 'center' as const,
-  },
-  sheetStatValue: { color: colors.text, fontSize: 18, fontWeight: '700' as const, fontVariant: ['tabular-nums'] as any },
-  sheetStatLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '500' as const, marginTop: 4 },
+  sheetHandle: { ...typography.body, color: textLevels.primary, fontWeight: '700' },
+  sheetName: { ...typography.caption, color: textLevels.secondary, marginTop: 2 },
+  sheetStats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
 });

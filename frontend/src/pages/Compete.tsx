@@ -175,7 +175,7 @@ export default function Compete() {
     fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
       .then(r => r.json())
       .then(d => { if (d?.solana?.usd) setSolPrice(d.solana.usd); })
-      .catch(() => {});
+      .catch(() => { /* non-critical: keeps fallback SOL price */ });
   }, []);
 
   // Live countdown tick — updates every second when any contest has an active countdown
@@ -226,7 +226,7 @@ export default function Compete() {
           }));
           setPlayerInfluencers(data);
           setPlayersLoaded(true);
-        }).catch(() => {});
+        }).catch((e) => console.warn('[Compete] influencers fetch failed:', e?.message));
       }
     } else {
       fetchContestsData();
@@ -244,7 +244,7 @@ export default function Compete() {
           setFollowingIds(ids as Set<string>);
         }
       })
-      .catch(() => {});
+      .catch((e) => console.warn('[Compete] following fetch failed:', e?.message));
   }, [isConnected]);
 
   // Fetch batch follow states when FS leaders load (for follow buttons)
@@ -263,7 +263,7 @@ export default function Compete() {
           setFollowStates(res.data.data.states);
         }
       })
-      .catch(() => {});
+      .catch((e) => console.warn('[Compete] follow states fetch failed:', e?.message));
   }, [fsLeaders]);
 
   const FS_PAGE_SIZE = 25;
@@ -1026,22 +1026,6 @@ export default function Compete() {
               <Trophy size={48} className="mx-auto mb-4 text-gray-600" />
               <h3 className="text-xl font-bold text-white mb-2">No contests available</h3>
               <p className="text-gray-400 mb-6">Check back soon for new contests!</p>
-              {isConnected && (
-                <button
-                  onClick={async () => {
-                    try {
-                      const r = await apiClient.post('/api/admin/seed-demo-contest');
-                      showToast(r.data.message || 'Done', 'success');
-                      setTimeout(() => window.location.reload(), 1200);
-                    } catch {
-                      showToast('Failed to seed contest', 'error');
-                    }
-                  }}
-                  className="text-xs text-gray-600 hover:text-gray-400 underline"
-                >
-                  Seed demo contest
-                </button>
-              )}
             </div>
           )}
 

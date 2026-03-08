@@ -21,14 +21,8 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Attach Bearer token + CSRF token to every request
+// Attach CSRF token to mutation requests
 apiClient.interceptors.request.use((config) => {
-  // Bearer token from sessionStorage — fallback when CDN strips Set-Cookie
-  const token = sessionStorage.getItem('accessToken');
-  if (token && !config.headers['Authorization']) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
-
   if (config.method && !['get', 'head', 'options'].includes(config.method)) {
     const csrf = getCsrfToken();
     if (csrf) {
@@ -80,7 +74,7 @@ apiClient.interceptors.response.use(
  * Uses the non-httpOnly CSRF cookie as a proxy (set on login, cleared on logout).
  */
 export function hasSession(): boolean {
-  return !!sessionStorage.getItem('accessToken') || document.cookie.includes('csrf-token=');
+  return document.cookie.includes('csrf-token=');
 }
 
 export default apiClient;

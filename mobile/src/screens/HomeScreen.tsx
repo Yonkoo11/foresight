@@ -8,11 +8,14 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
 import { useForesightScore, useDailyStatus } from '../hooks/useForesightScore';
 import { useActiveContests } from '../hooks/useContests';
@@ -29,20 +32,12 @@ import { Skeleton } from '../components/Skeleton';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-// ─── Tier color mapping ───────────────────────────────────────────────
-const TIER_COLORS: Record<string, string> = {
-  S: '#F59E0B',
-  A: '#06B6D4',
-  B: '#10B981',
-  C: '#71717A',
-};
+// ─── HomeScreen ───────────────────────────────────────────────────────
 
 function getTierColor(tier: string): string {
-  const key = tier?.charAt(0).toUpperCase();
-  return TIER_COLORS[key] ?? colors.textMuted;
+  const key = tier?.charAt(0).toUpperCase() as keyof typeof TIER_CONFIG;
+  return TIER_CONFIG[key]?.color ?? textLevels.muted;
 }
-
-// ─── HomeScreen ───────────────────────────────────────────────────────
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { user, isAuthenticated } = useAuth();
@@ -117,6 +112,7 @@ export default function HomeScreen() {
         )}
 
         {/* ── Active Contest Hero ───────────────── */}
+        <Animated.View entering={FadeInDown.delay(0).duration(300)}>
         {contestsLoading ? (
           <View style={styles.heroCard}>
             <Skeleton style={styles.skeletonLine80} />
@@ -142,9 +138,11 @@ export default function HomeScreen() {
             <Text style={styles.emptySubtext}>Check back soon for upcoming contests</Text>
           </View>
         )}
+        </Animated.View>
 
         {/* ── Guest Sign-In Banner ─────────────── */}
         {!isAuthenticated && (
+          <Animated.View entering={FadeInDown.delay(50).duration(300)}>
           <TouchableOpacity
             style={styles.signInBanner}
             activeOpacity={0.8}
@@ -164,11 +162,12 @@ export default function HomeScreen() {
             </View>
             <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
+          </Animated.View>
         )}
 
         {/* ── Featured Influencers ────────────────── */}
         {featuredInfluencers.length > 0 && (
-          <View style={styles.featuredSection}>
+          <Animated.View entering={FadeInDown.delay(100).duration(300)} style={styles.featuredSection}>
             <View style={styles.featuredHeader}>
               <Text style={styles.sectionLabel}>Who Will You Draft?</Text>
               <TouchableOpacity
@@ -190,7 +189,7 @@ export default function HomeScreen() {
                 <InfluencerChip key={inf.id} influencer={inf} navigation={navigation} />
               ))}
             </ScrollView>
-          </View>
+          </Animated.View>
         )}
 
         {/* ── Foresight Score ──────────────────── */}
@@ -208,15 +207,22 @@ export default function HomeScreen() {
               <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.surface }} />
             </View>
           ) : score ? (
-            <ForesightScoreCard score={score} />
+            <Animated.View entering={FadeInDown.delay(150).duration(300)}>
+              <ForesightScoreCard score={score} />
+            </Animated.View>
           ) : null
         )}
 
         {/* ── Daily Activities ─────────────────── */}
-        {isAuthenticated && daily && <DailyActivitiesRow daily={daily} />}
+        {isAuthenticated && daily && (
+          <Animated.View entering={FadeInDown.delay(200).duration(300)}>
+            <DailyActivitiesRow daily={daily} />
+          </Animated.View>
+        )}
 
         {/* ── Quest Alert Banner ───────────────── */}
         {isAuthenticated && questSummary && questSummary.unclaimed > 0 && (
+          <Animated.View entering={FadeInDown.delay(250).duration(300)}>
           <TouchableOpacity
             style={styles.questBanner}
             activeOpacity={0.8}
@@ -231,6 +237,7 @@ export default function HomeScreen() {
             </Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
+          </Animated.View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -472,54 +479,53 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scroll: {
-    paddingBottom: 32,
+    paddingBottom: spacing['3xl'],
   },
 
   // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.lg + spacing.xs,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
   },
   brandMark: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...typography.label,
     color: colors.brand,
     letterSpacing: 2,
     marginBottom: 2,
   },
   greeting: {
-    fontSize: 24,
+    ...typography.h1,
     fontWeight: '800',
-    color: colors.text,
+    color: textLevels.primary,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
+    width: TOUCH_MIN,
+    height: TOUCH_MIN,
+    borderRadius: TOUCH_MIN / 2,
+    backgroundColor: elevation.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: colors.brand + '44',
   },
   avatarLetter: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '700',
     color: colors.brand,
   },
 
   // Hero contest card
   heroCard: {
-    marginHorizontal: 16,
-    marginBottom: 20,
-    backgroundColor: colors.card,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg + spacing.xs,
+    backgroundColor: elevation.surface,
     borderRadius: 20,
     borderWidth: 1.5,
     borderColor: colors.brand,
-    padding: 24,
+    padding: spacing.xl,
     overflow: 'hidden',
     alignItems: 'center',
     minHeight: 100,
@@ -543,13 +549,13 @@ const styles = StyleSheet.create({
   featuredBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
     backgroundColor: 'rgba(245, 158, 11, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
     alignSelf: 'flex-start',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   featuredText: {
     fontSize: 10,
@@ -562,19 +568,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   heroName: {
+    ...typography.h2,
     fontSize: 20,
     fontWeight: '800',
-    color: colors.text,
+    color: textLevels.primary,
     width: '100%',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 5,
     borderRadius: 8,
   },
@@ -592,15 +599,16 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   statusText: {
-    fontSize: 11,
+    ...typography.caption,
     fontWeight: '800',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
     letterSpacing: 0.5,
+    fontSize: 11,
   },
   freeEntryBadge: {
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
   },
   freeEntryText: {
@@ -610,29 +618,29 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   entryFeeText: {
-    fontSize: 12,
+    ...typography.caption,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: textLevels.muted,
   },
 
   // Prize block
   prizeBlock: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: spacing.lg + spacing.xs,
   },
   prizeLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
+    ...typography.label,
+    color: textLevels.muted,
     letterSpacing: 1.5,
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   prizeRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 8,
+    gap: spacing.sm,
   },
   prizeAmount: {
+    ...typography.display,
     fontSize: 44,
     fontWeight: '800',
     color: colors.brand,
@@ -640,8 +648,7 @@ const styles = StyleSheet.create({
     lineHeight: 48,
   },
   prizeCurrency: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...typography.h2,
     color: colors.brand,
     opacity: 0.7,
   },
@@ -651,8 +658,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: spacing.lg + spacing.xs,
+    gap: spacing.md,
   },
   faceStack: {
     flexDirection: 'row',
@@ -664,7 +671,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
+    backgroundColor: elevation.surface,
   },
   faceImage: {
     width: 28,
@@ -672,9 +679,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   facesLabel: {
-    fontSize: 13,
+    ...typography.bodySm,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
+    fontSize: 13,
   },
 
   // CTA
@@ -682,29 +690,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: spacing.sm + 2,
     backgroundColor: colors.brand,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
     borderRadius: 14,
     width: '100%',
+    minHeight: 56,
   },
   ctaText: {
+    ...typography.body,
     fontSize: 17,
     fontWeight: '800',
     color: colors.black,
     letterSpacing: 0.3,
   },
   emptyText: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '600',
-    color: colors.textSecondary,
-    marginTop: 12,
+    color: textLevels.secondary,
+    marginTop: spacing.md,
   },
   emptySubtext: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 4,
+    ...typography.caption,
+    color: textLevels.muted,
+    marginTop: spacing.xs,
   },
 
   // Error banner
@@ -713,30 +723,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
     borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 12,
-    gap: 8,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md + 2,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
   errorBannerText: {
-    fontSize: 13,
+    ...typography.bodySm,
     fontWeight: '600',
     color: colors.brand,
+    fontSize: 13,
   },
 
   // Sign-in banner
   signInBanner: {
-    marginHorizontal: 16,
-    marginBottom: 20,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg + spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
     borderColor: colors.brand + '33',
     borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    gap: 12,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+    minHeight: TOUCH_MIN,
   },
   signInIconWrap: {
     width: 36,
@@ -747,45 +759,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   signInBannerTitle: {
+    ...typography.bodySm,
     fontSize: 15,
     fontWeight: '700',
-    color: colors.text,
+    color: textLevels.primary,
     marginBottom: 2,
   },
   signInBannerText: {
+    ...typography.caption,
+    color: textLevels.secondary,
     fontSize: 13,
-    color: colors.textSecondary,
   },
 
   // Featured influencers
   featuredSection: {
-    marginBottom: 20,
+    marginBottom: spacing.lg + spacing.xs,
   },
   featuredHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    paddingHorizontal: spacing.lg + spacing.xs,
+    marginBottom: spacing.md,
   },
   sectionLabel: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '700',
-    color: colors.text,
+    color: textLevels.primary,
   },
   seeAllText: {
-    fontSize: 13,
+    ...typography.bodySm,
     fontWeight: '600',
     color: colors.brand,
+    fontSize: 13,
   },
   featuredScroll: {
-    paddingHorizontal: 16,
-    gap: 10,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm + 2,
   },
   infChip: {
     width: 88,
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.xs + 2,
   },
   infChipAvatar: {
     width: 56,
@@ -793,7 +808,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     borderWidth: 2,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
+    backgroundColor: elevation.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -803,11 +818,12 @@ const styles = StyleSheet.create({
     borderRadius: 26,
   },
   infChipHandle: {
-    fontSize: 11,
+    ...typography.caption,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
     maxWidth: 80,
     textAlign: 'center',
+    fontSize: 11,
   },
   infChipTier: {
     paddingHorizontal: 6,
@@ -819,27 +835,25 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   infChipCost: {
-    fontSize: 10,
+    ...typography.caption,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: textLevels.muted,
+    fontSize: 10,
   },
 
   // Generic card
   card: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: colors.card,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    backgroundColor: elevation.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    padding: 16,
+    borderColor: borders.subtle,
+    padding: spacing.lg,
   },
   cardLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...typography.label,
+    color: textLevels.secondary,
   },
 
   // Score card
@@ -847,38 +861,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   rankBadge: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: elevation.elevated,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
     borderRadius: 8,
   },
   rankText: {
-    fontSize: 12,
+    ...typography.caption,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
   },
   scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   scoreNumber: {
+    ...typography.monoLg,
     fontSize: 36,
-    fontWeight: '800',
-    color: colors.text,
-    fontVariant: ['tabular-nums'],
+    color: textLevels.primary,
   },
   tierBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
     borderRadius: 10,
-    gap: 6,
+    gap: spacing.xs + 2,
   },
   tierDot: {
     width: 8,
@@ -886,15 +899,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   tierLabel: {
-    fontSize: 13,
+    ...typography.bodySm,
     fontWeight: '700',
+    fontSize: 13,
   },
   progressSection: {
-    gap: 6,
+    gap: spacing.xs + 2,
   },
   progressBar: {
     height: 6,
-    backgroundColor: colors.surface,
+    backgroundColor: elevation.elevated,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -903,8 +917,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   progressLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
+    ...typography.caption,
+    color: textLevels.muted,
   },
 
   // Daily activities
@@ -912,10 +926,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   dailyCount: {
-    fontSize: 14,
+    ...typography.mono,
     fontWeight: '700',
     color: colors.brand,
   },
@@ -925,7 +939,7 @@ const styles = StyleSheet.create({
   },
   dailyItem: {
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
   dailyCircle: {
     width: 48,
@@ -939,31 +953,32 @@ const styles = StyleSheet.create({
   },
   dailyCircleOutline: {
     borderWidth: 2,
-    borderColor: colors.cardBorder,
+    borderColor: borders.default,
   },
   dailyLabel: {
-    fontSize: 12,
+    ...typography.caption,
     fontWeight: '500',
-    color: colors.textMuted,
+    color: textLevels.muted,
   },
 
   // Quest banner
   questBanner: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(245, 158, 11, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.2)',
     borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 10,
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm + 2,
+    minHeight: TOUCH_MIN,
   },
   questBannerText: {
     flex: 1,
-    fontSize: 14,
+    ...typography.bodySm,
     fontWeight: '600',
     color: colors.brand,
   },
@@ -973,28 +988,28 @@ const styles = StyleSheet.create({
     width: '80%',
     height: 14,
     borderRadius: 7,
-    backgroundColor: colors.surface,
-    marginBottom: 10,
+    backgroundColor: elevation.surface,
+    marginBottom: spacing.sm + 2,
   },
   skeletonLine40: {
     width: '40%',
     height: 12,
     borderRadius: 6,
-    backgroundColor: colors.surface,
-    marginBottom: 8,
+    backgroundColor: elevation.surface,
+    marginBottom: spacing.sm,
   },
   skeletonLineLarge: {
     width: '50%',
     height: 28,
     borderRadius: 8,
-    backgroundColor: colors.surface,
-    marginBottom: 16,
+    backgroundColor: elevation.surface,
+    marginBottom: spacing.lg,
     alignSelf: 'flex-start' as const,
   },
   skeletonButton: {
     width: '100%',
     height: 48,
     borderRadius: 12,
-    backgroundColor: colors.surface,
+    backgroundColor: elevation.surface,
   },
 });

@@ -146,7 +146,7 @@ export default function Progress() {
       }
 
       // Trigger daily login quest (idempotent — backend dedupes by day)
-      apiClient.post('/api/v2/fs/track-activity', { activityType: 'daily_login', durationSeconds: 1 }).catch(() => {}); // non-blocking, silent fail
+      apiClient.post('/api/v2/fs/track-activity', { activityType: 'daily_login', durationSeconds: 1 }).catch(() => { /* non-critical: activity tracking */ });
     } catch (error) {
       console.error('Error fetching progress:', error);
     } finally {

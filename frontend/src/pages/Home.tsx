@@ -422,7 +422,7 @@ export default function Home() {
     if (!isConnected) return;
     if (!hasSession()) return;
     apiClient.get('/api/users/me')
-      .then(r => setXp(r.data.xp || 0)).catch(() => {});
+      .then(r => setXp(r.data.xp || 0)).catch((e) => console.warn('[Home] XP fetch failed:', e?.message));
   }, [isConnected]);
 
   useEffect(() => {
@@ -437,7 +437,7 @@ export default function Home() {
         if (prize) setPrizeFormatted(prize);
         const lock = free?.lockTime ?? free?.lock_time;
         if (lock) setLockTime(lock);
-      }).catch(() => {});
+      }).catch((e) => console.warn('[Home] contest fetch failed:', e?.message));
   }, []);
 
   return (

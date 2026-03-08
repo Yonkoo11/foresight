@@ -42,5 +42,11 @@
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "minimatch": ">=9.0.7",
+      "undici": ">=7.18.2"
+    }
   }
 }

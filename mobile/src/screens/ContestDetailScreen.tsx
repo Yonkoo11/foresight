@@ -12,7 +12,9 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
 import { useContestLeaderboard, useActiveContests } from '../hooks/useContests';
 import { useMyEntry } from '../hooks/useMyEntry';
@@ -84,7 +86,7 @@ function EntryRow({
   entry: LeaderboardEntry;
   isCurrentUser: boolean;
 }) {
-  const rankColor = RANK_COLORS[entry.rank] ?? colors.text;
+  const rankColor = RANK_COLORS[entry.rank] ?? textLevels.primary;
   const initial = (entry.username?.[0] ?? '?').toUpperCase();
   const avatarBg = getAvatarColor(entry.username ?? 'unknown');
 
@@ -208,31 +210,31 @@ export default function ContestDetailScreen() {
         <View style={styles.listContent}>
           {/* Skeleton header card */}
           <View style={styles.headerCard}>
-            <View style={{ width: '70%', height: 20, borderRadius: 8, backgroundColor: colors.surface, marginBottom: 12 }} />
-            <View style={{ width: 60, height: 24, borderRadius: 6, backgroundColor: colors.surface, marginBottom: 16 }} />
-            <View style={{ flexDirection: 'row', gap: 16 }}>
+            <View style={{ width: '70%', height: 20, borderRadius: spacing.sm, backgroundColor: elevation.elevated, marginBottom: spacing.md }} />
+            <View style={{ width: 60, height: 24, borderRadius: 6, backgroundColor: elevation.elevated, marginBottom: spacing.lg }} />
+            <View style={{ flexDirection: 'row', gap: spacing.lg }}>
               <View style={{ flex: 1 }}>
-                <View style={{ width: '50%', height: 12, borderRadius: 6, backgroundColor: colors.surface, marginBottom: 6 }} />
-                <View style={{ width: '70%', height: 20, borderRadius: 6, backgroundColor: colors.surface }} />
+                <View style={{ width: '50%', height: 12, borderRadius: 6, backgroundColor: elevation.elevated, marginBottom: 6 }} />
+                <View style={{ width: '70%', height: 20, borderRadius: 6, backgroundColor: elevation.elevated }} />
               </View>
               <View style={styles.statDivider} />
               <View style={{ flex: 1 }}>
-                <View style={{ width: '50%', height: 12, borderRadius: 6, backgroundColor: colors.surface, marginBottom: 6 }} />
-                <View style={{ width: '40%', height: 20, borderRadius: 6, backgroundColor: colors.surface }} />
+                <View style={{ width: '50%', height: 12, borderRadius: 6, backgroundColor: elevation.elevated, marginBottom: 6 }} />
+                <View style={{ width: '40%', height: 20, borderRadius: 6, backgroundColor: elevation.elevated }} />
               </View>
             </View>
           </View>
           {/* Skeleton action button */}
-          <View style={{ height: 52, borderRadius: 12, backgroundColor: colors.surface, marginBottom: 24 }} />
+          <View style={{ height: 52, borderRadius: spacing.md, backgroundColor: elevation.elevated, marginBottom: spacing.xl }} />
           {/* Skeleton leaderboard rows */}
           {[1, 2, 3, 4].map((i) => (
             <View key={i} style={styles.skeletonRow}>
-              <View style={{ width: 28, height: 16, borderRadius: 4, backgroundColor: colors.surface }} />
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, marginLeft: 4, marginRight: 12 }} />
+              <View style={{ width: 28, height: 16, borderRadius: spacing.xs, backgroundColor: elevation.elevated }} />
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: elevation.elevated, marginLeft: spacing.xs, marginRight: spacing.md }} />
               <View style={{ flex: 1, gap: 6 }}>
-                <View style={{ width: '50%', height: 14, borderRadius: 7, backgroundColor: colors.surface }} />
+                <View style={{ width: '50%', height: 14, borderRadius: 7, backgroundColor: elevation.elevated }} />
               </View>
-              <View style={{ width: 50, height: 14, borderRadius: 7, backgroundColor: colors.surface }} />
+              <View style={{ width: 50, height: 14, borderRadius: 7, backgroundColor: elevation.elevated }} />
             </View>
           ))}
         </View>
@@ -244,7 +246,7 @@ export default function ContestDetailScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.errorContainer}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={48} color={colors.textMuted} />
+          <MaterialCommunityIcons name="alert-circle-outline" size={48} color={textLevels.muted} />
           <Text style={styles.errorTitle}>Failed to load contest</Text>
           <Text style={styles.errorSubtitle}>
             {(error as any)?.message?.includes('Network') ? 'Check your connection and try again' : 'Something went wrong'}
@@ -321,7 +323,7 @@ export default function ContestDetailScreen() {
                   <MaterialCommunityIcons name="shield-check" size={16} color={colors.success} />
                   <Text style={styles.myTeamHandle}>{myEntry?.teamName ?? 'My Team'}</Text>
                 </View>
-                <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
+                <Text style={{ color: textLevels.secondary, ...typography.caption, marginTop: spacing.xs }}>
                   Your entry is locked in. Scores update live during the contest.
                 </Text>
               </View>
@@ -351,7 +353,7 @@ export default function ContestDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: elevation.base,
   },
   loadingContainer: {
     flex: 1,
@@ -359,36 +361,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing['3xl'],
   },
 
   // Header Card
   headerCard: {
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
+    borderColor: borders.subtle,
+    borderRadius: spacing.md,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
   },
   contestName: {
-    fontSize: 22,
+    ...typography.h1,
     fontWeight: '800',
-    color: colors.text,
-    marginBottom: 10,
+    color: textLevels.primary,
+    marginBottom: spacing.sm,
   },
   statusRow: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
   },
   liveDot: {
@@ -399,21 +401,20 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   liveBadgeText: {
-    fontSize: 12,
+    ...typography.label,
     fontWeight: '700',
     color: colors.success,
-    letterSpacing: 0.5,
   },
   pendingBadge: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    backgroundColor: elevation.elevated,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
   },
   pendingBadgeText: {
-    fontSize: 12,
+    ...typography.caption,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
     fontVariant: ['tabular-nums'],
   },
   statsRow: {
@@ -424,12 +425,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textMuted,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...typography.label,
+    color: textLevels.muted,
+    marginBottom: spacing.xs,
   },
   prizeValue: {
     fontSize: 20,
@@ -440,37 +438,39 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.text,
+    color: textLevels.primary,
     fontVariant: ['tabular-nums'],
   },
   statDivider: {
     width: 1,
     height: 36,
-    backgroundColor: colors.cardBorder,
-    marginHorizontal: 16,
+    backgroundColor: borders.subtle,
+    marginHorizontal: spacing.lg,
   },
 
   // Action Button
   successBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
     borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 12,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
   },
   successBannerText: {
-    fontSize: 14,
+    ...typography.bodySm,
     fontWeight: '600',
     color: colors.success,
   },
   actionButton: {
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: spacing.md,
+    minHeight: TOUCH_MIN,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
   },
   actionButtonPrimary: {
     backgroundColor: colors.brand,
@@ -479,42 +479,43 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cyan,
   },
   actionButtonText: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '700',
   },
   actionButtonTextPrimary: {
-    color: colors.background,
+    color: elevation.base,
   },
   actionButtonTextSecondary: {
-    color: colors.background,
+    color: elevation.base,
   },
 
   // Section
   sectionTitle: {
-    fontSize: 18,
+    ...typography.h2,
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
+    color: textLevels.primary,
+    marginBottom: spacing.md,
   },
 
   // Entry Row
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    minHeight: TOUCH_MIN,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+    borderColor: borders.subtle,
+    borderRadius: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
   entryRowHighlighted: {
     borderColor: colors.brand,
     borderWidth: 1.5,
   },
   rankNumber: {
-    width: 32,
-    fontSize: 16,
+    width: spacing['2xl'],
+    ...typography.body,
     fontWeight: '700',
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
@@ -525,60 +526,60 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   avatarText: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '700',
     color: colors.white,
   },
   entryInfo: {
     flex: 1,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   entryUsername: {
-    fontSize: 15,
+    ...typography.bodySm,
     fontWeight: '600',
-    color: colors.text,
+    color: textLevels.primary,
   },
   teamName: {
-    fontSize: 12,
-    color: colors.textMuted,
+    ...typography.caption,
+    color: textLevels.muted,
     marginTop: 2,
   },
   entryScore: {
+    ...typography.mono,
     fontSize: 15,
     fontWeight: '700',
-    color: colors.text,
-    fontVariant: ['tabular-nums'],
+    color: textLevels.primary,
   },
 
   // Empty State
   emptyState: {
-    paddingVertical: 40,
+    paddingVertical: spacing['3xl'],
     alignItems: 'center',
   },
   emptyTitle: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
+    color: textLevels.primary,
+    marginBottom: spacing.xs,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: colors.textMuted,
+    ...typography.bodySm,
+    color: textLevels.muted,
   },
 
   // Skeleton
   skeletonRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+    borderColor: borders.subtle,
+    borderRadius: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
 
   // Error State
@@ -586,49 +587,52 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    paddingHorizontal: 32,
-    gap: 8,
+    paddingHorizontal: spacing['2xl'],
+    gap: spacing.sm,
   },
   errorTitle: {
-    fontSize: 18,
+    ...typography.h2,
     fontWeight: '700' as const,
-    color: colors.text,
-    marginTop: 8,
+    color: textLevels.primary,
+    marginTop: spacing.sm,
   },
   errorSubtitle: {
-    fontSize: 14,
-    color: colors.textMuted,
+    ...typography.bodySm,
+    color: textLevels.muted,
     textAlign: 'center' as const,
   },
   retryButton: {
-    marginTop: 16,
+    marginTop: spacing.lg,
     backgroundColor: colors.brand,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
     borderRadius: 10,
+    minHeight: TOUCH_MIN,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
   retryButtonText: {
-    color: colors.background,
-    fontSize: 15,
+    color: elevation.base,
+    ...typography.bodySm,
     fontWeight: '700' as const,
   },
   myTeamSection: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
+    backgroundColor: elevation.surface,
+    borderRadius: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: borders.subtle,
   },
   myTeamRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
-    gap: 8,
+    gap: spacing.sm,
   },
   myTeamHandle: {
-    color: colors.text,
-    fontSize: 14,
+    ...typography.bodySm,
+    color: textLevels.primary,
     fontWeight: '600',
   },
   captainLabel: {
@@ -638,7 +642,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(245, 158, 11, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: spacing.xs,
     overflow: 'hidden',
   },
 });

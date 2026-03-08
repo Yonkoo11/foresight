@@ -5,7 +5,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
 import { useSKRBalance, TIERS } from '../hooks/useSKR';
 import { formatNumber } from '../utils/formatting';
@@ -41,8 +43,8 @@ export default function SKRScreen() {
             {isLoading ? '...' : formatNumber(skr?.balance ?? 0)}
           </Text>
           <View style={s.tierRow}>
-            <View style={[s.tierDot, { backgroundColor: skr?.tierColor ?? colors.textMuted }]} />
-            <Text style={[s.tierName, { color: skr?.tierColor ?? colors.textMuted }]}>
+            <View style={[s.tierDot, { backgroundColor: skr?.tierColor ?? textLevels.muted }]} />
+            <Text style={[s.tierName, { color: skr?.tierColor ?? textLevels.muted }]}>
               {skr?.tierLabel ?? (user?.walletAddress ? 'Loading...' : 'No Wallet')}
             </Text>
             {skr && skr.fsMultiplier > 1 && (
@@ -155,7 +157,7 @@ export default function SKRScreen() {
           onPress={() => (navigation as any).navigate('Main', { screen: 'Compete' })}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="trophy-outline" size={20} color={colors.background} />
+          <MaterialCommunityIcons name="trophy-outline" size={20} color={elevation.base} />
           <Text style={s.earnCtaText}>Earn SKR by placing in contests</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -169,81 +171,81 @@ function BenefitRow({ icon, text, color, active }: { icon: string; text: string;
       <MaterialCommunityIcons
         name={icon as any}
         size={14}
-        color={active ? color : colors.textMuted}
+        color={active ? color : textLevels.muted}
       />
-      <Text style={[s.benefitText, !active && { color: colors.textMuted }]}>{text}</Text>
+      <Text style={[s.benefitText, !active && { color: textLevels.muted }]}>{text}</Text>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  scroll: { padding: 20, paddingBottom: 40 },
+  root: { flex: 1, backgroundColor: elevation.base },
+  scroll: { padding: spacing.xl, paddingBottom: spacing['3xl'] },
 
-  title: { fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 24, lineHeight: 20 },
+  title: { ...typography.h1, fontSize: 28, fontWeight: '800', color: textLevels.primary, marginBottom: spacing.xs },
+  subtitle: { ...typography.bodySm, color: textLevels.secondary, marginBottom: spacing.xl },
 
   // Balance Card
   balanceCard: {
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder,
-    borderRadius: 16, padding: 24, marginBottom: 28, alignItems: 'center',
+    backgroundColor: elevation.surface, borderWidth: 1, borderColor: borders.subtle,
+    borderRadius: spacing.lg, padding: spacing.xl, marginBottom: spacing['2xl'], alignItems: 'center',
   },
   balanceLabel: {
-    fontSize: 11, fontWeight: '600', color: colors.textMuted,
-    letterSpacing: 1, marginBottom: 8,
+    ...typography.label, fontSize: 11, color: textLevels.muted,
+    letterSpacing: 1, marginBottom: spacing.sm,
   },
   balanceValue: {
-    fontSize: 44, fontWeight: '800', color: colors.text,
-    fontVariant: ['tabular-nums'], marginBottom: 8,
+    ...typography.monoLg, fontSize: 44, fontWeight: '800', color: textLevels.primary,
+    marginBottom: spacing.sm,
   },
-  tierRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  tierRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
   tierDot: { width: 10, height: 10, borderRadius: 5 },
-  tierName: { fontSize: 16, fontWeight: '700' },
+  tierName: { ...typography.body, fontWeight: '700' },
   multiplierBadge: {
-    backgroundColor: colors.brand + '22', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6,
+    backgroundColor: colors.brand + '22', paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 6,
   },
-  multiplierText: { color: colors.brand, fontSize: 12, fontWeight: '700' },
-  nextTierText: { color: colors.textMuted, fontSize: 13, marginTop: 4 },
+  multiplierText: { ...typography.caption, color: colors.brand, fontWeight: '700' },
+  nextTierText: { ...typography.caption, fontSize: 13, color: textLevels.muted, marginTop: spacing.xs },
 
   // Section
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 12 },
+  sectionTitle: { ...typography.h2, color: textLevels.primary, marginBottom: spacing.md },
 
   // Tier Card
   tierCard: {
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder,
-    borderRadius: 12, padding: 16, marginBottom: 12,
+    backgroundColor: elevation.surface, borderWidth: 1, borderColor: borders.subtle,
+    borderRadius: spacing.md, padding: spacing.lg, marginBottom: spacing.md,
   },
-  tierCardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  tierCardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   tierIcon: {
     width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   tierCardInfo: { flex: 1 },
-  tierCardName: { fontSize: 16, fontWeight: '700' },
-  tierCardMin: { fontSize: 12, color: colors.textMuted, fontVariant: ['tabular-nums'] },
-  unlockedBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  unlockedText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  tierCardName: { ...typography.body, fontWeight: '700' },
+  tierCardMin: { ...typography.mono, fontSize: 12, color: textLevels.muted },
+  unlockedBadge: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: 6 },
+  unlockedText: { ...typography.label, fontSize: 10 },
 
-  progressWrap: { marginBottom: 12 },
-  progressTrack: { height: 4, backgroundColor: colors.surface, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: 4, borderRadius: 2 },
+  progressWrap: { marginBottom: spacing.md },
+  progressTrack: { height: spacing.xs, backgroundColor: elevation.elevated, borderRadius: 2, overflow: 'hidden' },
+  progressFill: { height: spacing.xs, borderRadius: 2 },
 
   benefitsList: { gap: 6 },
-  benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  benefitText: { fontSize: 13, color: colors.textSecondary, flex: 1 },
+  benefitRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: TOUCH_MIN },
+  benefitText: { ...typography.bodySm, fontSize: 13, color: textLevels.secondary, flex: 1 },
 
   // Info Card
   infoCard: {
-    flexDirection: 'row', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder,
-    borderRadius: 12, padding: 16, marginTop: 16, gap: 12,
+    flexDirection: 'row', backgroundColor: elevation.surface, borderWidth: 1, borderColor: borders.subtle,
+    borderRadius: spacing.md, padding: spacing.lg, marginTop: spacing.lg, gap: spacing.md,
   },
   infoContent: { flex: 1 },
-  infoTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 4 },
-  infoText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  infoTitle: { ...typography.bodySm, fontWeight: '700', color: textLevels.primary, marginBottom: spacing.xs },
+  infoText: { ...typography.bodySm, fontSize: 13, color: textLevels.secondary, lineHeight: 18 },
   earnCta: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, backgroundColor: colors.brand, borderRadius: 12, paddingVertical: 14,
-    marginTop: 24,
+    gap: spacing.sm, backgroundColor: colors.brand, borderRadius: spacing.md, paddingVertical: 14,
+    marginTop: spacing.xl, minHeight: TOUCH_MIN,
   },
-  earnCtaText: { color: colors.background, fontSize: 15, fontWeight: '700' },
+  earnCtaText: { ...typography.bodySm, fontSize: 15, fontWeight: '700', color: elevation.base },
 });

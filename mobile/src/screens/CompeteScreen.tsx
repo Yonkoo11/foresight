@@ -7,11 +7,21 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  useWindowDimensions,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  FadeInDown,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
 import { LiveDot } from '../components/LiveDot';
 import { useActiveContests } from '../hooks/useContests';
@@ -19,6 +29,7 @@ import { useFSLeaderboard } from '../hooks/useForesightScore';
 import { formatNumber, timeUntil, getAvatarColor } from '../utils/formatting';
 import { haptics } from '../utils/haptics';
 import type { Contest, LeaderboardEntry } from '../types';
+import { TIER_CONFIG } from '../types';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -96,19 +107,12 @@ const ContestCard = React.memo(function ContestCard({
 
 const LeaderboardRow = React.memo(function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isCurrentUser?: boolean }) {
   const isTop3 = entry.rank <= 3;
-  const rankColor = RANK_COLORS[entry.rank] ?? colors.text;
+  const rankColor = RANK_COLORS[entry.rank] ?? textLevels.primary;
   const borderColor = RANK_COLORS[entry.rank];
   const initial = (entry.username?.[0] ?? '?').toUpperCase();
   const avatarBg = getAvatarColor(entry.username ?? 'unknown');
 
-  const tierConfig: Record<string, { color: string; label: string }> = {
-    S: { color: '#F59E0B', label: 'S' },
-    A: { color: '#06B6D4', label: 'A' },
-    B: { color: '#10B981', label: 'B' },
-    C: { color: '#71717A', label: 'C' },
-  };
-
-  const tier = entry.tier ? tierConfig[entry.tier] : null;
+  const tier = entry.tier ? TIER_CONFIG[entry.tier as keyof typeof TIER_CONFIG] : null;
 
   return (
     <View
@@ -139,7 +143,7 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ entry, isCurrentUser
             {entry.username}
           </Text>
           {isCurrentUser && (
-            <View style={{ backgroundColor: colors.brand, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 }}>
+            <View style={{ backgroundColor: colors.brand, borderRadius: spacing.xs, paddingHorizontal: 5, paddingVertical: 1 }}>
               <Text style={{ color: colors.background, fontSize: 9, fontWeight: '800' }}>YOU</Text>
             </View>
           )}
@@ -147,7 +151,7 @@ const LeaderboardRow = React.memo(function LeaderboardRow({ entry, isCurrentUser
             <View
               style={[
                 styles.tierBadge,
-                { backgroundColor: tier.color + '26' },
+                { backgroundColor: tier.bg },
               ]}
             >
               <Text style={[styles.tierBadgeText, { color: tier.color }]}>
@@ -201,6 +205,15 @@ export default function CompeteScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  const { width: screenWidth } = useWindowDimensions();
+  const tabWidth = (screenWidth - (spacing.lg + spacing.xs) * 2) / 2;
+  const underlineX = useSharedValue(0);
+
+  const underlineStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: underlineX.value }],
+    width: tabWidth,
+  }));
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     haptics.light();
@@ -216,6 +229,10 @@ export default function CompeteScreen() {
     if (tab !== activeTab) {
       haptics.selection();
       setActiveTab(tab);
+      underlineX.value = withTiming(tab === 'contests' ? 0 : tabWidth, {
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+      });
     }
   };
 
@@ -225,19 +242,23 @@ export default function CompeteScreen() {
   }, [navigation]);
 
   const renderContestItem = useCallback(
-    ({ item }: { item: Contest }) => (
-      <ContestCard
-        contest={item}
-        onPress={() => handleContestPress(item.id)}
-      />
+    ({ item, index }: { item: Contest; index: number }) => (
+      <Animated.View entering={FadeInDown.delay(Math.min(index * 50, 250)).duration(300)}>
+        <ContestCard
+          contest={item}
+          onPress={() => handleContestPress(item.id)}
+        />
+      </Animated.View>
     ),
     [handleContestPress],
   );
 
   const currentUserId = user?.id;
   const renderLeaderboardItem = useCallback(
-    ({ item }: { item: LeaderboardEntry }) => (
-      <LeaderboardRow entry={item} isCurrentUser={item.userId === currentUserId} />
+    ({ item, index }: { item: LeaderboardEntry; index: number }) => (
+      <Animated.View entering={FadeInDown.delay(Math.min(index * 50, 250)).duration(300)}>
+        <LeaderboardRow entry={item} isCurrentUser={item.userId === currentUserId} />
+      </Animated.View>
     ),
     [currentUserId],
   );
@@ -250,33 +271,28 @@ export default function CompeteScreen() {
       </View>
 
       {/* Segmented Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'contests' && styles.tabActive]}
-          onPress={() => handleTabChange('contests')}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'contests' && styles.tabTextActive,
-            ]}
+      <View style={styles.tabsContainer}>
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={styles.tab}
+            onPress={() => handleTabChange('contests')}
           >
-            Contests
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'leaderboard' && styles.tabActive]}
-          onPress={() => handleTabChange('leaderboard')}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'leaderboard' && styles.tabTextActive,
-            ]}
+            <Text style={[styles.tabText, activeTab === 'contests' && styles.tabTextActive]}>
+              Contests
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.tab}
+            onPress={() => handleTabChange('leaderboard')}
           >
-            Leaderboard
-          </Text>
-        </TouchableOpacity>
+            <Text style={[styles.tabText, activeTab === 'leaderboard' && styles.tabTextActive]}>
+              Leaderboard
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.tabTrack}>
+          <Animated.View style={[styles.tabUnderline, underlineStyle]} />
+        </View>
       </View>
 
       {/* Contests Tab */}
@@ -287,13 +303,13 @@ export default function CompeteScreen() {
               {[1, 2, 3, 4].map((i) => (
                 <View key={i} style={styles.skeletonContestCard}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <View style={{ width: '60%', height: 14, borderRadius: 7, backgroundColor: colors.surface }} />
-                    <View style={{ width: 50, height: 20, borderRadius: 6, backgroundColor: colors.surface }} />
+                    <View style={{ width: '60%', height: 14, borderRadius: 7, backgroundColor: elevation.elevated }} />
+                    <View style={{ width: 50, height: 20, borderRadius: 6, backgroundColor: elevation.elevated }} />
                   </View>
-                  <View style={{ width: '40%', height: 20, borderRadius: 6, backgroundColor: colors.surface, marginBottom: 12 }} />
+                  <View style={{ width: '40%', height: 20, borderRadius: 6, backgroundColor: elevation.elevated, marginBottom: spacing.md }} />
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <View style={{ width: '30%', height: 12, borderRadius: 6, backgroundColor: colors.surface }} />
-                    <View style={{ width: 50, height: 20, borderRadius: 6, backgroundColor: colors.surface }} />
+                    <View style={{ width: '30%', height: 12, borderRadius: 6, backgroundColor: elevation.elevated }} />
+                    <View style={{ width: 50, height: 20, borderRadius: 6, backgroundColor: elevation.elevated }} />
                   </View>
                 </View>
               ))}
@@ -354,12 +370,12 @@ export default function CompeteScreen() {
             <View style={styles.skeletonList}>
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <View key={i} style={styles.skeletonLeaderboardRow}>
-                  <View style={{ width: 28, height: 16, borderRadius: 4, backgroundColor: colors.surface }} />
-                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, marginLeft: 4 }} />
-                  <View style={{ flex: 1, marginLeft: 12, gap: 6 }}>
-                    <View style={{ width: '50%', height: 14, borderRadius: 7, backgroundColor: colors.surface }} />
+                  <View style={{ width: 28, height: 16, borderRadius: spacing.xs, backgroundColor: elevation.elevated }} />
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: elevation.elevated, marginLeft: spacing.xs }} />
+                  <View style={{ flex: 1, marginLeft: spacing.md, gap: 6 }}>
+                    <View style={{ width: '50%', height: 14, borderRadius: 7, backgroundColor: elevation.elevated }} />
                   </View>
-                  <View style={{ width: 50, height: 14, borderRadius: 7, backgroundColor: colors.surface }} />
+                  <View style={{ width: 50, height: 14, borderRadius: 7, backgroundColor: elevation.elevated }} />
                 </View>
               ))}
             </View>
@@ -400,36 +416,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: spacing.lg + spacing.xs,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   title: {
+    ...typography.h1,
     fontSize: 28,
     fontWeight: '800',
-    color: colors.text,
+    color: textLevels.primary,
   },
 
   // Tabs
+  tabsContainer: {
+    paddingHorizontal: spacing.lg + spacing.xs,
+    marginBottom: spacing.xs,
+  },
   tabs: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 4,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    minHeight: TOUCH_MIN,
+    justifyContent: 'center',
   },
-  tabActive: {
-    borderBottomColor: colors.brand,
+  tabTrack: {
+    height: 2,
+    backgroundColor: borders.subtle,
+  },
+  tabUnderline: {
+    height: 2,
+    backgroundColor: colors.brand,
   },
   tabText: {
-    fontSize: 15,
+    ...typography.bodySm,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: textLevels.muted,
   },
   tabTextActive: {
     color: colors.brand,
@@ -444,9 +468,9 @@ const styles = StyleSheet.create({
 
   // List
   listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing['3xl'],
   },
   listContentEmpty: {
     flex: 1,
@@ -454,12 +478,12 @@ const styles = StyleSheet.create({
 
   // Contest Card
   contestCard: {
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderColor: borders.subtle,
+    borderRadius: spacing.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   contestCardTop: {
     flexDirection: 'row',
@@ -468,18 +492,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   contestName: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '700',
-    color: colors.text,
+    color: textLevels.primary,
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
   },
   liveDot: {
@@ -490,23 +514,23 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   liveBadgeText: {
+    ...typography.label,
     fontSize: 11,
     fontWeight: '700',
     color: colors.success,
-    letterSpacing: 0.5,
   },
   countdownText: {
+    ...typography.mono,
     fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    fontVariant: ['tabular-nums'],
+    color: textLevels.secondary,
   },
   prizePool: {
+    ...typography.monoLg,
     fontSize: 22,
     fontWeight: '700',
+    lineHeight: 28,
     color: colors.brand,
-    marginBottom: 12,
-    fontVariant: ['tabular-nums'],
+    marginBottom: spacing.md,
   },
   contestCardBottom: {
     flexDirection: 'row',
@@ -514,31 +538,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   playerCount: {
+    ...typography.bodySm,
     fontSize: 13,
-    color: colors.textSecondary,
+    color: textLevels.secondary,
   },
   freeBadge: {
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
   },
   freeBadgeText: {
-    fontSize: 12,
+    ...typography.label,
     fontWeight: '700',
     color: colors.success,
   },
   feeBadge: {
     backgroundColor: 'rgba(245, 158, 11, 0.15)',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
   },
   feeBadgeText: {
+    ...typography.mono,
     fontSize: 12,
     fontWeight: '700',
     color: colors.brand,
-    fontVariant: ['tabular-nums'],
   },
 
   // Empty State
@@ -546,44 +571,47 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 60,
+    paddingBottom: spacing['3xl'] + spacing.md,
   },
   emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: spacing['3xl'],
+    marginBottom: spacing.lg,
   },
   emptyTitle: {
-    fontSize: 18,
+    ...typography.h2,
     fontWeight: '700',
-    color: colors.text,
+    color: textLevels.primary,
     marginBottom: 6,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: colors.textMuted,
+    ...typography.bodySm,
+    color: textLevels.muted,
   },
 
   // Leaderboard chips
   chipRow: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    gap: 8,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+    gap: spacing.sm,
   },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: colors.surface,
+    backgroundColor: elevation.elevated,
+    minHeight: TOUCH_MIN,
+    justifyContent: 'center',
   },
   chipActive: {
     backgroundColor: colors.brand,
   },
   chipText: {
+    ...typography.bodySm,
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: textLevels.secondary,
   },
   chipTextActive: {
     color: colors.background,
@@ -593,19 +621,20 @@ const styles = StyleSheet.create({
   leaderboardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+    borderColor: borders.subtle,
+    borderRadius: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    minHeight: TOUCH_MIN,
   },
   rankNumber: {
-    width: 32,
+    width: spacing['2xl'],
+    ...typography.mono,
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
-    fontVariant: ['tabular-nums'],
   },
   avatar: {
     width: 40,
@@ -613,16 +642,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   avatarText: {
-    fontSize: 16,
+    ...typography.body,
     fontWeight: '700',
     color: colors.white,
   },
   leaderboardInfo: {
     flex: 1,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   usernameRow: {
     flexDirection: 'row',
@@ -630,48 +659,49 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   username: {
-    fontSize: 15,
+    ...typography.bodySm,
     fontWeight: '600',
-    color: colors.text,
+    color: textLevels.primary,
     flexShrink: 1,
   },
   tierBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: spacing.xs,
   },
   tierBadgeText: {
+    ...typography.caption,
     fontSize: 10,
     fontWeight: '800',
   },
   score: {
+    ...typography.mono,
     fontSize: 15,
     fontWeight: '700',
-    color: colors.text,
-    fontVariant: ['tabular-nums'],
+    color: textLevels.primary,
   },
 
   // Skeleton loading
   skeletonList: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
   skeletonContestCard: {
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderColor: borders.subtle,
+    borderRadius: spacing.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   skeletonLeaderboardRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: colors.card,
+    backgroundColor: elevation.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+    borderColor: borders.subtle,
+    borderRadius: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
   },
 });

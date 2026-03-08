@@ -155,7 +155,7 @@ export default function Draft() {
           setUserInfo({ username: r.data.data.username || '', avatarUrl: r.data.data.avatarUrl });
         }
       })
-      .catch(() => {});
+      .catch((e) => console.warn('[Draft] user info fetch failed:', e?.message));
   }, []);
 
   // Fetch live SOL price for paid contest display
@@ -163,7 +163,7 @@ export default function Draft() {
     fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
       .then(r => r.json())
       .then(d => { if (d?.solana?.usd) setSolPrice(d.solana.usd); })
-      .catch(() => {});
+      .catch(() => { /* non-critical: keeps fallback SOL price */ });
   }, []);
 
   // Load data
@@ -234,7 +234,7 @@ export default function Draft() {
                 level: r.data.data.level,
               });
             }
-          }).catch(() => {});
+          }).catch((e) => console.warn('[Draft] transfer status fetch failed:', e?.message));
       }
     } catch (err) {
       // No existing team - that's fine

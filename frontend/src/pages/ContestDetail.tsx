@@ -158,7 +158,7 @@ export default function ContestDetail() {
     fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd')
       .then(r => r.json())
       .then(d => { if (d?.solana?.usd) setSolPrice(d.solana.usd); })
-      .catch(() => {}); // keep fallback on failure
+      .catch(() => { /* non-critical: keeps fallback SOL price */ });
   }, []);
 
   useEffect(() => {

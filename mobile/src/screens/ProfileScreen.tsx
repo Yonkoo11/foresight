@@ -13,7 +13,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors } from '../constants/colors';
+import { colors, elevation, textLevels, borders } from '../constants/colors';
+import { typography } from '../constants/typography';
+import { spacing, TOUCH_MIN } from '../constants/spacing';
 import { useAuth } from '../providers/AuthProvider';
 import { useForesightScore } from '../hooks/useForesightScore';
 import { useQuestSummary } from '../hooks/useQuests';
@@ -23,16 +25,9 @@ import { truncateAddress, formatNumber } from '../utils/formatting';
 import { TIER_CONFIG } from '../types';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
-const TIER_COLORS: Record<string, string> = {
-  S: colors.tierS,
-  A: colors.tierA,
-  B: colors.tierB,
-  C: colors.tierC,
-};
-
 function getTierColor(tier: string): string {
-  const key = tier?.charAt(0).toUpperCase();
-  return TIER_COLORS[key] || colors.textMuted;
+  const key = tier?.charAt(0).toUpperCase() as keyof typeof TIER_CONFIG;
+  return TIER_CONFIG[key]?.color ?? textLevels.muted;
 }
 
 export default function ProfileScreen() {
@@ -50,7 +45,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.guestContainer}>
-          <MaterialCommunityIcons name="account-circle-outline" size={64} color={colors.textMuted} />
+          <MaterialCommunityIcons name="account-circle-outline" size={64} color={textLevels.muted} />
           <Text style={styles.guestTitle}>Your Profile</Text>
           <Text style={styles.guestSubtitle}>
             Sign in to track your Foresight Score,{'\n'}manage teams, and claim prizes.
@@ -88,7 +83,7 @@ export default function ProfileScreen() {
   }, [user?.referralCode]);
 
   const tierProgress = fs?.tierProgress;
-  const tierColor = fs ? getTierColor(fs.tier) : colors.textMuted;
+  const tierColor = fs ? getTierColor(fs.tier) : textLevels.muted;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -125,7 +120,7 @@ export default function ProfileScreen() {
             <MaterialCommunityIcons
               name={copied ? 'check' : 'content-copy'}
               size={14}
-              color={copied ? colors.success : colors.textMuted}
+              color={copied ? colors.success : textLevels.muted}
             />
           </TouchableOpacity>
           {user?.isFoundingMember && user.foundingMemberNumber && (
@@ -145,7 +140,7 @@ export default function ProfileScreen() {
             <View style={styles.skeletonLineLarge} />
             <View style={styles.skeletonLine60} />
             <View style={[styles.skeletonProgressBar, { marginTop: 14 }]} />
-            <View style={[styles.skeletonLine40, { marginTop: 8 }]} />
+            <View style={[styles.skeletonLine40, { marginTop: spacing.sm }]} />
           </View>
         ) : fs ? (
           <View style={styles.scoreCard}>
@@ -227,10 +222,10 @@ export default function ProfileScreen() {
         {skrLoading && !skr ? (
           <View style={styles.skrCard}>
             <View style={styles.skrLeft}>
-              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: colors.surface }} />
+              <View style={{ width: spacing.xl, height: spacing.xl, borderRadius: spacing.md, backgroundColor: elevation.elevated }} />
               <View>
                 <View style={styles.skeletonLine60} />
-                <View style={[styles.skeletonLine40, { marginTop: 4 }]} />
+                <View style={[styles.skeletonLine40, { marginTop: spacing.xs }]} />
               </View>
             </View>
             <View style={styles.skrRight}>
@@ -256,16 +251,16 @@ export default function ProfileScreen() {
                 <Text style={styles.skrMulti}>{skr.fsMultiplier}x FS</Text>
               )}
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={textLevels.muted} />
           </TouchableOpacity>
         ) : null}
 
         {/* Actions */}
         <View style={styles.actions}>
           <TouchableOpacity style={styles.actionRow} onPress={copyReferral} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="gift-outline" size={20} color={colors.textSecondary} />
+            <MaterialCommunityIcons name="gift-outline" size={20} color={textLevels.secondary} />
             <Text style={styles.actionText}>Referral Code: {user?.referralCode ?? '---'}</Text>
-            <MaterialCommunityIcons name="content-copy" size={16} color={colors.textMuted} />
+            <MaterialCommunityIcons name="content-copy" size={16} color={textLevels.muted} />
           </TouchableOpacity>
           <View style={styles.separator} />
           <TouchableOpacity
@@ -275,7 +270,7 @@ export default function ProfileScreen() {
           >
             <MaterialCommunityIcons name="logout" size={20} color={colors.error} />
             <Text style={[styles.actionText, { color: colors.error }]}>Sign Out</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={textLevels.muted} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -284,79 +279,113 @@ export default function ProfileScreen() {
 }
 
 const BRAND_BG = 'rgba(245,158,11,0.12)';
-const cardBase = { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder } as const;
+const cardBase = {
+  backgroundColor: elevation.surface,
+  borderWidth: 1,
+  borderColor: borders.subtle,
+} as const;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  scroll: { paddingBottom: 40 },
-  header: { alignItems: 'center', paddingTop: 24, paddingBottom: 20 },
+  container: { flex: 1, backgroundColor: elevation.base },
+  scroll: { paddingBottom: spacing['3xl'] },
+  header: { alignItems: 'center', paddingTop: spacing.xl, paddingBottom: 20 },
   avatar: { width: 80, height: 80, borderRadius: 40 },
   avatarFallback: { backgroundColor: colors.brand, justifyContent: 'center', alignItems: 'center' },
-  avatarLetter: { fontSize: 32, fontWeight: '700', color: colors.black },
-  username: { fontSize: 22, fontWeight: '700', color: colors.text, marginTop: 12 },
-  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  address: { fontSize: 13, color: colors.textMuted },
+  avatarLetter: { ...typography.h1, fontSize: 32, color: colors.black },
+  username: { ...typography.h1, fontSize: 22, color: textLevels.primary, marginTop: spacing.md },
+  addressRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: spacing.xs, minHeight: TOUCH_MIN,
+  },
+  address: { ...typography.caption, fontSize: 13, color: textLevels.muted },
   founderBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8,
-    backgroundColor: BRAND_BG, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm,
+    backgroundColor: BRAND_BG, paddingHorizontal: 10, paddingVertical: spacing.xs, borderRadius: spacing.md,
   },
-  founderText: { fontSize: 12, fontWeight: '600', color: colors.brand },
+  founderText: { ...typography.caption, fontWeight: '600', color: colors.brand },
   scoreCard: {
-    ...cardBase, marginHorizontal: 16, marginTop: 4,
-    borderRadius: 12, padding: 20, alignItems: 'center',
+    ...cardBase, marginHorizontal: spacing.lg, marginTop: spacing.xs,
+    borderRadius: spacing.md, padding: 20, alignItems: 'center',
   },
-  scoreLabel: { fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
-  scoreValue: { fontSize: 40, fontWeight: '800', color: colors.text, marginTop: 2, fontVariant: ['tabular-nums'] },
+  scoreLabel: { ...typography.label, color: textLevels.muted },
+  scoreValue: {
+    ...typography.monoLg, fontSize: 40, fontWeight: '700',
+    color: textLevels.primary, marginTop: 2,
+  },
   tierRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  tierDot: { width: 8, height: 8, borderRadius: 4 },
-  tierName: { fontSize: 14, fontWeight: '600' },
+  tierDot: { width: spacing.sm, height: spacing.sm, borderRadius: spacing.xs },
+  tierName: { ...typography.bodySm, fontWeight: '600' },
   multiBadge: {
     backgroundColor: 'rgba(245,158,11,0.15)', paddingHorizontal: 6,
-    paddingVertical: 2, borderRadius: 6, marginLeft: 4,
+    paddingVertical: 2, borderRadius: 6, marginLeft: spacing.xs,
   },
-  multiBadgeText: { fontSize: 11, fontWeight: '700', color: colors.brand },
+  multiBadgeText: { ...typography.caption, fontSize: 11, fontWeight: '700', color: colors.brand },
   progressBar: {
-    width: '100%', height: 6, backgroundColor: colors.surface,
+    width: '100%', height: 6, backgroundColor: elevation.elevated,
     borderRadius: 3, marginTop: 14, overflow: 'hidden',
   },
   progressFill: { height: 6, backgroundColor: colors.brand, borderRadius: 3 },
-  progressText: { fontSize: 12, color: colors.textMuted, marginTop: 6 },
-  rankRow: { fontSize: 13, color: colors.textSecondary, marginTop: 12 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, marginTop: 16, gap: 10 },
-  statCard: { ...cardBase, width: '48%', flexGrow: 1, borderRadius: 8, padding: 14 },
-  statLabel: { fontSize: 12, color: colors.textMuted },
-  statValue: { fontSize: 20, fontWeight: '700', color: colors.text, marginTop: 2, fontVariant: ['tabular-nums'] },
-  questSection: { marginHorizontal: 16, marginTop: 16 },
-  questBanner: { backgroundColor: BRAND_BG, borderRadius: 8, padding: 12, marginBottom: 8 },
-  questBannerText: { fontSize: 14, fontWeight: '600', color: colors.brand, textAlign: 'center' },
-  questProgress: { fontSize: 13, color: colors.textSecondary, textAlign: 'center' },
+  progressText: { ...typography.caption, color: textLevels.muted, marginTop: 6 },
+  rankRow: { ...typography.bodySm, fontSize: 13, color: textLevels.secondary, marginTop: spacing.md },
+  statsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    paddingHorizontal: spacing.lg, marginTop: spacing.lg, gap: 10,
+  },
+  statCard: { ...cardBase, width: '48%', flexGrow: 1, borderRadius: spacing.sm, padding: 14 },
+  statLabel: { ...typography.label, color: textLevels.muted },
+  statValue: {
+    ...typography.mono, fontSize: 20, fontWeight: '700',
+    color: textLevels.primary, marginTop: 2,
+  },
+  questSection: { marginHorizontal: spacing.lg, marginTop: spacing.lg },
+  questBanner: {
+    backgroundColor: BRAND_BG, borderRadius: spacing.sm,
+    padding: spacing.md, marginBottom: spacing.sm,
+  },
+  questBannerText: { ...typography.bodySm, fontWeight: '600', color: colors.brand, textAlign: 'center' },
+  questProgress: { ...typography.bodySm, fontSize: 13, color: textLevels.secondary, textAlign: 'center' },
   skrCard: {
-    ...cardBase, flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 16,
-    borderRadius: 12, padding: 16, gap: 12,
+    ...cardBase, flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: spacing.lg, marginTop: spacing.lg,
+    borderRadius: spacing.md, padding: spacing.lg, gap: spacing.md,
+    minHeight: TOUCH_MIN,
   },
   skrLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  skrTitle: { fontSize: 14, fontWeight: '600', color: colors.text },
-  skrTier: { fontSize: 12, fontWeight: '700' },
-  skrRight: { alignItems: 'flex-end', marginRight: 4 },
-  skrBalance: { fontSize: 16, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
-  skrMulti: { fontSize: 11, fontWeight: '600', color: colors.brand },
-  actions: { ...cardBase, marginHorizontal: 16, marginTop: 24, borderRadius: 12, overflow: 'hidden' },
-  actionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
-  actionText: { flex: 1, fontSize: 14, color: colors.text },
-  separator: { height: 1, backgroundColor: colors.cardBorder, marginHorizontal: 16 },
+  skrTitle: { ...typography.bodySm, fontWeight: '600', color: textLevels.primary },
+  skrTier: { ...typography.caption, fontWeight: '700' },
+  skrRight: { alignItems: 'flex-end', marginRight: spacing.xs },
+  skrBalance: { ...typography.mono, fontSize: 16, fontWeight: '700', color: textLevels.primary },
+  skrMulti: { ...typography.caption, fontSize: 11, fontWeight: '600', color: colors.brand },
+  actions: {
+    ...cardBase, marginHorizontal: spacing.lg, marginTop: spacing.xl,
+    borderRadius: spacing.md, overflow: 'hidden',
+  },
+  actionRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: spacing.lg, paddingVertical: 14,
+    gap: 10, minHeight: TOUCH_MIN,
+  },
+  actionText: { ...typography.bodySm, flex: 1, color: textLevels.primary },
+  separator: { height: 1, backgroundColor: borders.subtle, marginHorizontal: spacing.lg },
   // Guest mode
-  guestContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32, gap: 12 },
-  guestTitle: { fontSize: 22, fontWeight: '700', color: colors.text },
-  guestSubtitle: { fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  guestContainer: {
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    paddingHorizontal: spacing['2xl'], gap: spacing.md,
+  },
+  guestTitle: { ...typography.h1, fontSize: 22, color: textLevels.primary },
+  guestSubtitle: { ...typography.body, fontSize: 15, color: textLevels.secondary, textAlign: 'center', lineHeight: 22 },
   guestCta: {
     backgroundColor: colors.brand, paddingVertical: 14, paddingHorizontal: 40,
-    borderRadius: 12, marginTop: 16,
+    borderRadius: spacing.md, marginTop: spacing.lg, minHeight: TOUCH_MIN,
   },
-  guestCtaText: { color: colors.background, fontSize: 16, fontWeight: '700' },
+  guestCtaText: { ...typography.body, fontWeight: '700', color: elevation.base },
 
   // Skeleton styles
-  skeletonLine40: { height: 12, width: '40%', borderRadius: 6, backgroundColor: colors.surface },
-  skeletonLine60: { height: 12, width: '60%', borderRadius: 6, backgroundColor: colors.surface },
-  skeletonLineLarge: { height: 32, width: '50%', borderRadius: 8, backgroundColor: colors.surface, marginTop: 8, alignSelf: 'center' as const },
-  skeletonProgressBar: { height: 6, width: '100%', borderRadius: 3, backgroundColor: colors.surface },
+  skeletonLine40: { height: spacing.md, width: '40%', borderRadius: 6, backgroundColor: elevation.elevated },
+  skeletonLine60: { height: spacing.md, width: '60%', borderRadius: 6, backgroundColor: elevation.elevated },
+  skeletonLineLarge: {
+    height: spacing['2xl'], width: '50%', borderRadius: spacing.sm,
+    backgroundColor: elevation.elevated, marginTop: spacing.sm, alignSelf: 'center' as const,
+  },
+  skeletonProgressBar: { height: 6, width: '100%', borderRadius: 3, backgroundColor: elevation.elevated },
 });
