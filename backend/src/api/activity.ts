@@ -6,6 +6,8 @@
 import express, { Request, Response } from 'express';
 import { authenticate as authenticateToken } from '../middleware/auth';
 import activityFeedService from '../services/activityFeedService';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -20,12 +22,9 @@ router.get('/feed', async (req: Request, res: Response) => {
 
     const activities = await activityFeedService.getGlobalFeed(limit, offset);
 
-    res.json({
-      success: true,
-      data: activities,
-    });
+    sendSuccess(res, activities);
   } catch (error: any) {
-    console.error('Error fetching activity feed:', error);
+    logger.error('Error fetching activity feed', error, { context: 'Activity' });
     res.status(500).json({ success: false, error: 'Failed to fetch activity feed' });
   }
 });
@@ -42,12 +41,9 @@ router.get('/me', authenticateToken, async (req: Request, res: Response) => {
 
     const activities = await activityFeedService.getUserFeed(userId, limit, offset);
 
-    res.json({
-      success: true,
-      data: activities,
-    });
+    sendSuccess(res, activities);
   } catch (error: any) {
-    console.error('Error fetching user activity:', error);
+    logger.error('Error fetching user activity', error, { context: 'Activity' });
     res.status(500).json({ success: false, error: 'Failed to fetch user activity' });
   }
 });

@@ -61,10 +61,10 @@ describe('FINDING-003: Image Proxy SSRF Protection', () => {
   });
 
   it('should allow whitelisted domain (pbs.twimg.com)', async () => {
-    // This will either succeed (200) or fail upstream (502) — but NOT 403
+    // This will either succeed (200) or fail upstream (502/404) — but NOT 403
     const res = await request(app)
       .get('/api/proxy-image')
       .query({ url: 'https://pbs.twimg.com/profile_images/test/photo.jpg' });
     expect(res.status).not.toBe(403);
-  });
+  }, 15000);
 });

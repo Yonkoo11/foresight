@@ -18,7 +18,7 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction):
   }
 
   // Auth endpoints exempt: verify (no session yet), logout (must always work)
-  if (req.path === '/api/auth/verify' || req.path === '/api/auth/logout') {
+  if (req.path === '/api/auth/verify' || req.path === '/api/auth/logout' || req.path === '/api/auth/wallet-verify' || req.path === '/api/auth/mobile-refresh') {
     return next();
   }
 

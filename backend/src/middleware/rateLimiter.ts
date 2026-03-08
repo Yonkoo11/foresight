@@ -36,3 +36,17 @@ export const strictLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * User-keyed rate limiter for authenticated sensitive endpoints (e.g. prize claims).
+ * Keys on userId when available, falls back to IP.
+ * 10 requests per 15 minutes per user.
+ */
+export const userLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => (req as any).user?.userId || req.ip || '0.0.0.0',
+  message: 'Too many requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});

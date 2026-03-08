@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import db from '../utils/db';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { authenticate } from '../middleware/auth';
+import { sendSuccess } from '../utils/response';
 
 const router: Router = Router();
 
@@ -53,7 +54,7 @@ router.get(
 
     const rank = topRecruiterRank ? parseInt(topRecruiterRank.count as string) + 1 : 1;
 
-    res.json({
+    sendSuccess(res, {
       referralCode: user.referral_code,
       referralCount: user.referral_count,
       activeReferralCount: user.active_referral_count,
@@ -106,7 +107,7 @@ router.post(
       throw new AppError('Invalid referral code', 404);
     }
 
-    res.json({
+    sendSuccess(res, {
       valid: true,
       referrerUsername: referrer.username,
       referrerIsFoundingMember: referrer.is_founding_member,
@@ -146,7 +147,7 @@ router.post(
       .first();
 
     if (existingEvent) {
-      return res.json({ message: 'Event already tracked', xpAwarded: 0 });
+      return sendSuccess(res, { message: 'Event already tracked', xpAwarded: 0 });
     }
 
     // Calculate XP based on event type
@@ -195,8 +196,7 @@ router.post(
     // Check for milestone achievements
     await checkMilestones(referrerId);
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       xpAwarded,
       message: `Earned ${xpAwarded} XP for referee ${eventType}`,
     });
@@ -229,7 +229,7 @@ router.get(
       .orderBy('referral_quality_score', 'desc')
       .limit(limit);
 
-    res.json({
+    sendSuccess(res, {
       leaderboard: topRecruiters.map((user, index) => ({
         rank: index + 1,
         userId: user.id,

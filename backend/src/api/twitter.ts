@@ -14,6 +14,8 @@ import { authenticate } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { encrypt, decrypt } from '../utils/encryption';
 import questService from '../services/questService';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router: Router = Router();
 
@@ -109,17 +111,14 @@ router.get(
       )
       .first();
 
-    res.json({
-      success: true,
-      data: {
-        configured: isTwitterConfigured(),
-        connected: !!user?.twitter_id,
-        handle: user?.twitter_handle || null,
-        followers: user?.twitter_followers || 0,
-        connectedAt: user?.twitter_connected_at || null,
-        followsForesight: user?.twitter_follows_foresight || false,
-        lastVerifiedAt: user?.twitter_last_verified_at || null,
-      },
+    sendSuccess(res, {
+      configured: isTwitterConfigured(),
+      connected: !!user?.twitter_id,
+      handle: user?.twitter_handle || null,
+      followers: user?.twitter_followers || 0,
+      connectedAt: user?.twitter_connected_at || null,
+      followsForesight: user?.twitter_follows_foresight || false,
+      lastVerifiedAt: user?.twitter_last_verified_at || null,
     });
   })
 );
@@ -164,11 +163,8 @@ router.get(
 
     const authUrl = `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
 
-    res.json({
-      success: true,
-      data: {
-        authUrl,
-      },
+    sendSuccess(res, {
+      authUrl,
     });
   })
 );
@@ -217,7 +213,7 @@ router.get(
 
       if (!tokenResponse.ok) {
         const errorData = await tokenResponse.text();
-        console.error('[Twitter] Token exchange failed:', errorData);
+        logger.error('Token exchange failed', errorData, { context: 'Twitter' });
         return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings?twitter=error&message=token_exchange_failed`);
       }
 
@@ -231,7 +227,7 @@ router.get(
       });
 
       if (!userResponse.ok) {
-        console.error('[Twitter] User info fetch failed');
+        logger.error('User info fetch failed', undefined, { context: 'Twitter' });
         return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings?twitter=error&message=user_info_failed`);
       }
 
@@ -255,15 +251,15 @@ router.get(
           twitter_token_expires_at: expiresAt,
         });
 
-      console.log(`[Twitter] User ${pkceData.userId.slice(0, 8)}... connected Twitter: @${twitterUser.username}`);
+      logger.info(`User ${pkceData.userId.slice(0, 8)}... connected Twitter: @${twitterUser.username}`, { context: 'Twitter' });
 
       // Check if user follows Foresight (async, don't block redirect)
-      verifyFollow(pkceData.userId, tokens.access_token).catch(console.error);
+      verifyFollow(pkceData.userId, tokens.access_token).catch(err => logger.error('Error verifying follow', err, { context: 'Twitter' }));
 
       // Redirect back to settings with success
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings?twitter=success&handle=${twitterUser.username}`);
     } catch (error) {
-      console.error('[Twitter] Callback error:', error);
+      logger.error('Callback error', error, { context: 'Twitter' });
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/settings?twitter=error&message=unexpected_error`);
     }
   })
@@ -299,12 +295,9 @@ router.post(
 
     const followsUs = await verifyFollow(userId, accessToken);
 
-    res.json({
-      success: true,
-      data: {
-        followsForesight: followsUs,
-        verifiedAt: new Date().toISOString(),
-      },
+    sendSuccess(res, {
+      followsForesight: followsUs,
+      verifiedAt: new Date().toISOString(),
     });
   })
 );
@@ -333,10 +326,9 @@ router.post(
         twitter_last_verified_at: null,
       });
 
-    console.log(`[Twitter] User ${userId.slice(0, 8)}... disconnected Twitter`);
+    logger.info(`User ${userId.slice(0, 8)}... disconnected Twitter`, { context: 'Twitter' });
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: 'Twitter disconnected successfully',
     });
   })
@@ -396,7 +388,7 @@ router.post(
       if (tweetResponse.status === 404) {
         throw new AppError('Tweet not found', 404);
       }
-      console.error('[Twitter] Tweet fetch failed:', errorData);
+      logger.error('Tweet fetch failed', errorData, { context: 'Twitter' });
       throw new AppError('Failed to verify tweet', 500);
     }
 
@@ -440,15 +432,12 @@ router.post(
     // Trigger the weekly_tweet quest
     await questService.triggerAction(userId, 'twitter_tweet');
 
-    console.log(`[Twitter] User ${userId.slice(0, 8)}... verified tweet ${tweetId} - quest triggered`);
+    logger.info(`User ${userId.slice(0, 8)}... verified tweet ${tweetId} - quest triggered`, { context: 'Twitter' });
 
-    res.json({
-      success: true,
-      data: {
-        tweetVerified: true,
-        tweetId,
-        questTriggered: true,
-      },
+    sendSuccess(res, {
+      tweetVerified: true,
+      tweetId,
+      questTriggered: true,
     });
   })
 );
@@ -467,7 +456,7 @@ async function verifyFollow(userId: string, accessToken: string): Promise<boolea
     );
 
     if (!foresightUserResponse.ok) {
-      console.error('[Twitter] Failed to get Foresight account ID');
+      logger.error('Failed to get Foresight account ID', undefined, { context: 'Twitter' });
       return false;
     }
 
@@ -475,7 +464,7 @@ async function verifyFollow(userId: string, accessToken: string): Promise<boolea
     const foresightId = foresightData.data?.id;
 
     if (!foresightId) {
-      console.error('[Twitter] Foresight account not found');
+      logger.error('Foresight account not found', undefined, { context: 'Twitter' });
       return false;
     }
 
@@ -498,7 +487,7 @@ async function verifyFollow(userId: string, accessToken: string): Promise<boolea
     );
 
     if (!followsResponse.ok) {
-      console.error('[Twitter] Failed to get following list');
+      logger.error('Failed to get following list', undefined, { context: 'Twitter' });
       return false;
     }
 
@@ -515,13 +504,13 @@ async function verifyFollow(userId: string, accessToken: string): Promise<boolea
 
     // If follows, trigger quest
     if (followsUs) {
-      questService.triggerAction(userId, 'follow_twitter').catch(console.error);
-      console.log(`[Twitter] User ${userId.slice(0, 8)}... follows @${TWITTER_ACCOUNT_TO_FOLLOW} - quest triggered`);
+      questService.triggerAction(userId, 'follow_twitter').catch(err => logger.error('Error triggering follow_twitter quest', err, { context: 'Twitter' }));
+      logger.info(`User ${userId.slice(0, 8)}... follows @${TWITTER_ACCOUNT_TO_FOLLOW} - quest triggered`, { context: 'Twitter' });
     }
 
     return followsUs;
   } catch (error) {
-    console.error('[Twitter] Error verifying follow:', error);
+    logger.error('Error verifying follow', error, { context: 'Twitter' });
     return false;
   }
 }

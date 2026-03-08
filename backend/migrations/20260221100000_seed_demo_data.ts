@@ -195,7 +195,7 @@ export async function up(knex: Knex): Promise<void> {
       bio: `Crypto influencer | ${inf.tier}-Tier`,
       created_at: now,
       updated_at: now,
-    });
+    }).onConflict('twitter_handle').ignore();
   }
 
   // ─── Step 3: Create active demo contest ─────────────────────────────────

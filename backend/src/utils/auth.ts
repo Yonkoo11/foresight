@@ -9,6 +9,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const JWT_SECRET: Secret = process.env.JWT_SECRET;
+const REFRESH_SECRET: Secret = process.env.REFRESH_TOKEN_SECRET || (JWT_SECRET + '_refresh');
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
 const REFRESH_TOKEN_EXPIRES_IN = '30d';
 
@@ -36,10 +37,22 @@ export function createAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): str
  * Create JWT refresh token
  */
 export function createRefreshToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, REFRESH_SECRET, {
     algorithm: 'HS256',
     expiresIn: REFRESH_TOKEN_EXPIRES_IN as any,
   });
+}
+
+/**
+ * Verify JWT refresh token (uses separate secret)
+ */
+export function verifyRefreshToken(token: string): JWTPayload | null {
+  try {
+    const decoded = jwt.verify(token, REFRESH_SECRET, { algorithms: ['HS256'] }) as JWTPayload;
+    return decoded;
+  } catch (error) {
+    return null;
+  }
 }
 
 /**

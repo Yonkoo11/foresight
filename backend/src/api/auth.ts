@@ -6,6 +6,7 @@ import {
   createAccessToken,
   createRefreshToken,
   verifyToken,
+  verifyRefreshToken,
 } from '../utils/auth';
 import { verifyPrivyToken, getPrivyUserInfo, isPrivyConfigured, type PrivyUserInfo } from '../utils/privy';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
@@ -17,6 +18,8 @@ import foresightScoreService from '../services/foresightScoreService';
 import tapestryService from '../services/tapestryService';
 import { sendSuccess } from '../utils/response';
 import logger from '../utils/logger';
+import { verifySolanaSignature } from '../utils/siws';
+import { PublicKey } from '@solana/web3.js';
 
 // Predefined avatar seeds (DiceBear identicon) — must match frontend/src/constants/avatars.ts
 const AVATAR_SEEDS = [
@@ -250,9 +253,9 @@ async function awardReferrer(
     created_at: db.fn.now(),
   });
 
-  questService.triggerAction(referrerId, 'invite_friend').catch(console.error);
-  questService.triggerAction(referrerId, 'referral_converted').catch(console.error);
-  questService.checkReferralMilestone(referrerId, referrer.referral_count + 1).catch(console.error);
+  questService.triggerAction(referrerId, 'invite_friend').catch(err => logger.error('Error triggering invite_friend quest', err, { context: 'Auth' }));
+  questService.triggerAction(referrerId, 'referral_converted').catch(err => logger.error('Error triggering referral_converted quest', err, { context: 'Auth' }));
+  questService.checkReferralMilestone(referrerId, referrer.referral_count + 1).catch(err => logger.error('Error checking referral milestone', err, { context: 'Auth' }));
 }
 
 /**
@@ -308,7 +311,7 @@ async function createSessionAndRespond(
 
   // Trigger quest progress and FS awarding (async, don't block response)
   if (isNewUser) {
-    questService.triggerAction(user.id, 'wallet_connected').catch(console.error);
+    questService.triggerAction(user.id, 'wallet_connected').catch(err => logger.error('Error triggering wallet_connected quest', err, { context: 'Auth' }));
     foresightScoreService
       .earnFs({
         userId: user.id,
@@ -347,7 +350,6 @@ async function createSessionAndRespond(
 
   sendSuccess(res, {
     csrfToken,
-    accessToken,
     user: {
       id: user.id,
       walletAddress: user.wallet_address || null,
@@ -434,6 +436,235 @@ router.post(
 );
 
 /**
+ * POST /api/auth/wallet-verify
+ * Mobile auth: verify a Sign In With Solana (SIWS) signature from MWA.
+ * Returns tokens in response body (NOT cookies) for mobile clients.
+ */
+router.post(
+  '/wallet-verify',
+  authLimiter,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { address, signedMessage, signature } = req.body;
+
+    if (!address || !signedMessage || !signature) {
+      throw new AppError('Missing required fields: address, signedMessage, signature', 400);
+    }
+
+    // Verify the ed25519 signature
+    const messageBytes = typeof signedMessage === 'string'
+      ? Buffer.from(signedMessage, 'base64')
+      : new Uint8Array(signedMessage);
+    const signatureBytes = typeof signature === 'string'
+      ? Buffer.from(signature, 'base64')
+      : new Uint8Array(signature);
+
+    const isValid = verifySolanaSignature(address, messageBytes, signatureBytes);
+    if (!isValid) {
+      throw new AppError('Invalid wallet signature', 401);
+    }
+
+    // Validate Solana address format
+    try {
+      new PublicKey(address);
+    } catch {
+      throw new AppError('Invalid Solana address', 400);
+    }
+
+    // Find or create user by wallet address
+    const { user, isNewUser } = await findOrCreateUser(
+      `wallet:${address}`,
+      {
+        privyDid: `wallet:${address}`,
+        wallet: { address, chainType: 'solana' },
+      } as PrivyUserInfo,
+      { authProvider: 'mwa' }
+    );
+
+    // Create JWT tokens
+    const accessToken = createAccessToken({
+      userId: user.id,
+      walletAddress: user.wallet_address || address,
+      privyDid: `wallet:${address}`,
+      role: user.role,
+    });
+
+    const refreshToken = createRefreshToken({
+      userId: user.id,
+      walletAddress: user.wallet_address || address,
+      privyDid: `wallet:${address}`,
+      role: user.role,
+    });
+
+    // Store session
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days for mobile
+
+    await db('sessions').insert({
+      id: uuidv4(),
+      user_id: user.id,
+      access_token: accessToken,
+      refresh_token: hashToken(refreshToken),
+      expires_at: expiresAt,
+      ip_address: req.ip,
+      user_agent: req.get('user-agent'),
+      created_at: db.fn.now(),
+    });
+
+    // Trigger same post-auth side effects as Privy flow
+    if (isNewUser) {
+      if (user.wallet_address) {
+        tapestryService.findOrCreateProfile(user.wallet_address, user.username)
+          .then(async (profile) => {
+            if (profile) {
+              await db('users').where({ id: user.id }).update({ tapestry_user_id: profile.id });
+            }
+          })
+          .catch((err) => logger.error('Error creating Tapestry profile:', err, { context: 'Auth API' }));
+      }
+      questService.triggerAction(user.id, 'wallet_connected').catch(err => logger.error('Error triggering wallet_connected quest', err, { context: 'Auth' }));
+      foresightScoreService
+        .earnFs({
+          userId: user.id,
+          reason: 'signup_bonus',
+          category: 'engagement',
+          baseAmount: user.is_founding_member ? 100 : 25,
+          sourceType: 'signup',
+          metadata: { isFoundingMember: user.is_founding_member },
+        })
+        .catch((err) => logger.error('Error awarding signup FS:', err, { context: 'Auth API' }));
+    } else {
+      questService.triggerAction(user.id, 'daily_login').catch(err => logger.error('Error triggering daily_login quest:', err, { context: 'Auth' }));
+      foresightScoreService
+        .earnFs({
+          userId: user.id,
+          reason: 'daily_login',
+          category: 'engagement',
+          baseAmount: 5,
+          sourceType: 'login',
+        })
+        .catch((err) => logger.error('Error awarding daily login FS:', err, { context: 'Auth API' }));
+    }
+
+    logger.info(`Mobile wallet auth successful`, {
+      context: 'Auth API',
+      data: { address, isNewUser, authProvider: 'mwa' },
+    });
+
+    // Return tokens in body (mobile clients don't use cookies)
+    sendSuccess(res, {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        walletAddress: user.wallet_address || address,
+        username: user.username,
+        avatarUrl: user.avatar_url,
+        ctMasteryScore: user.ct_mastery_score,
+        ctMasteryLevel: user.ct_mastery_level,
+        referralCode: user.referral_code,
+        isFoundingMember: user.is_founding_member,
+        foundingMemberNumber: user.founding_member_number,
+      },
+      isNewUser,
+    });
+  })
+);
+
+/**
+ * POST /api/auth/mobile-refresh
+ * Refresh access token for mobile clients (reads refresh token from body, returns new tokens in body).
+ */
+router.post(
+  '/mobile-refresh',
+  authLimiter,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { refreshToken: refreshTokenValue } = req.body;
+
+    if (!refreshTokenValue) {
+      throw new AppError('Refresh token is required', 400);
+    }
+
+    const payload = verifyRefreshToken(refreshTokenValue);
+    if (!payload) {
+      throw new AppError('Invalid or expired refresh token', 401);
+    }
+
+    // Verify session exists with hashed refresh token
+    const hashedToken = hashToken(refreshTokenValue);
+    const session = await db('sessions')
+      .where({ refresh_token: hashedToken, user_id: payload.userId })
+      .where('expires_at', '>', db.fn.now())
+      .first();
+
+    if (!session) {
+      throw new AppError('Session not found or expired', 401);
+    }
+
+    // Get current user
+    const user = await db('users').where({ id: payload.userId }).first();
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Create new tokens
+    const newAccessToken = createAccessToken({
+      userId: user.id,
+      walletAddress: user.wallet_address || undefined,
+      privyDid: user.privy_did || undefined,
+      role: user.role,
+    });
+
+    const newRefreshToken = createRefreshToken({
+      userId: user.id,
+      walletAddress: user.wallet_address || undefined,
+      privyDid: user.privy_did || undefined,
+      role: user.role,
+    });
+
+    // Rotate refresh token in DB
+    await db('sessions')
+      .where({ id: session.id })
+      .update({
+        access_token: newAccessToken,
+        refresh_token: hashToken(newRefreshToken),
+      });
+
+    sendSuccess(res, {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  })
+);
+
+/**
+ * POST /api/auth/twitter-mobile
+ * Twitter OAuth for mobile clients.
+ * TODO: Implement full OAuth 2.0 PKCE flow for mobile (requires deep linking).
+ * For now, returns a clear error so the mobile app can show "coming soon."
+ */
+router.post(
+  '/twitter-mobile',
+  authLimiter,
+  asyncHandler(async (_req: Request, res: Response) => {
+    throw new AppError('Twitter login is not yet available on mobile. Please use wallet connect.', 501);
+  })
+);
+
+/**
+ * POST /api/auth/email-mobile
+ * Email magic link for mobile clients.
+ * TODO: Implement magic link flow with deep linking back to the app.
+ * For now, returns a clear error so the mobile app can show "coming soon."
+ */
+router.post(
+  '/email-mobile',
+  authLimiter,
+  asyncHandler(async (_req: Request, res: Response) => {
+    throw new AppError('Email login is not yet available on mobile. Please use wallet connect.', 501);
+  })
+);
+
+/**
  * POST /api/auth/refresh
  * Refresh access token using refresh token (from httpOnly cookie or body)
  */
@@ -448,7 +679,7 @@ router.post(
       throw new AppError('Refresh token is required', 400);
     }
 
-    const payload = verifyToken(refreshTokenValue);
+    const payload = verifyRefreshToken(refreshTokenValue);
     if (!payload) {
       throw new AppError('Invalid or expired refresh token', 401);
     }
@@ -483,7 +714,11 @@ router.post(
     // FINDING-007: Set new access token as httpOnly cookie
     res.cookie('accessToken', newAccessToken, ACCESS_COOKIE_OPTIONS);
 
-    sendSuccess(res, { refreshed: true });
+    // Refresh CSRF token alongside access token
+    const newCsrfToken = generateCsrfToken();
+    res.cookie('csrf-token', newCsrfToken, CSRF_COOKIE_OPTIONS);
+
+    sendSuccess(res, { refreshed: true, csrfToken: newCsrfToken });
   })
 );
 

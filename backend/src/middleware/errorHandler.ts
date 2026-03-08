@@ -53,9 +53,11 @@ export function errorHandler(
     console.error('Error:', err);
   }
 
-  // Send error response
+  // Send error response — never expose stack traces outside development
   res.status(statusCode).json({
-    error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    success: false,
+    error: statusCode >= 500 && process.env.NODE_ENV !== 'development'
+      ? 'Internal server error'
+      : message,
   });
 }

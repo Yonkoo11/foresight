@@ -13,6 +13,7 @@ import foresightScoreService from '../services/foresightScoreService';
 import questService from '../services/questService';
 import { validators, handleValidationErrors } from '../middleware/validation';
 import logger from '../utils/logger';
+import { sendSuccess } from '../utils/response';
 
 // Extended request type with user info
 interface AuthRequest extends Request {
@@ -93,9 +94,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
       ? Math.ceil((new Date(fsData.multiplierExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
       : 0;
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         ...fsData,
         allTimeRank: allTimeRank?.rank || null,
         allTimeTotal: allTimeRank?.total || 0,
@@ -107,10 +106,9 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
         effectiveMultiplier,
         multiplierActive,
         multiplierDaysRemaining,
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error getting user FS:', error);
+    logger.error('Error getting user FS', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -150,19 +148,16 @@ router.get('/leaderboard', async (req: Request, res: Response) => {
 
     const total = parseInt(totalResult?.count as string) || 0;
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         type,
         entries: leaderboard,
         total,
         limit,
         offset,
         hasMore: offset + limit < total,
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error getting leaderboard:', error);
+    logger.error('Error getting leaderboard', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -194,21 +189,18 @@ router.get('/leaderboard/position', authenticate, async (req: AuthRequest, res: 
     }
 
     // Trigger daily quest for checking scores
-    questService.triggerAction(userId, 'check_scores').catch(console.error);
+    questService.triggerAction(userId, 'check_scores').catch(err => logger.error('Error triggering check_scores quest', err, { context: 'ForesightScore' }));
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         type,
         rank: position.rank,
         total: position.total,
         percentile: position.total > 0
           ? Math.round((1 - (position.rank / position.total)) * 100)
           : 0,
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error getting position:', error);
+    logger.error('Error getting position', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -237,18 +229,15 @@ router.get('/history', authenticate, async (req: AuthRequest, res: Response) => 
 
     const total = parseInt(totalResult?.count as string) || 0;
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         transactions,
         total,
         limit,
         offset,
         hasMore: offset + limit < total,
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error getting history:', error);
+    logger.error('Error getting history', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -277,9 +266,7 @@ router.get('/config', async (_req: Request, res: Response) => {
       return acc;
     }, {});
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         config: grouped,
         tiers: {
           bronze: { threshold: 0, multiplier: 1.0 },
@@ -294,10 +281,9 @@ router.get('/config', async (_req: Request, res: Response) => {
           bird: { range: '5001-10000', multiplier: 1.1, duration: '30 days' },
           standard: { range: '10001+', multiplier: 1.0, duration: 'N/A' },
         },
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error getting config:', error);
+    logger.error('Error getting config', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -333,18 +319,15 @@ router.get('/founding-members', async (req: Request, res: Response) => {
 
     const claimed = parseInt(countResult?.count as string) || 0;
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         founders,
         claimed,
         total: 1000,
         remaining: Math.max(0, 1000 - claimed),
         isClosed: claimed >= 1000,
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error getting founding members:', error);
+    logger.error('Error getting founding members', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -394,14 +377,11 @@ router.post('/track-activity', authenticate, async (req: AuthRequest, res: Respo
       .first();
 
     if (existing) {
-      return res.json({
-        success: true,
-        data: {
+      return sendSuccess(res, {
           alreadyClaimed: true,
           message: 'Already claimed today',
           activityType,
           claimedAt: existing.created_at,
-        },
       });
     }
 
@@ -424,20 +404,17 @@ router.post('/track-activity', authenticate, async (req: AuthRequest, res: Respo
     // Trigger quest progress (quest system handles FS rewards)
     const questInfo = questMap[activityType];
     if (questInfo) {
-      questService.triggerAction(userId, questInfo.action).catch(console.error);
+      questService.triggerAction(userId, questInfo.action).catch(err => logger.error('Error triggering quest action', err, { context: 'ForesightScore' }));
     }
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         alreadyClaimed: false,
         fsAwarded: questInfo?.fsReward || 10,
         activityType,
         message: `Quest triggered! Claim +${questInfo?.fsReward || 10} FS in Quests`,
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error tracking activity:', error);
+    logger.error('Error tracking activity', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -480,17 +457,14 @@ router.get('/daily-status', authenticate, async (req: AuthRequest, res: Response
       }
     }
 
-    return res.json({
-      success: true,
-      data: {
+    return sendSuccess(res, {
         date: today,
         activities,
         completedCount: completedToday.length,
         totalPossible: Object.keys(activities).length,
-      },
     });
   } catch (error) {
-    console.error('[FS API] Error getting daily status:', error);
+    logger.error('Error getting daily status', error, { context: 'ForesightScore' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -528,10 +502,7 @@ router.post(
         return res.status(400).json({ success: false, error: result.error });
       }
 
-      return res.json({
-        success: true,
-        data: result,
-      });
+      return sendSuccess(res, result);
     } catch (error) {
       logger.error('Error earning FS:', error, { context: 'FS API' });
       return res.status(500).json({ success: false, error: 'Internal server error' });

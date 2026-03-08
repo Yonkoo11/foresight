@@ -1,5 +1,6 @@
 import express, { Application } from 'express';
 import { createServer } from 'http';
+import dns from 'dns';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -154,24 +155,29 @@ const PROXY_ALLOWED_DOMAINS = [
   'i.imgur.com',
 ];
 
-function isPrivateOrReservedHost(hostname: string): boolean {
+/**
+ * Check if an IP address falls within private/reserved ranges.
+ * Uses numeric comparison for correct CIDR matching (fixes 172.16.0.0/12).
+ */
+function isPrivateIP(ip: string): boolean {
+  // IPv6 loopback
+  if (ip === '::1') return true;
+
+  // Parse IPv4
+  const parts = ip.split('.').map(Number);
+  if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) {
+    return true; // Non-IPv4 addresses treated as private (block by default)
+  }
+
+  const [a, b] = parts;
+
   return (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '[::1]' ||
-    hostname === '0.0.0.0' ||
-    hostname.startsWith('10.') ||
-    hostname.startsWith('192.168.') ||
-    hostname.startsWith('172.16.') ||
-    hostname.startsWith('172.17.') ||
-    hostname.startsWith('172.18.') ||
-    hostname.startsWith('172.19.') ||
-    hostname.startsWith('172.2') ||
-    hostname.startsWith('172.30.') ||
-    hostname.startsWith('172.31.') ||
-    hostname.startsWith('169.254.') ||
-    hostname.endsWith('.internal') ||
-    hostname.endsWith('.local')
+    a === 0 ||                           // 0.0.0.0/8
+    a === 10 ||                          // 10.0.0.0/8
+    a === 127 ||                         // 127.0.0.0/8
+    (a === 172 && b >= 16 && b <= 31) || // 172.16.0.0/12
+    (a === 192 && b === 168) ||          // 192.168.0.0/16
+    (a === 169 && b === 254)             // 169.254.0.0/16 (link-local)
   );
 }
 
@@ -191,14 +197,29 @@ app.get('/api/proxy-image', async (req, res) => {
     return res.status(403).send('Only HTTP(S) URLs allowed');
   }
 
-  // Block private/reserved IPs
-  if (isPrivateOrReservedHost(parsed.hostname)) {
+  // Block hostnames that look private (localhost, .internal, .local)
+  const hostname = parsed.hostname;
+  if (hostname === 'localhost' || hostname.endsWith('.internal') || hostname.endsWith('.local')) {
     return res.status(403).send('Access denied');
   }
 
   // Whitelist domains
-  if (!PROXY_ALLOWED_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d))) {
+  if (!PROXY_ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
     return res.status(403).send('Domain not allowed');
+  }
+
+  // DNS resolution check: resolve hostname to IP and validate against private ranges
+  // This blocks DNS rebinding attacks where a public domain resolves to 127.0.0.1
+  let resolvedIP: string;
+  try {
+    const { address } = await dns.promises.lookup(hostname);
+    resolvedIP = address;
+  } catch {
+    return res.status(502).send('DNS resolution failed');
+  }
+
+  if (isPrivateIP(resolvedIP)) {
+    return res.status(403).send('Access denied');
   }
 
   try {

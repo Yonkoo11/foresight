@@ -9,6 +9,8 @@
 import { Router, Request, Response } from 'express';
 import db from '../utils/db';
 import { authenticate, optionalAuthenticate } from '../middleware/auth';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -106,21 +108,18 @@ router.get('/influencers', optionalAuthenticate, async (req: AuthRequest, res: R
       isScouted: scoutedIds.includes(inf.id),
     }));
 
-    res.json({
-      success: true,
-      data: {
-        influencers: formatted,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-          hasMore: offset + limit < total,
-        },
+    sendSuccess(res, {
+      influencers: formatted,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasMore: offset + limit < total,
       },
     });
   } catch (error) {
-    console.error('[Intel API] Error fetching influencers:', error);
+    logger.error('Error fetching influencers', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to fetch influencers' });
   }
 });
@@ -207,30 +206,27 @@ router.get('/influencers/:id', optionalAuthenticate, async (req: AuthRequest, re
       isScouted = !!scouted;
     }
 
-    res.json({
-      success: true,
-      data: {
-        influencer: {
-          ...influencer,
-          price: parseFloat(influencer.price) || 10,
-          totalPoints: influencer.totalPoints || 0,
-          followers: influencer.followers || 0,
-          engagementRate: parseFloat(influencer.engagementRate) || 0,
-          isScouted,
-          trends: {
-            followers: followerTrend,
-            engagement: engagementTrend,
-          },
+    sendSuccess(res, {
+      influencer: {
+        ...influencer,
+        price: parseFloat(influencer.price) || 10,
+        totalPoints: influencer.totalPoints || 0,
+        followers: influencer.followers || 0,
+        engagementRate: parseFloat(influencer.engagementRate) || 0,
+        isScouted,
+        trends: {
+          followers: followerTrend,
+          engagement: engagementTrend,
         },
-        metrics: metrics.reverse(), // Chronological order for charts
-        recentTweets: tweets.map(t => ({
-          ...t,
-          engagementScore: parseFloat(t.engagementScore) || 0,
-        })),
       },
+      metrics: metrics.reverse(), // Chronological order for charts
+      recentTweets: tweets.map(t => ({
+        ...t,
+        engagementScore: parseFloat(t.engagementScore) || 0,
+      })),
     });
   } catch (error) {
-    console.error('[Intel API] Error fetching influencer:', error);
+    logger.error('Error fetching influencer', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to fetch influencer' });
   }
 });
@@ -293,15 +289,12 @@ router.get('/rising-stars', optionalAuthenticate, async (req: AuthRequest, res: 
       voteScore: (star.votesFor || 0) - (star.votesAgainst || 0),
     }));
 
-    res.json({
-      success: true,
-      data: {
-        stars: formatted,
-        count: formatted.length,
-      },
+    sendSuccess(res, {
+      stars: formatted,
+      count: formatted.length,
     });
   } catch (error) {
-    console.error('[Intel API] Error fetching rising stars:', error);
+    logger.error('Error fetching rising stars', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to fetch rising stars' });
   }
 });
@@ -345,10 +338,7 @@ router.post('/rising-stars/:id/vote', authenticate, async (req: AuthRequest, res
       // Already voted same way
       if ((existingVote.interaction_type === 'vote_for' && vote === 'for') ||
           (existingVote.interaction_type === 'vote_against' && vote === 'against')) {
-        return res.json({
-          success: true,
-          data: { action: 'already_voted', vote },
-        });
+        return sendSuccess(res, { action: 'already_voted', vote });
       }
 
       // Changing vote - remove old, add new
@@ -373,10 +363,7 @@ router.post('/rising-stars/:id/vote', authenticate, async (req: AuthRequest, res
         }
       });
 
-      return res.json({
-        success: true,
-        data: { action: 'changed_vote', vote },
-      });
+      return sendSuccess(res, { action: 'changed_vote', vote });
     }
 
     // New vote
@@ -394,12 +381,9 @@ router.post('/rising-stars/:id/vote', authenticate, async (req: AuthRequest, res
       }
     });
 
-    res.json({
-      success: true,
-      data: { action: 'voted', vote },
-    });
+    sendSuccess(res, { action: 'voted', vote });
   } catch (error) {
-    console.error('[Intel API] Error voting:', error);
+    logger.error('Error voting', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to vote' });
   }
 });
@@ -494,15 +478,12 @@ router.get('/compare', async (req: Request, res: Response) => {
       ).id,
     };
 
-    res.json({
-      success: true,
-      data: {
-        influencers: formatted,
-        comparison,
-      },
+    sendSuccess(res, {
+      influencers: formatted,
+      comparison,
     });
   } catch (error) {
-    console.error('[Intel API] Error comparing:', error);
+    logger.error('Error comparing', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to compare influencers' });
   }
 });
@@ -524,17 +505,14 @@ router.get('/stats', async (_req: Request, res: Response) => {
       .orderBy('total_points', 'desc')
       .limit(3);
 
-    res.json({
-      success: true,
-      data: {
-        totalInfluencers: parseInt(influencerCount.count as string) || 0,
-        totalTweets: parseInt(tweetCount.count as string) || 0,
-        risingStar: parseInt(starCount.count as string) || 0,
-        topPerformers: topToday,
-      },
+    sendSuccess(res, {
+      totalInfluencers: parseInt(influencerCount.count as string) || 0,
+      totalTweets: parseInt(tweetCount.count as string) || 0,
+      risingStar: parseInt(starCount.count as string) || 0,
+      topPerformers: topToday,
     });
   } catch (error) {
-    console.error('[Intel API] Error fetching stats:', error);
+    logger.error('Error fetching stats', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to fetch stats' });
   }
 });
@@ -659,17 +637,14 @@ router.get('/influencers/:id/weekly-history', async (req: AuthRequest, res: Resp
       }
     }
 
-    res.json({
-      success: true,
-      data: {
-        weeks: weeks.reverse(), // Chronological order (oldest first)
-        consistency,
-        avgWeeklyPts,
-        trend,
-      },
+    sendSuccess(res, {
+      weeks: weeks.reverse(), // Chronological order (oldest first)
+      consistency,
+      avgWeeklyPts,
+      trend,
     });
   } catch (error) {
-    console.error('[Intel API] Error fetching weekly history:', error);
+    logger.error('Error fetching weekly history', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to fetch weekly history' });
   }
 });
@@ -710,14 +685,11 @@ router.get('/community-picks', async (_req: Request, res: Response) => {
       uniqueDrafters: row.unique_drafters,
     }));
 
-    res.json({
-      success: true,
-      data: {
-        picks: formatted,
-      },
+    sendSuccess(res, {
+      picks: formatted,
     });
   } catch (error) {
-    console.error('[Intel API] Error fetching community picks:', error);
+    logger.error('Error fetching community picks', error, { context: 'Intel' });
     res.status(500).json({ success: false, error: 'Failed to fetch community picks' });
   }
 });

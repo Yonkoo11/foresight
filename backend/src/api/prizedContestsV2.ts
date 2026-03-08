@@ -1,13 +1,14 @@
 import { Router, Request, Response } from 'express';
 import db from '../utils/db';
 import { authenticate, requireAdmin } from '../middleware/auth';
-import { strictLimiter } from '../middleware/rateLimiter';
+import { strictLimiter, userLimiter } from '../middleware/rateLimiter';
 import foresightScoreService from '../services/foresightScoreService';
 import questService from '../services/questService';
 import tapestryService from '../services/tapestryService';
 import logger from '../utils/logger';
 import { logAuditEvent } from '../utils/auditLog';
 import { getXPLevel } from '../utils/xp';
+import { sendSuccess } from '../utils/response';
 import {
   Connection,
   Keypair,
@@ -47,7 +48,7 @@ router.get('/contest-types', async (req: Request, res: Response) => {
       .where('is_active', true)
       .orderBy('display_order', 'asc');
 
-    res.json({
+    sendSuccess(res, {
       contestTypes: types.map(t => ({
         id: t.id,
         code: t.code,
@@ -115,7 +116,7 @@ router.get('/contests', async (req: Request, res: Response) => {
 
     const contests = await query;
 
-    res.json({
+    sendSuccess(res, {
       contests: contests.map(c => ({
         id: c.id,
         contractContestId: c.contract_contest_id,
@@ -149,7 +150,7 @@ router.get('/contests', async (req: Request, res: Response) => {
       })),
     });
   } catch (error: any) {
-    console.error('Error fetching contests:', error);
+    logger.error('Error fetching contests', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to fetch contests' });
   }
 });
@@ -193,7 +194,7 @@ router.get('/contests/:id', async (req: Request, res: Response) => {
         .limit(20);
     }
 
-    res.json({
+    sendSuccess(res, {
       contest: {
         id: contest.id,
         contractContestId: contest.contract_contest_id,
@@ -232,7 +233,7 @@ router.get('/contests/:id', async (req: Request, res: Response) => {
       })),
     });
   } catch (error: any) {
-    console.error('Error fetching contest:', error);
+    logger.error('Error fetching contest', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to fetch contest' });
   }
 });
@@ -282,7 +283,7 @@ router.get('/contests/:id/entries', async (req: Request, res: Response) => {
       : [];
     const captainMap = new Map(captains.map(c => [c.id, c]));
 
-    res.json({
+    sendSuccess(res, {
       entries: entries.map(e => ({
         id: e.id,
         userId: e.user_id,
@@ -310,7 +311,7 @@ router.get('/contests/:id/entries', async (req: Request, res: Response) => {
       hasCaptain: contest.has_captain,
     });
   } catch (error: any) {
-    console.error('Error fetching entries:', error);
+    logger.error('Error fetching entries', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to fetch entries' });
   }
 });
@@ -339,7 +340,7 @@ router.get('/contests/:id/social-scouts', authenticate, async (req: Request, res
       .select('following_tapestry_profile_id', 'following_username');
 
     if (follows.length === 0) {
-      return res.json({ scouts: [], message: 'You are not following anyone yet' });
+      return sendSuccess(res, { scouts: [], message: 'You are not following anyone yet' });
     }
 
     const followingIds = follows.map((f: any) => f.following_tapestry_profile_id).filter(Boolean);
@@ -412,7 +413,7 @@ router.get('/contests/:id/social-scouts', authenticate, async (req: Request, res
     }
 
     if (scouts.length === 0) {
-      return res.json({ scouts: [], message: 'None of your follows have entered any contests yet' });
+      return sendSuccess(res, { scouts: [], message: 'None of your follows have entered any contests yet' });
     }
 
     // 5. Resolve captain handles
@@ -422,7 +423,7 @@ router.get('/contests/:id/social-scouts', authenticate, async (req: Request, res
       : [];
     const captainMap = new Map(captains.map((c: any) => [c.id, c]));
 
-    res.json({
+    sendSuccess(res, {
       fromPreviousContest,
       scouts: scouts.map((s: any) => ({
         username: s.username || 'Anonymous',
@@ -435,7 +436,7 @@ router.get('/contests/:id/social-scouts', authenticate, async (req: Request, res
       })),
     });
   } catch (error: any) {
-    console.error('[SocialScouts] Error:', error);
+    logger.error('SocialScouts error', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to fetch scout data' });
   }
 });
@@ -511,24 +512,27 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
       return res.status(400).json({ error: 'Contest is full' });
     }
 
-    // Create entry
-    const [entry] = await db('free_league_entries')
-      .insert({
-        contest_id: id,
-        user_id: userId,
-        wallet_address: entryKey,
-        team_ids: teamIds,
-        captain_id: contest.has_captain ? captainId : null,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-      .returning('*');
+    // Create entry + update player count atomically
+    const entry = await db.transaction(async (trx) => {
+      const [newEntry] = await trx('free_league_entries')
+        .insert({
+          contest_id: id,
+          user_id: userId,
+          wallet_address: entryKey,
+          team_ids: teamIds,
+          captain_id: contest.has_captain ? captainId : null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning('*');
 
-    // Update contest player count
-    await db('prized_contests')
-      .where('id', id)
-      .increment('player_count', 1)
-      .update({ updated_at: new Date() });
+      await trx('prized_contests')
+        .where('id', id)
+        .increment('player_count', 1)
+        .update({ updated_at: new Date() });
+
+      return newEntry;
+    });
 
     // Award Foresight Score for contest entry
     foresightScoreService.earnFs({
@@ -538,13 +542,13 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
       sourceType: 'contest',
       sourceId: id,
       metadata: { contestName: contest.name, isFree: true }
-    }).catch(err => console.error('[FS] Error awarding contest entry FS:', err));
+    }).catch(err => logger.error('Error awarding contest entry FS', err, { context: 'PrizedContestsV2' }));
 
     // Trigger quest progress (async, non-blocking)
     questService.triggerAction(userId, 'contest_entered').catch(err =>
-      console.error('[Quest] Error triggering contest_entered:', err));
+      logger.error('Error triggering contest_entered quest', err, { context: 'PrizedContestsV2' }));
     questService.triggerAction(userId, 'team_created').catch(err =>
-      console.error('[Quest] Error triggering team_created:', err));
+      logger.error('Error triggering team_created quest', err, { context: 'PrizedContestsV2' }));
 
     // Publish team to Tapestry (async, non-blocking)
     let tapestryTeamId: string | null = null;
@@ -566,8 +570,7 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
       }).catch((err) => logger.error('Error publishing team to Tapestry:', err, { context: 'ContestsV2' }));
     }
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: 'Successfully entered the free league!',
       entry: {
         id: entry.id,
@@ -580,7 +583,7 @@ router.post('/contests/:id/enter-free', authenticate, async (req: Request, res: 
       },
     });
   } catch (error: any) {
-    console.error('Error entering free league:', error);
+    logger.error('Error entering free league', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to enter contest' });
   }
 });
@@ -611,15 +614,12 @@ router.get('/contests/:id/transfer-status', authenticate, async (req: Request, r
 
     const transfersUsed = entry?.update_count || 0;
 
-    res.json({
-      success: true,
-      data: {
-        transfersAllowed: maxTransfers,
-        transfersUsed,
-        transfersRemaining: Math.max(0, maxTransfers - transfersUsed),
-        level: xpData.level,
-        isUnlimited: maxTransfers >= 999,
-      },
+    sendSuccess(res, {
+      transfersAllowed: maxTransfers,
+      transfersUsed,
+      transfersRemaining: Math.max(0, maxTransfers - transfersUsed),
+      level: xpData.level,
+      isUnlimited: maxTransfers >= 999,
     });
   } catch (error: any) {
     logger.error('Error getting transfer status:', error, { context: 'ContestsV2' });
@@ -707,14 +707,13 @@ router.put('/contests/:id/update-free-team', authenticate, async (req: Request, 
 
     const transfersRemaining = Math.max(0, maxTransfers - (transfersUsed + 1));
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: 'Team updated successfully',
       transfersRemaining,
       level: xpData.level,
     });
   } catch (error: any) {
-    console.error('Error updating free team:', error);
+    logger.error('Error updating free team', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to update team' });
   }
 });
@@ -783,39 +782,42 @@ router.post('/contests/:id/enter-test', authenticate, async (req: Request, res: 
       return res.status(400).json({ error: 'You have already entered this contest' });
     }
 
-    // Create test entry (simulated payment)
+    // Create test entry + update contest atomically
     const entryFee = contest.entry_fee || 0;
-    const [entryId] = await db('prized_entries').insert({
-      contest_id: id,
-      user_id: userId,
-      wallet_address: walletAddress.toLowerCase(),
-      team_ids: influencer_ids,
-      captain_id: contest.has_captain ? captain_id : null,
-      paid_amount: entryFee,
-      entry_tx_hash: `test_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      created_at: new Date(),
-      updated_at: new Date(),
-    }).returning('id');
-
-    // Update contest player count and prize pool
     const rakeAmount = entryFee * (contest.rake_percent / 100);
-    await db('prized_contests')
-      .where('id', id)
-      .increment('player_count', 1)
-      .update({
-        prize_pool: db.raw('COALESCE(prize_pool, 0) + ?', [entryFee]),
-        distributable_pool: db.raw('COALESCE(distributable_pool, 0) + ?', [entryFee - rakeAmount]),
-        updated_at: new Date(),
-      });
 
-    res.json({
-      success: true,
+    const entryId = await db.transaction(async (trx) => {
+      const [newEntryId] = await trx('prized_entries').insert({
+        contest_id: id,
+        user_id: userId,
+        wallet_address: walletAddress.toLowerCase(),
+        team_ids: influencer_ids,
+        captain_id: contest.has_captain ? captain_id : null,
+        paid_amount: entryFee,
+        entry_tx_hash: `test_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }).returning('id');
+
+      await trx('prized_contests')
+        .where('id', id)
+        .increment('player_count', 1)
+        .update({
+          prize_pool: db.raw('COALESCE(prize_pool, 0) + ?', [entryFee]),
+          distributable_pool: db.raw('COALESCE(distributable_pool, 0) + ?', [entryFee - rakeAmount]),
+          updated_at: new Date(),
+        });
+
+      return newEntryId;
+    });
+
+    sendSuccess(res, {
       message: 'Test entry created successfully',
       entryId: entryId?.id || entryId,
       note: 'This is a TEST entry - no real payment was made'
     });
   } catch (error: any) {
-    console.error('Error creating test entry:', error);
+    logger.error('Error creating test entry', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to create test entry' });
   }
 });
@@ -831,7 +833,7 @@ router.get('/user/has-open-entry', authenticate, async (req: Request, res: Respo
   try {
     const walletAddress = req.user!.walletAddress;
     if (!walletAddress) {
-      return res.json({ hasEntry: false });
+      return sendSuccess(res, { hasEntry: false });
     }
 
     const openContests = await db('prized_contests')
@@ -845,14 +847,14 @@ router.get('/user/has-open-entry', authenticate, async (req: Request, res: Respo
         .where('wallet_address', walletAddress.toLowerCase())
         .first();
       if (entry) {
-        return res.json({ hasEntry: true });
+        return sendSuccess(res, { hasEntry: true });
       }
     }
 
-    return res.json({ hasEntry: false });
+    return sendSuccess(res, { hasEntry: false });
   } catch (error) {
     logger.error('Error checking user open entries:', error);
-    return res.json({ hasEntry: false }); // fail open — don't block the banner silently
+    return sendSuccess(res, { hasEntry: false }); // fail open — don't block the banner silently
   }
 });
 
@@ -886,14 +888,14 @@ router.get('/contests/:id/my-entry', authenticate, async (req: Request, res: Res
       .first();
 
     if (!entry) {
-      return res.json({ entered: false, entry: null });
+      return sendSuccess(res, { entered: false, entry: null });
     }
 
     // Get influencer details
     const influencers = await db('influencers').whereIn('id', entry.team_ids);
     const influencerMap = new Map(influencers.map(i => [i.id, i]));
 
-    res.json({
+    sendSuccess(res, {
       entered: true,
       entry: {
         id: entry.id,
@@ -920,7 +922,7 @@ router.get('/contests/:id/my-entry', authenticate, async (req: Request, res: Res
       },
     });
   } catch (error: any) {
-    console.error('Error fetching my entry:', error);
+    logger.error('Error fetching my entry', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to fetch entry' });
   }
 });
@@ -934,7 +936,7 @@ router.get('/me/entries', authenticate, async (req: Request, res: Response) => {
     const walletAddress = req.user!.walletAddress;
 
     if (!walletAddress) {
-      return res.json({ entries: [] });
+      return sendSuccess(res, { entries: [] });
     }
 
     // Get paid entries
@@ -979,7 +981,7 @@ router.get('/me/entries', authenticate, async (req: Request, res: Response) => {
                         ...freeEntries.map(e => ({ ...e, source: 'free' }))]
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-    res.json({
+    sendSuccess(res, {
       entries: allEntries.map(e => ({
         id: e.id,
         contestId: e.contest_id,
@@ -1002,7 +1004,7 @@ router.get('/me/entries', authenticate, async (req: Request, res: Response) => {
       })),
     });
   } catch (error: any) {
-    console.error('Error fetching my entries:', error);
+    logger.error('Error fetching my entries', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to fetch entries' });
   }
 });
@@ -1016,7 +1018,7 @@ router.get('/me/latest-entry', authenticate, async (req: Request, res: Response)
     const walletAddress = req.user!.walletAddress;
 
     if (!walletAddress) {
-      return res.json({ entry: null });
+      return sendSuccess(res, { entry: null });
     }
 
     // Get most recent free entry
@@ -1056,7 +1058,7 @@ router.get('/me/latest-entry', authenticate, async (req: Request, res: Response)
     }
 
     if (!entry) {
-      return res.json({ entry: null });
+      return sendSuccess(res, { entry: null });
     }
 
     // Hydrate team_ids with influencer details
@@ -1083,7 +1085,7 @@ router.get('/me/latest-entry', authenticate, async (req: Request, res: Response)
 
     const totalBudgetUsed = picks.reduce((sum: number, p: any) => sum + (p?.price || 0), 0);
 
-    res.json({
+    sendSuccess(res, {
       entry: {
         id: entry.id,
         team_name: entry.team_name || 'My Team',
@@ -1100,7 +1102,7 @@ router.get('/me/latest-entry', authenticate, async (req: Request, res: Response)
       },
     });
   } catch (error: any) {
-    console.error('Error fetching latest entry:', error);
+    logger.error('Error fetching latest entry', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to fetch latest entry' });
   }
 });
@@ -1114,7 +1116,7 @@ router.get('/me/free-entries-remaining', authenticate, async (req: Request, res:
     const walletAddress = req.user!.walletAddress;
 
     if (!walletAddress) {
-      return res.json({ remaining: 1, max: 1 });
+      return sendSuccess(res, { remaining: 1, max: 1 });
     }
 
     const weekStart = getWeekStart(new Date());
@@ -1126,7 +1128,7 @@ router.get('/me/free-entries-remaining', authenticate, async (req: Request, res:
     const used = limit?.entries_used || 0;
     const max = 1; // 1 free entry per week
 
-    res.json({
+    sendSuccess(res, {
       remaining: Math.max(0, max - used),
       max,
       used,
@@ -1134,7 +1136,7 @@ router.get('/me/free-entries-remaining', authenticate, async (req: Request, res:
       weekEnd: getWeekEnd(weekStart),
     });
   } catch (error: any) {
-    console.error('Error checking free entries:', error);
+    logger.error('Error checking free entries', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to check free entries' });
   }
 });
@@ -1145,7 +1147,7 @@ router.get('/me/free-entries-remaining', authenticate, async (req: Request, res:
  * POST /api/v2/contests/:id/claim-prize
  * Transfer SOL prize from treasury to winner's wallet (devnet)
  */
-router.post('/contests/:id/claim-prize', authenticate, strictLimiter, async (req: Request, res: Response) => {
+router.post('/contests/:id/claim-prize', authenticate, strictLimiter, userLimiter, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
@@ -1284,8 +1286,7 @@ router.post('/contests/:id/claim-prize', authenticate, strictLimiter, async (req
       });
     }
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: `${prizeAmount.toFixed(3)} SOL sent to your wallet`,
       txSignature,
       explorerUrl: simulated ? null : `https://explorer.solana.com/tx/${txSignature}?cluster=devnet`,
@@ -1350,9 +1351,9 @@ router.post('/admin/contests', authenticate, requireAdmin, async (req: Request, 
       updated_at: new Date(),
     }).returning('*');
 
-    res.json({ success: true, contest });
+    sendSuccess(res, { contest });
   } catch (error: any) {
-    console.error('Error creating contest:', error);
+    logger.error('Error creating contest', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ error: 'Failed to create contest' });
   }
 });
@@ -1409,7 +1410,7 @@ router.get('/me/history', authenticate, async (req: Request, res: Response) => {
     const offset = parseInt(req.query.offset as string) || 0;
 
     if (!walletAddress) {
-      return res.json({ success: true, data: { history: [], careerStats: { totalContests: 0, wins: 0, topThree: 0, avgScore: 0, bestScore: 0, bestRank: null }, total: 0 } });
+      return sendSuccess(res, { history: [], careerStats: { totalContests: 0, wins: 0, topThree: 0, avgScore: 0, bestScore: 0, bestRank: null }, total: 0 });
     }
 
     const wa = walletAddress.toLowerCase();
@@ -1530,25 +1531,22 @@ router.get('/me/history', authenticate, async (req: Request, res: Response) => {
     const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
     const bestRank = ranks.length > 0 ? Math.min(...ranks) : null;
 
-    res.json({
-      success: true,
-      data: {
-        history,
-        careerStats: {
-          totalContests: total,
-          wins,
-          topThree,
-          avgScore,
-          bestScore,
-          bestRank,
-        },
-        total,
-        limit,
-        offset,
+    sendSuccess(res, {
+      history,
+      careerStats: {
+        totalContests: total,
+        wins,
+        topThree,
+        avgScore,
+        bestScore,
+        bestRank,
       },
+      total,
+      limit,
+      offset,
     });
   } catch (error: any) {
-    console.error('[History] Error fetching career history:', error);
+    logger.error('Error fetching career history', error, { context: 'PrizedContestsV2' });
     res.status(500).json({ success: false, error: 'Failed to fetch career history' });
   }
 });

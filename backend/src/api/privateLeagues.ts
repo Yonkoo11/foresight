@@ -7,6 +7,8 @@ import express, { Request, Response } from 'express';
 import { authenticate as authenticateToken } from '../middleware/auth';
 import db from '../utils/db';
 import crypto from 'crypto';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -94,15 +96,14 @@ router.post('/create', authenticateToken, async (req: Request, res: Response) =>
       return [newLeague];
     });
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       league: {
         ...league,
         invite_url: `${process.env.FRONTEND_URL || 'http://localhost:5174'}/league/join/${code}`,
       },
     });
   } catch (error: any) {
-    console.error('Error creating league:', error);
+    logger.error('Error creating league', error, { context: 'PrivateLeagues' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -133,7 +134,7 @@ router.get('/:code', authenticateToken, async (req: Request, res: Response) => {
     const userId = (req as any).user.userId;
     const isMember = members.some((m) => m.user_id === userId);
 
-    res.json({
+    sendSuccess(res, {
       league: {
         ...league,
         members,
@@ -141,7 +142,7 @@ router.get('/:code', authenticateToken, async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Error fetching league:', error);
+    logger.error('Error fetching league', error, { context: 'PrivateLeagues' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -210,12 +211,11 @@ router.post('/join', authenticateToken, async (req: Request, res: Response) => {
         });
     });
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: 'Successfully joined league!',
     });
   } catch (error: any) {
-    console.error('Error joining league:', error);
+    logger.error('Error joining league', error, { context: 'PrivateLeagues' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -239,9 +239,9 @@ router.get('/my-leagues', authenticateToken, async (req: Request, res: Response)
       )
       .orderBy('private_leagues.created_at', 'desc');
 
-    res.json({ leagues });
+    sendSuccess(res, { leagues });
   } catch (error: any) {
-    console.error('Error fetching user leagues:', error);
+    logger.error('Error fetching user leagues', error, { context: 'PrivateLeagues' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -269,9 +269,9 @@ router.get('/:id/leaderboard', authenticateToken, async (req: Request, res: Resp
       entry.rank = index + 1;
     });
 
-    res.json({ leaderboard });
+    sendSuccess(res, { leaderboard });
   } catch (error: any) {
-    console.error('Error fetching leaderboard:', error);
+    logger.error('Error fetching leaderboard', error, { context: 'PrivateLeagues' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -385,8 +385,7 @@ router.post('/:id/distribute', authenticateToken, async (req: Request, res: Resp
         });
     });
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       distributions: prizeDistributions.map((p, idx) => ({
         rank: p.rank,
         user_id: p.user_id,
@@ -396,7 +395,7 @@ router.post('/:id/distribute', authenticateToken, async (req: Request, res: Resp
       platform_fee: (totalPrizePool * 0.15).toFixed(6),
     });
   } catch (error: any) {
-    console.error('Error distributing prizes:', error);
+    logger.error('Error distributing prizes', error, { context: 'PrivateLeagues' });
     res.status(500).json({ error: error.message });
   }
 });

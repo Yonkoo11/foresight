@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import db from '../utils/db';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { optionalAuthenticate, authenticate } from '../middleware/auth';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router: Router = Router();
 
@@ -68,19 +70,21 @@ router.post(
 
     // Log critical errors to console immediately
     if (severity === 'critical') {
-      console.error('🚨 CRITICAL ERROR:', {
-        id: errorLog.id,
-        message,
-        component,
-        user_id: userId,
+      logger.error('CRITICAL ERROR', undefined, {
+        context: 'Errors',
+        data: {
+          id: errorLog.id,
+          message,
+          component,
+          user_id: userId,
+        },
       });
     }
 
-    res.status(201).json({
-      success: true,
+    sendSuccess(res, {
       error_id: errorLog.id,
       message: 'Error logged successfully',
-    });
+    }, 201);
   })
 );
 
@@ -136,7 +140,7 @@ router.get(
     }
     const [{ count }] = await totalQuery;
 
-    res.json({
+    sendSuccess(res, {
       errors,
       total: parseInt(count as string),
       limit,
@@ -187,7 +191,7 @@ router.get(
     // Total count
     const [{ count: totalCount }] = await query.clone().count('* as count');
 
-    res.json({
+    sendSuccess(res, {
       total_errors: parseInt(totalCount as string),
       by_severity: severityCounts.reduce((acc, row) => {
         acc[row.severity] = parseInt(row.count as string);
@@ -225,10 +229,7 @@ router.patch(
       throw new AppError('Error log not found', 404);
     }
 
-    res.json({
-      success: true,
-      error,
-    });
+    sendSuccess(res, { error });
   })
 );
 

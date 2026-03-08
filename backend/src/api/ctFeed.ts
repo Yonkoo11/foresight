@@ -14,6 +14,7 @@ import * as ctFeedService from '../services/ctFeedService';
 import { authenticate, optionalAuthenticate, requireAdmin } from '../middleware/auth';
 import questService from '../services/questService';
 import logger from '../utils/logger';
+import { sendSuccess } from '../utils/response';
 
 const router = Router();
 
@@ -37,10 +38,7 @@ router.get('/', optionalAuthenticate, async (req: Request, res: Response) => {
       );
     }
 
-    res.json({
-      success: true,
-      data: result,
-    });
+    sendSuccess(res, result);
   } catch (error) {
     logger.error('Error getting feed:', error, { context: 'CT Feed API' });
     res.status(500).json({
@@ -68,10 +66,7 @@ router.get('/highlights', async (req: Request, res: Response) => {
 
     const result = await ctFeedService.getHighlights(limit, timeframe);
 
-    res.json({
-      success: true,
-      data: result,
-    });
+    sendSuccess(res, result);
   } catch (error) {
     logger.error('Error getting highlights:', error, { context: 'CT Feed API' });
     res.status(500).json({
@@ -91,10 +86,7 @@ router.get('/rising-stars', async (req: Request, res: Response) => {
 
     const result = await ctFeedService.getRisingStars(limit);
 
-    res.json({
-      success: true,
-      data: result,
-    });
+    sendSuccess(res, result);
   } catch (error) {
     logger.error('Error getting rising stars:', error, { context: 'CT Feed API' });
     res.status(500).json({
@@ -141,25 +133,19 @@ router.post('/interaction', authenticate, async (req: Request, res: Response) =>
     if (type === 'browse_time' && timeSpentSeconds >= 30) {
       const fsResult = await ctFeedService.awardBrowseTimeFS(userId, timeSpentSeconds);
 
-      return res.json({
-        success: true,
-        data: {
-          tracked: true,
-          fsAwarded: fsResult.awarded ? fsResult.fsAmount : 0,
-          message: fsResult.awarded
-            ? `Earned +${fsResult.fsAmount} FS for browsing Intel`
-            : fsResult.reason === 'already_claimed_today'
-            ? 'Already earned browse bonus today'
-            : 'Interaction tracked',
-        },
+      return sendSuccess(res, {
+        tracked: true,
+        fsAwarded: fsResult.awarded ? fsResult.fsAmount : 0,
+        message: fsResult.awarded
+          ? `Earned +${fsResult.fsAmount} FS for browsing Intel`
+          : fsResult.reason === 'already_claimed_today'
+          ? 'Already earned browse bonus today'
+          : 'Interaction tracked',
       });
     }
 
-    res.json({
-      success: true,
-      data: {
-        tracked: true,
-      },
+    sendSuccess(res, {
+      tracked: true,
     });
   } catch (error) {
     logger.error('Error tracking interaction:', error, { context: 'CT Feed API' });
@@ -182,14 +168,11 @@ router.post('/refresh', authenticate, requireAdmin, async (req: Request, res: Re
 
     const result = await ctFeedService.refreshTweets();
 
-    res.json({
-      success: result.success,
-      data: {
-        tweetsStored: result.tweetsStored,
-        influencersProcessed: result.influencersProcessed,
-        scoresUpdated: result.scoresUpdated,
-        errors: result.errors.length > 0 ? result.errors : undefined,
-      },
+    sendSuccess(res, {
+      tweetsStored: result.tweetsStored,
+      influencersProcessed: result.influencersProcessed,
+      scoresUpdated: result.scoresUpdated,
+      errors: result.errors.length > 0 ? result.errors : undefined,
     });
   } catch (error) {
     logger.error('Error refreshing feed:', error, { context: 'CT Feed API' });

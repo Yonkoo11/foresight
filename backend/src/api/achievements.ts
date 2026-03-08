@@ -9,6 +9,8 @@ import {
   getUserAchievements,
   getAllAchievementsWithStatus,
 } from '../services/achievementService';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -35,14 +37,14 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
       return acc;
     }, {});
 
-    res.json({
+    sendSuccess(res, {
       achievements,
       grouped,
       total: achievements.length,
       unlocked: achievements.filter((a: any) => a.unlocked).length,
     });
   } catch (error: any) {
-    console.error('Error fetching achievements:', error);
+    logger.error('Error fetching achievements', error, { context: 'Achievements' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -61,12 +63,12 @@ router.get('/unlocked', authenticate, async (req: Request, res: Response) => {
 
     const achievements = await getUserAchievements(userId);
 
-    res.json({
+    sendSuccess(res, {
       achievements,
       count: achievements.length,
     });
   } catch (error: any) {
-    console.error('Error fetching unlocked achievements:', error);
+    logger.error('Error fetching unlocked achievements', error, { context: 'Achievements' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -81,12 +83,12 @@ router.get('/user/:userId', async (req: Request, res: Response) => {
 
     const achievements = await getUserAchievements(userId);
 
-    res.json({
+    sendSuccess(res, {
       achievements,
       count: achievements.length,
     });
   } catch (error: any) {
-    console.error('Error fetching user achievements:', error);
+    logger.error('Error fetching user achievements', error, { context: 'Achievements' });
     res.status(500).json({ error: error.message });
   }
 });

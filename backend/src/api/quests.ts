@@ -11,6 +11,8 @@ import { Router, Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import db from '../utils/db';
 import foresightScoreService from '../services/foresightScoreService';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 interface AuthRequest extends Request {
   user?: {
@@ -135,19 +137,16 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       },
     };
 
-    return res.json({
-      success: true,
-      data: {
-        quests: grouped,
-        summary,
-        periods: {
-          daily: today,
-          weekStart: weekStartStr,
-        },
+    return sendSuccess(res, {
+      quests: grouped,
+      summary,
+      periods: {
+        daily: today,
+        weekStart: weekStartStr,
       },
     });
   } catch (error) {
-    console.error('[Quests API] Error getting quests:', error);
+    logger.error('Error getting quests', error, { context: 'Quests' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -212,30 +211,27 @@ router.get('/summary', authenticate, async (req: AuthRequest, res: Response) => 
       questCounts.map((c: any) => [c.quest_type, parseInt(c.total)])
     );
 
-    return res.json({
-      success: true,
-      data: {
-        daily: {
-          total: countMap.daily || 0,
-          completed: parseInt(String(dailyCompleted?.count || 0)),
-        },
-        weekly: {
-          total: countMap.weekly || 0,
-          completed: parseInt(String(weeklyCompleted?.count || 0)),
-        },
-        onboarding: {
-          total: countMap.onboarding || 0,
-          completed: parseInt(String(onboardingCompleted?.count || 0)),
-        },
-        unclaimed: parseInt(String(unclaimed?.count || 0)),
-        periods: {
-          daily: today,
-          weekStart: weekStartStr,
-        },
+    return sendSuccess(res, {
+      daily: {
+        total: countMap.daily || 0,
+        completed: parseInt(String(dailyCompleted?.count || 0)),
+      },
+      weekly: {
+        total: countMap.weekly || 0,
+        completed: parseInt(String(weeklyCompleted?.count || 0)),
+      },
+      onboarding: {
+        total: countMap.onboarding || 0,
+        completed: parseInt(String(onboardingCompleted?.count || 0)),
+      },
+      unclaimed: parseInt(String(unclaimed?.count || 0)),
+      periods: {
+        daily: today,
+        weekStart: weekStartStr,
       },
     });
   } catch (error) {
-    console.error('[Quests API] Error getting summary:', error);
+    logger.error('Error getting summary', error, { context: 'Quests' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -317,15 +313,12 @@ router.post('/:questId/progress', authenticate, async (req: AuthRequest, res: Re
 
     // Don't update if already completed
     if (userQuest.is_completed) {
-      return res.json({
-        success: true,
-        data: {
-          questId,
-          progress: userQuest.progress,
-          target: questDef.target,
-          isCompleted: true,
-          isClaimed: userQuest.is_claimed,
-        },
+      return sendSuccess(res, {
+        questId,
+        progress: userQuest.progress,
+        target: questDef.target,
+        isCompleted: true,
+        isClaimed: userQuest.is_claimed,
       });
     }
 
@@ -342,19 +335,16 @@ router.post('/:questId/progress', authenticate, async (req: AuthRequest, res: Re
         updated_at: db.fn.now(),
       });
 
-    return res.json({
-      success: true,
-      data: {
-        questId,
-        progress: newProgress,
-        target: questDef.target,
-        isCompleted: isNowCompleted,
-        isClaimed: false,
-        fsReward: questDef.fs_reward,
-      },
+    return sendSuccess(res, {
+      questId,
+      progress: newProgress,
+      target: questDef.target,
+      isCompleted: isNowCompleted,
+      isClaimed: false,
+      fsReward: questDef.fs_reward,
     });
   } catch (error) {
-    console.error('[Quests API] Error updating progress:', error);
+    logger.error('Error updating progress', error, { context: 'Quests' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -442,21 +432,18 @@ router.post('/:questId/claim', authenticate, async (req: AuthRequest, res: Respo
         updated_at: db.fn.now(),
       });
 
-    return res.json({
-      success: true,
-      data: {
-        questId,
-        questName: questDef.name,
-        baseReward: questDef.fs_reward,
-        multipliedReward: fsResult.multipliedAmount,
-        multiplier: fsResult.multiplier,
-        newTotal: fsResult.newTotal,
-        tierChanged: fsResult.tierChanged,
-        newTier: fsResult.newTier,
-      },
+    return sendSuccess(res, {
+      questId,
+      questName: questDef.name,
+      baseReward: questDef.fs_reward,
+      multipliedReward: fsResult.multipliedAmount,
+      multiplier: fsResult.multiplier,
+      newTotal: fsResult.newTotal,
+      tierChanged: fsResult.tierChanged,
+      newTier: fsResult.newTier,
     });
   } catch (error) {
-    console.error('[Quests API] Error claiming reward:', error);
+    logger.error('Error claiming reward', error, { context: 'Quests' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -504,12 +491,9 @@ router.post('/check-and-complete', authenticate, async (req: AuthRequest, res: R
       }
     }
 
-    return res.json({
-      success: true,
-      data: { results },
-    });
+    return sendSuccess(res, { results });
   } catch (error) {
-    console.error('[Quests API] Error checking quests:', error);
+    logger.error('Error checking quests', error, { context: 'Quests' });
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
@@ -596,7 +580,7 @@ async function updateQuestProgress(userId: string, questId: string, increment: n
       fsReward: questDef.fs_reward,
     };
   } catch (error) {
-    console.error(`Error updating quest ${questId}:`, error);
+    logger.error(`Error updating quest ${questId}`, error, { context: 'Quests' });
     return null;
   }
 }

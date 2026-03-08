@@ -14,6 +14,8 @@ import activityFeedService from '../services/activityFeedService';
 import questService from '../services/questService';
 import tapestryService from '../services/tapestryService';
 import leagueService from '../services/leagueService';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router = express.Router();
 
@@ -32,9 +34,9 @@ router.get('/contests/active', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'No active contests found' });
     }
 
-    res.json({ contests });
+    sendSuccess(res, { contests });
   } catch (error: any) {
-    console.error('Error fetching active contests:', error);
+    logger.error('Error fetching active contests', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -54,9 +56,9 @@ router.get('/contest/current', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'No active contest found' });
     }
 
-    res.json({ contest });
+    sendSuccess(res, { contest });
   } catch (error: any) {
-    console.error('Error fetching current contest:', error);
+    logger.error('Error fetching current contest', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -75,7 +77,7 @@ router.get('/my-active-entry', authenticateToken, async (req: Request, res: Resp
       .first();
 
     if (!contest) {
-      return res.json({ success: true, data: { entry: null, contest: null } });
+      return sendSuccess(res, { entry: null, contest: null });
     }
 
     // Get user's team for this contest
@@ -84,7 +86,7 @@ router.get('/my-active-entry', authenticateToken, async (req: Request, res: Resp
       .first();
 
     if (!team) {
-      return res.json({ success: true, data: { entry: null, contest } });
+      return sendSuccess(res, { entry: null, contest });
     }
 
     // Get team picks count
@@ -93,29 +95,26 @@ router.get('/my-active-entry', authenticateToken, async (req: Request, res: Resp
       .count('* as count')
       .first();
 
-    return res.json({
-      success: true,
-      data: {
-        entry: {
-          id: team.id,
-          teamName: team.name || team.team_name,
-          isLocked: team.is_locked || false,
-          totalPoints: parseFloat(team.total_points || '0'),
-          rank: team.rank || null,
-          picksCount: parseInt(String(picksCount?.count || 0)),
-          createdAt: team.created_at,
-        },
-        contest: {
-          id: contest.id,
-          name: contest.name,
-          startDate: contest.start_date,
-          endDate: contest.end_date,
-          status: contest.status,
-        },
+    return sendSuccess(res, {
+      entry: {
+        id: team.id,
+        teamName: team.name || team.team_name,
+        isLocked: team.is_locked || false,
+        totalPoints: parseFloat(team.total_points || '0'),
+        rank: team.rank || null,
+        picksCount: parseInt(String(picksCount?.count || 0)),
+        createdAt: team.created_at,
+      },
+      contest: {
+        id: contest.id,
+        name: contest.name,
+        startDate: contest.start_date,
+        endDate: contest.end_date,
+        status: contest.status,
       },
     });
   } catch (error: any) {
-    console.error('Error fetching active entry:', error);
+    logger.error('Error fetching active entry', error, { context: 'League' });
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -141,7 +140,7 @@ router.get('/team/me', authenticateToken, async (req: Request, res: Response) =>
     const team = await leagueService.getUserTeam(userId, contest.id);
 
     if (!team) {
-      return res.json({ team: null, contest });
+      return sendSuccess(res, { team: null, contest });
     }
 
     // Get team picks with influencer details using service
@@ -149,7 +148,7 @@ router.get('/team/me', authenticateToken, async (req: Request, res: Response) =>
 
     const totalBudget = picks.reduce((sum: number, pick: any) => sum + parseFloat(pick.price || 0), 0);
 
-    res.json({
+    sendSuccess(res, {
       team: {
         ...team,
         picks,
@@ -159,7 +158,7 @@ router.get('/team/me', authenticateToken, async (req: Request, res: Response) =>
       contest,
     });
   } catch (error: any) {
-    console.error('Error fetching user team:', error);
+    logger.error('Error fetching user team', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -290,7 +289,7 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
     const totalBudget = picks.reduce((sum, pick) => sum + parseFloat(pick.price || 0), 0);
 
     // Check for draft achievements (async, don't block response)
-    checkDraftAchievements(userId, team.id).catch(console.error);
+    checkDraftAchievements(userId, team.id).catch(err => logger.error('Error checking draft achievements', err, { context: 'League' }));
 
     // Check if this is user's first team ever and award FS
     const teamCount = await db('user_teams')
@@ -307,7 +306,7 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
         sourceType: 'team',
         sourceId: team.id.toString(),
         metadata: { teamName: team_name, contestId: contest.id }
-      }).catch(err => console.error('[FS] Error awarding first team FS:', err));
+      }).catch(err => logger.error('Error awarding first team FS', err, { context: 'League' }));
     }
 
     // Record activity (async, don't block response)
@@ -316,13 +315,13 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
       'draft_team',
       `drafted their team "${team_name}"`,
       { teamName: team_name, contestId: contest.id }
-    ).catch(console.error);
+    ).catch(err => logger.error('Error recording draft activity', err, { context: 'League' }));
 
     // Trigger quest progress (async, don't block response)
     questService.triggerAction(userId, 'team_created', { teamName: team_name, contestId: contest.id })
-      .catch(console.error);
+      .catch(err => logger.error('Error triggering team_created quest', err, { context: 'League' }));
     questService.triggerAction(userId, 'contest_entered', { contestId: contest.id })
-      .catch(console.error);
+      .catch(err => logger.error('Error triggering contest_entered quest', err, { context: 'League' }));
 
     // Publish team to Tapestry (async, non-blocking)
     const userRecord = await db('users').where({ id: userId }).first();
@@ -337,11 +336,10 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
         })),
         totalBudgetUsed: totalBudget,
         captainId: String(captain_id),
-      }).catch((err) => console.error('[Tapestry] Error publishing team:', err));
+      }).catch((err) => logger.error('Error publishing team to Tapestry', err, { context: 'League' }));
     }
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       team: {
         ...team,
         picks,
@@ -353,7 +351,7 @@ router.post('/team/create', authenticateToken, async (req: Request, res: Respons
       },
     });
   } catch (error: any) {
-    console.error('Error creating team:', error);
+    logger.error('Error creating team', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -469,8 +467,7 @@ router.put('/team/update', authenticateToken, async (req: Request, res: Response
 
     const totalBudget = picks.reduce((sum, pick) => sum + parseFloat(pick.price || 0), 0);
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       team: {
         ...team,
         picks,
@@ -479,7 +476,7 @@ router.put('/team/update', authenticateToken, async (req: Request, res: Response
       },
     });
   } catch (error: any) {
-    console.error('Error updating team:', error);
+    logger.error('Error updating team', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -561,8 +558,7 @@ router.patch('/team/name', authenticateToken, async (req: Request, res: Response
 
     const totalBudget = picks.reduce((sum, pick) => sum + parseFloat(pick.price || 0), 0);
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: 'Team name updated successfully',
       team: {
         ...updatedTeam,
@@ -572,7 +568,7 @@ router.patch('/team/name', authenticateToken, async (req: Request, res: Response
       },
     });
   } catch (error: any) {
-    console.error('Error updating team name:', error);
+    logger.error('Error updating team name', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -616,12 +612,11 @@ router.post('/team/lock', authenticateToken, async (req: Request, res: Response)
         updated_at: db.fn.now(),
       });
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: 'Team locked successfully',
     });
   } catch (error: any) {
-    console.error('Error locking team:', error);
+    logger.error('Error locking team', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -712,7 +707,7 @@ router.get('/influencers', async (req: Request, res: Response) => {
       return { ...inf, archetype };
     });
 
-    res.json({
+    sendSuccess(res, {
       influencers: withArchetypes,
       budget_info: {
         max_budget: 150,
@@ -721,7 +716,7 @@ router.get('/influencers', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Error fetching influencers:', error);
+    logger.error('Error fetching influencers', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -762,9 +757,9 @@ router.get('/leaderboard/:contest_id?', async (req: Request, res: Response) => {
       team.rank = index + 1;
     });
 
-    res.json({ leaderboard });
+    sendSuccess(res, { leaderboard });
   } catch (error: any) {
-    console.error('Error fetching leaderboard:', error);
+    logger.error('Error fetching leaderboard', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -855,8 +850,7 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
 
       // Don't allow voting for the same influencer
       if (previousInfluencerId === influencer_id) {
-        return res.json({
-          success: true,
+        return sendSuccess(res, {
           message: 'You already voted for this influencer',
           vote_weight: voteWeight,
           is_update: false,
@@ -956,13 +950,13 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
       const totalVotes = parseInt(voteCount?.count as string) || 0;
 
       // Check voting achievements
-      checkVotingAchievements(userId, totalVotes, currentStreak).catch(console.error);
+      checkVotingAchievements(userId, totalVotes, currentStreak).catch(err => logger.error('Error checking voting achievements', err, { context: 'League' }));
 
       // Check milestone achievements
-      checkMilestoneAchievements(userId).catch(console.error);
+      checkMilestoneAchievements(userId).catch(err => logger.error('Error checking milestone achievements', err, { context: 'League' }));
 
       // Check streak quest achievements (7-day, 30-day)
-      questService.checkLoginStreak(userId, currentStreak).catch(console.error);
+      questService.checkLoginStreak(userId, currentStreak).catch(err => logger.error('Error checking login streak', err, { context: 'League' }));
 
       // Award Foresight Score for daily engagement (voting counts as daily activity)
       foresightScoreService.earnFs({
@@ -972,7 +966,7 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
         sourceType: 'vote',
         sourceId: influencer_id.toString(),
         metadata: { streak: currentStreak, voteWeight }
-      }).catch(err => console.error('[FS] Error awarding daily login FS:', err));
+      }).catch(err => logger.error('Error awarding daily login FS', err, { context: 'League' }));
 
       // Award streak bonus if applicable
       if (currentStreak >= 7) {
@@ -983,12 +977,11 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
           baseAmount: Math.min(50, currentStreak * 5), // 5 FS per day, max 50
           sourceType: 'streak',
           metadata: { streak: currentStreak }
-        }).catch(err => console.error('[FS] Error awarding streak bonus FS:', err));
+        }).catch(err => logger.error('Error awarding streak bonus FS', err, { context: 'League' }));
       }
     }
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       message: isUpdate ? 'Vote updated successfully' : 'Vote submitted successfully',
       vote_weight: voteWeight,
       is_update: isUpdate,
@@ -998,7 +991,7 @@ router.post('/vote', authenticateToken, async (req: Request, res: Response) => {
       bonus_xp: totalBonusXP,
     });
   } catch (error: any) {
-    console.error('Error submitting vote:', error);
+    logger.error('Error submitting vote', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -1017,7 +1010,7 @@ router.get('/vote/status', authenticateToken, async (req: Request, res: Response
       .first();
 
     if (!activeContest) {
-      return res.json({
+      return sendSuccess(res, {
         has_voted: false,
         vote: null,
         contest: null,
@@ -1040,7 +1033,7 @@ router.get('/vote/status', authenticateToken, async (req: Request, res: Response
       )
       .first();
 
-    res.json({
+    sendSuccess(res, {
       has_voted: !!vote,
       vote: vote || null,
       contest: {
@@ -1051,7 +1044,7 @@ router.get('/vote/status', authenticateToken, async (req: Request, res: Response
       },
     });
   } catch (error: any) {
-    console.error('Error fetching vote status:', error);
+    logger.error('Error fetching vote status', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -1068,7 +1061,7 @@ router.get('/vote/leaderboard', async (req: Request, res: Response) => {
       .first();
 
     if (!activeContest) {
-      return res.json({
+      return sendSuccess(res, {
         leaderboard: [],
         contest: null,
         message: 'No active contest',
@@ -1093,7 +1086,7 @@ router.get('/vote/leaderboard', async (req: Request, res: Response) => {
         'influencer_weekly_votes.weighted_score'
       );
 
-    res.json({
+    sendSuccess(res, {
       leaderboard,
       contest: {
         id: activeContest.id,
@@ -1103,7 +1096,7 @@ router.get('/vote/leaderboard', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Error fetching vote leaderboard:', error);
+    logger.error('Error fetching vote leaderboard', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -1161,8 +1154,7 @@ router.get('/team/:teamId/breakdown', async (req: Request, res: Response) => {
       spotlightBonus: picks.reduce((sum, p) => sum + parseFloat(p.spotlight_bonus || 0), 0),
     };
 
-    res.json({
-      success: true,
+    sendSuccess(res, {
       team: {
         id: team.id,
         name: team.team_name,
@@ -1184,7 +1176,7 @@ router.get('/team/:teamId/breakdown', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Error fetching team breakdown:', error);
+    logger.error('Error fetching team breakdown', error, { context: 'League' });
     res.status(500).json({ error: error.message });
   }
 });
@@ -1231,20 +1223,17 @@ router.get('/transfer/status', authenticateToken, async (req: Request, res: Resp
       .first();
     const freeTransfersUsed = parseInt(freeUsed?.count as string) || 0;
 
-    res.json({
-      success: true,
-      data: {
-        tier: userTier,
-        freeTransfersAllowed,
-        freeTransfersRemaining: Math.max(0, freeTransfersAllowed - freeTransfersUsed),
-        usedTransfersThisWeek: usedTransfers,
-        nextTransferCost: freeTransfersUsed < freeTransfersAllowed ? 0 : extraCost,
-        userFsBalance: fsData?.total_score || 0,
-        weekNumber,
-      },
+    sendSuccess(res, {
+      tier: userTier,
+      freeTransfersAllowed,
+      freeTransfersRemaining: Math.max(0, freeTransfersAllowed - freeTransfersUsed),
+      usedTransfersThisWeek: usedTransfers,
+      nextTransferCost: freeTransfersUsed < freeTransfersAllowed ? 0 : extraCost,
+      userFsBalance: fsData?.total_score || 0,
+      weekNumber,
     });
   } catch (error: any) {
-    console.error('Error getting transfer status:', error);
+    logger.error('Error getting transfer status', error, { context: 'League' });
     res.status(500).json({ success: false, error: 'Failed to get transfer status' });
   }
 });
@@ -1411,32 +1400,29 @@ router.post('/transfer', authenticateToken, async (req: Request, res: Response) 
         isFree,
         fsCost,
       }
-    ).catch(console.error);
+    ).catch(err => logger.error('Error recording transfer activity', err, { context: 'League' }));
 
     // Trigger quest progress (async, don't block response)
     questService.triggerAction(userId, 'transfer_made', {
       influencerOut: outInfluencer.handle,
       influencerIn: inInfluencer.handle,
-    }).catch(console.error);
+    }).catch(err => logger.error('Error triggering transfer_made quest', err, { context: 'League' }));
 
-    res.json({
-      success: true,
-      data: {
-        message: isFree ? 'Free transfer successful!' : `Transfer complete. ${fsCost} FS deducted.`,
-        transfer: {
-          out: { id: outInfluencer.id, name: outInfluencer.name, handle: outInfluencer.handle },
-          in: { id: inInfluencer.id, name: inInfluencer.name, handle: inInfluencer.handle },
-        },
-        wasFree: isFree,
-        fsCost,
-        newBudget: newBudget.toFixed(2),
-        freeTransfersRemaining: isFree
-          ? freeTransfersAllowed - freeTransfersUsed - 1
-          : freeTransfersAllowed - freeTransfersUsed,
+    sendSuccess(res, {
+      message: isFree ? 'Free transfer successful!' : `Transfer complete. ${fsCost} FS deducted.`,
+      transfer: {
+        out: { id: outInfluencer.id, name: outInfluencer.name, handle: outInfluencer.handle },
+        in: { id: inInfluencer.id, name: inInfluencer.name, handle: inInfluencer.handle },
       },
+      wasFree: isFree,
+      fsCost,
+      newBudget: newBudget.toFixed(2),
+      freeTransfersRemaining: isFree
+        ? freeTransfersAllowed - freeTransfersUsed - 1
+        : freeTransfersAllowed - freeTransfersUsed,
     });
   } catch (error: any) {
-    console.error('Error executing transfer:', error);
+    logger.error('Error executing transfer', error, { context: 'League' });
     res.status(500).json({ success: false, error: 'Failed to execute transfer' });
   }
 });
@@ -1463,19 +1449,16 @@ router.get('/transfer/history', authenticateToken, async (req: Request, res: Res
       .orderBy('team_transfers.created_at', 'desc')
       .limit(20);
 
-    res.json({
-      success: true,
-      data: transfers.map((t) => ({
-        id: t.id,
-        out: { name: t.out_name, handle: t.out_handle },
-        in: { name: t.in_name, handle: t.in_handle },
-        isFree: t.is_free,
-        fsCost: t.fs_cost,
-        createdAt: t.created_at,
-      })),
-    });
+    sendSuccess(res, transfers.map((t) => ({
+      id: t.id,
+      out: { name: t.out_name, handle: t.out_handle },
+      in: { name: t.in_name, handle: t.in_handle },
+      isFree: t.is_free,
+      fsCost: t.fs_cost,
+      createdAt: t.created_at,
+    })));
   } catch (error: any) {
-    console.error('Error fetching transfer history:', error);
+    logger.error('Error fetching transfer history', error, { context: 'League' });
     res.status(500).json({ success: false, error: 'Failed to fetch transfer history' });
   }
 });
@@ -1496,12 +1479,9 @@ router.get('/live-scoring', authenticateToken, async (req: Request, res: Respons
       .first();
 
     if (!team) {
-      return res.json({
-        success: true,
-        data: {
-          hasTeam: false,
-          message: 'No active team. Draft your team to see live scoring.',
-        },
+      return sendSuccess(res, {
+        hasTeam: false,
+        message: 'No active team. Draft your team to see live scoring.',
       });
     }
 
@@ -1615,35 +1595,32 @@ router.get('/live-scoring', authenticateToken, async (req: Request, res: Respons
       }
     }
 
-    res.json({
-      success: true,
-      data: {
-        hasTeam: true,
-        team: {
-          id: team.id,
-          name: team.team_name,
-          createdAt: team.created_at,
-        },
-        contest: currentContest ? {
-          id: currentContest.id,
-          name: currentContest.name,
-          status: currentContest.status,
-          endsAt: currentContest.end_date,
-        } : null,
-        summary: {
-          estimatedScore: teamTotal,
-          rank: teamRank,
-          followerDelta: totalFollowerDelta,
-          topPerformer: influencerPerformance.reduce((top, p) =>
-            p.estimatedScore > (top?.estimatedScore || 0) ? p : top,
-            influencerPerformance[0]
-          ),
-        },
-        influencers: influencerPerformance,
+    sendSuccess(res, {
+      hasTeam: true,
+      team: {
+        id: team.id,
+        name: team.team_name,
+        createdAt: team.created_at,
       },
+      contest: currentContest ? {
+        id: currentContest.id,
+        name: currentContest.name,
+        status: currentContest.status,
+        endsAt: currentContest.end_date,
+      } : null,
+      summary: {
+        estimatedScore: teamTotal,
+        rank: teamRank,
+        followerDelta: totalFollowerDelta,
+        topPerformer: influencerPerformance.reduce((top, p) =>
+          p.estimatedScore > (top?.estimatedScore || 0) ? p : top,
+          influencerPerformance[0]
+        ),
+      },
+      influencers: influencerPerformance,
     });
   } catch (error: any) {
-    console.error('Error fetching live scoring:', error);
+    logger.error('Error fetching live scoring', error, { context: 'League' });
     res.status(500).json({
       success: false,
       error: 'Failed to fetch live scoring data',
@@ -1652,7 +1629,7 @@ router.get('/live-scoring', authenticateToken, async (req: Request, res: Respons
 });
 
 router.get('/scoring-formula', async (_req: Request, res: Response) => {
-  res.json({
+  sendSuccess(res, {
     version: 'v2',
     name: 'Performance-Based Scoring',
     description: 'All points earned through actual performance - no free points from tier',

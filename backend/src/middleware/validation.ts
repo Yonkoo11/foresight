@@ -38,8 +38,14 @@ export const validators = {
   walletAddress: () =>
     body('walletAddress')
       .trim()
-      .matches(/^0x[a-fA-F0-9]{40}$/)
-      .withMessage('Invalid Ethereum address format'),
+      .custom((value: string) => {
+        const isEthereum = /^0x[a-fA-F0-9]{40}$/.test(value);
+        const isSolana = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
+        if (!isEthereum && !isSolana) {
+          throw new Error('Invalid wallet address format (must be Ethereum or Solana)');
+        }
+        return true;
+      }),
 
   /**
    * Username validation

@@ -6,6 +6,8 @@
 import { Router, Request, Response } from 'express';
 import db from '../utils/db';
 import { authenticate } from '../middleware/auth';
+import { sendSuccess } from '../utils/response';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -56,15 +58,12 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
       },
     }));
 
-    res.json({
-      success: true,
-      data: {
-        watchlist: formatted,
-        count: formatted.length,
-      },
+    sendSuccess(res, {
+      watchlist: formatted,
+      count: formatted.length,
     });
   } catch (error) {
-    console.error('[Watchlist API] Error getting watchlist:', error);
+    logger.error('Error getting watchlist', error, { context: 'Watchlist' });
     res.status(500).json({ success: false, error: 'Failed to get watchlist' });
   }
 });
@@ -86,12 +85,9 @@ router.get('/ids', authenticate, async (req: Request, res: Response) => {
 
     const ids = watchlist.map((w) => w.influencer_id);
 
-    res.json({
-      success: true,
-      data: { influencerIds: ids },
-    });
+    sendSuccess(res, { influencerIds: ids });
   } catch (error) {
-    console.error('[Watchlist API] Error getting watchlist IDs:', error);
+    logger.error('Error getting watchlist IDs', error, { context: 'Watchlist' });
     res.status(500).json({ success: false, error: 'Failed to get watchlist' });
   }
 });
@@ -124,10 +120,7 @@ router.post('/:influencerId', authenticate, async (req: Request, res: Response) 
       .first();
 
     if (existing) {
-      return res.json({
-        success: true,
-        data: { action: 'already_scouted', influencerId },
-      });
+      return sendSuccess(res, { action: 'already_scouted', influencerId });
     }
 
     // Add to watchlist
@@ -137,22 +130,19 @@ router.post('/:influencerId', authenticate, async (req: Request, res: Response) 
       notes: req.body.notes || null,
     });
 
-    res.json({
-      success: true,
-      data: {
-        action: 'scouted',
-        influencerId,
-        influencer: {
-          id: influencer.id,
-          handle: influencer.twitter_handle,
-          name: influencer.display_name,
-          tier: influencer.tier,
-          price: parseFloat(influencer.price) || 10,
-        },
+    sendSuccess(res, {
+      action: 'scouted',
+      influencerId,
+      influencer: {
+        id: influencer.id,
+        handle: influencer.twitter_handle,
+        name: influencer.display_name,
+        tier: influencer.tier,
+        price: parseFloat(influencer.price) || 10,
       },
     });
   } catch (error) {
-    console.error('[Watchlist API] Error adding to watchlist:', error);
+    logger.error('Error adding to watchlist', error, { context: 'Watchlist' });
     res.status(500).json({ success: false, error: 'Failed to add to watchlist' });
   }
 });
@@ -177,15 +167,12 @@ router.delete('/:influencerId', authenticate, async (req: Request, res: Response
       .where({ user_id: userId, influencer_id: influencerId })
       .delete();
 
-    res.json({
-      success: true,
-      data: {
-        action: deleted > 0 ? 'removed' : 'not_found',
-        influencerId,
-      },
+    sendSuccess(res, {
+      action: deleted > 0 ? 'removed' : 'not_found',
+      influencerId,
     });
   } catch (error) {
-    console.error('[Watchlist API] Error removing from watchlist:', error);
+    logger.error('Error removing from watchlist', error, { context: 'Watchlist' });
     res.status(500).json({ success: false, error: 'Failed to remove from watchlist' });
   }
 });

@@ -18,6 +18,7 @@ import {
 import twitterApiService from '../services/twitterApiService';
 import twitterApiIoService from '../services/twitterApiIoService';
 import weeklySnapshotService from '../services/weeklySnapshotService';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -227,14 +228,8 @@ router.post('/trigger-end-snapshot', authenticate, requireAdmin, async (req: Req
  *       Runs async — returns immediately, snapshot runs in background.
  *       No auth required so it can be triggered from scripts.
  */
-router.post('/trigger-prized-snapshot', async (req: Request, res: Response) => {
+router.post('/trigger-prized-snapshot', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const adminKey = process.env.ADMIN_KEY;
-    const providedKey = req.query.key as string | undefined;
-    if (adminKey && providedKey !== adminKey) {
-      return sendError(res, 'Unauthorized', 401);
-    }
-
     const { type, contestId } = req.body || {};
     if (type !== 'start' && type !== 'end') {
       return sendError(res, 'Body must include type: "start" or "end"', 400);
@@ -244,10 +239,10 @@ router.post('/trigger-prized-snapshot', async (req: Request, res: Response) => {
     // Return immediately so the request doesn't timeout at the proxy layer
     triggerPrizedContestSnapshot(type, contestId)
       .then(result => {
-        console.log(`[SNAPSHOT] ${type.toUpperCase()} snapshot complete for contest ${result.contestId}: ${result.success} success, ${result.failed} failed`);
+        logger.info(`${type.toUpperCase()} snapshot complete for contest ${result.contestId}: ${result.success} success, ${result.failed} failed`, { context: 'Admin' });
       })
       .catch(err => {
-        console.error(`[SNAPSHOT] ${type.toUpperCase()} snapshot failed:`, err.message);
+        logger.error(`${type.toUpperCase()} snapshot failed`, err, { context: 'Admin' });
       });
 
     sendSuccess(res, {
@@ -519,7 +514,7 @@ export async function ensureDemoContest(): Promise<{ created: boolean; contest: 
  * @route GET /api/admin/ensure-contest
  * @desc During launch week, redirects to seedLaunchContest instead of old demo.
  */
-router.get('/ensure-contest', async (_req: Request, res: Response) => {
+router.get('/ensure-contest', authenticate, requireAdmin, async (_req: Request, res: Response) => {
   try {
     const result = await seedLaunchContest();
     sendSuccess(res, {
@@ -535,7 +530,7 @@ router.get('/ensure-contest', async (_req: Request, res: Response) => {
  * @route POST /api/admin/seed-demo-contest
  * @desc During launch week, creates "Season 0" instead of the old demo contest.
  */
-router.post('/seed-demo-contest', async (req: Request, res: Response) => {
+router.post('/seed-demo-contest', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
     const result = await seedLaunchContest();
     sendSuccess(res, {
@@ -626,13 +621,8 @@ async function seedLaunchContest(): Promise<{ created: boolean; contest: Record<
  * @desc Create the hero launch contest. Idempotent — skips if already active.
  *       Optionally protected by ADMIN_KEY env var (?key= query param).
  */
-router.post('/seed-launch-contest', async (req: Request, res: Response) => {
+router.post('/seed-launch-contest', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const adminKey = process.env.ADMIN_KEY;
-    const providedKey = req.query.key as string | undefined;
-    if (adminKey && providedKey !== adminKey) {
-      return sendError(res, 'Unauthorized', 401);
-    }
     const result = await seedLaunchContest();
     sendSuccess(res, {
       message: result.created ? 'Launch contest "Season 0" created' : 'Launch contest already active',
@@ -648,14 +638,8 @@ router.post('/seed-launch-contest', async (req: Request, res: Response) => {
  * @desc Fetch latest Twitter data for all active influencers.
  *       Protected by ADMIN_KEY. Long-running — responds immediately, runs in background.
  */
-router.post('/refresh-influencers', async (req: Request, res: Response) => {
+router.post('/refresh-influencers', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const adminKey = process.env.ADMIN_KEY;
-    const providedKey = req.query.key as string | undefined;
-    if (adminKey && providedKey !== adminKey) {
-      return sendError(res, 'Unauthorized', 401);
-    }
-
     if (!twitterApiIoService.isConfigured()) {
       return sendError(res, 'TwitterAPI.io not configured', 400);
     }
@@ -680,7 +664,7 @@ router.post('/refresh-influencers', async (req: Request, res: Response) => {
         });
 
         if (!profile.success || !profile.data) {
-          console.log(`[refresh] ❌ @${inf.twitter_handle}: ${profile.error}`);
+          logger.warn(`Refresh failed for @${inf.twitter_handle}: ${profile.error}`, { context: 'Admin' });
           failed++;
           continue;
         }
@@ -722,14 +706,14 @@ router.post('/refresh-influencers', async (req: Request, res: Response) => {
           updated_at: new Date(),
         });
 
-        console.log(`[refresh] ✅ @${inf.twitter_handle}: ${profile.data.followers.toLocaleString()} followers | FS Rating: ${fsRating}`);
+        logger.info(`Refreshed @${inf.twitter_handle}: ${profile.data.followers.toLocaleString()} followers | FS Rating: ${fsRating}`, { context: 'Admin' });
         success++;
       } catch (err) {
-        console.log(`[refresh] ❌ @${inf.twitter_handle}: ${(err as Error).message}`);
+        logger.warn(`Refresh failed for @${inf.twitter_handle}: ${(err as Error).message}`, { context: 'Admin' });
         failed++;
       }
     }
-    console.log(`[refresh] Complete: ${success} success, ${failed} failed`);
+    logger.info(`Refresh complete: ${success} success, ${failed} failed`, { context: 'Admin' });
   } catch (error: any) {
     sendError(res, 'Failed to start influencer refresh', 500, error.message);
   }
@@ -740,14 +724,8 @@ router.post('/refresh-influencers', async (req: Request, res: Response) => {
  * @desc Cancel all active contests EXCEPT "Season 0".
  *       For launch week — only the hero contest should be visible.
  */
-router.post('/cleanup-contests', async (req: Request, res: Response) => {
+router.post('/cleanup-contests', authenticate, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const adminKey = process.env.ADMIN_KEY;
-    const providedKey = req.query.key as string | undefined;
-    if (adminKey && providedKey !== adminKey) {
-      return sendError(res, 'Unauthorized', 401);
-    }
-
     const keepName = 'Season 0';
 
     // Find all active contests that aren't "Season 0"
