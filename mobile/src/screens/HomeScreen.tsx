@@ -261,8 +261,14 @@ function ContestHeroCard({
         navigation.navigate('ContestDetail', { contestId: contest.id });
       }}
     >
-      {/* Accent edge */}
+      {/* Accent glow */}
       <View style={styles.heroAccent} />
+
+      {/* Featured badge */}
+      <View style={styles.featuredBadge}>
+        <MaterialCommunityIcons name="fire" size={12} color={colors.brand} />
+        <Text style={styles.featuredText}>FEATURED</Text>
+      </View>
 
       {/* Top row: status + entry type */}
       <View style={styles.heroTopRow}>
@@ -511,23 +517,45 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     backgroundColor: colors.card,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderWidth: 1.5,
+    borderColor: colors.brand,
     padding: 24,
     overflow: 'hidden',
     alignItems: 'center',
     minHeight: 100,
     justifyContent: 'center',
+    shadowColor: colors.brand,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   heroAccent: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 3,
-    backgroundColor: colors.brand,
+    height: 80,
+    backgroundColor: 'rgba(245, 158, 11, 0.06)',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+  },
+  featuredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  featuredText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.brand,
+    letterSpacing: 1,
   },
   heroTopRow: {
     flexDirection: 'row',

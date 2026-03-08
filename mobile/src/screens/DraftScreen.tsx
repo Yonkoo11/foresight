@@ -186,6 +186,7 @@ export default function DraftScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [tierFilter, setTierFilter] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teamName, setTeamName] = useState('');
   const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
   const [sheetInfluencer, setSheetInfluencer] = useState<Influencer | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -270,6 +271,29 @@ export default function DraftScreen() {
     haptics.impact(); setCaptainIndex(idx);
   }, [picks]);
 
+  const doSubmit = useCallback(async (name: string) => {
+    const filled = picks.filter(Boolean) as Influencer[];
+    const captain = picks[captainIndex] ?? filled[0];
+    setIsSubmitting(true);
+    try {
+      await api.post(`/api/v2/contests/${contestId}/team`, {
+        teamName: name,
+        influencerIds: filled.map((i) => i.id),
+        captainId: captain.id,
+      });
+      haptics.success();
+      setShowConfetti(true);
+      setPicks(Array(TEAM).fill(null));
+      setTimeout(() => {
+        (navigation as any).navigate('ContestDetail', { contestId, justEntered: true });
+      }, 1800);
+    } catch (err: any) {
+      haptics.error();
+      const msg = err?.response?.data?.error ?? (err?.message?.includes('Network') ? 'Network error. Check your connection.' : 'Failed to submit team');
+      Alert.alert('Error', msg);
+    } finally { setIsSubmitting(false); }
+  }, [picks, captainIndex, contestId, navigation]);
+
   const handleSubmit = useCallback(async () => {
     if (!isAuthenticated) {
       haptics.impact();
@@ -279,34 +303,28 @@ export default function DraftScreen() {
     const filled = picks.filter(Boolean) as Influencer[];
     if (filled.length < TEAM) { haptics.error(); return; }
     const captain = picks[captainIndex] ?? filled[0];
-    Alert.alert('Submit Team',
-      `Submit with captain @${captain.handle}?`,
-      [{ text: 'Cancel', style: 'cancel' }, { text: 'Submit', onPress: async () => {
-        setIsSubmitting(true);
-        try {
-          const adjectives = ['Alpha', 'Sigma', 'Based', 'Degen', 'Diamond', 'Moon', 'Turbo', 'Mega', 'Ultra', 'Chad'];
-          const nouns = ['Snipers', 'Whales', 'Bulls', 'Kings', 'Scouts', 'Hunters', 'Legends', 'Squad', 'Crew', 'Pack'];
-          const randomName = `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
-          await api.post(`/api/v2/contests/${contestId}/team`, {
-            teamName: randomName,
-            influencerIds: filled.map((i) => i.id),
-            captainId: captain.id,
-          });
-          haptics.success();
-          setShowConfetti(true);
-          // Clear beforeRemove guard, then navigate back to contest detail
-          setPicks(Array(TEAM).fill(null));
-          setTimeout(() => {
-            (navigation as any).navigate('ContestDetail', { contestId, justEntered: true });
-          }, 1800);
-        } catch (err: any) {
-          haptics.error();
-          const msg = err?.response?.data?.error ?? (err?.message?.includes('Network') ? 'Network error. Check your connection.' : 'Failed to submit team');
-          Alert.alert('Error', msg);
-        } finally { setIsSubmitting(false); }
-      }}],
-    );
-  }, [picks, captainIndex, contestId, navigation, isAuthenticated]);
+
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Name Your Team',
+        `Captain: @${captain.handle} (2x points)`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Submit', onPress: (name) => doSubmit(name?.trim() || 'My Team') },
+        ],
+        'plain-text',
+        teamName || '',
+        'default',
+      );
+    } else {
+      // Android: use Alert with pre-set name (no prompt support)
+      const name = teamName.trim() || 'My Team';
+      Alert.alert('Submit Team',
+        `"${name}" with captain @${captain.handle} (2x points)`,
+        [{ text: 'Cancel', style: 'cancel' }, { text: 'Submit', onPress: () => doSubmit(name) }],
+      );
+    }
+  }, [picks, captainIndex, contestId, navigation, isAuthenticated, teamName, doSubmit]);
 
   const canSubmit = pickCount === TEAM && !isSubmitting;
   const rows = [[0], [1, 2], [3, 4]];
@@ -350,6 +368,9 @@ export default function DraftScreen() {
       <View style={s.formation}>
         {pickCount === 0 && (
           <Text style={s.formationHint}>Build your dream team</Text>
+        )}
+        {pickCount > 0 && pickCount < TEAM && (
+          <Text style={s.captainHint}>Tap a player to make them captain (2x points)</Text>
         )}
         {rows.map((row, ri) => (
           <View key={ri} style={s.formationRow}>
@@ -412,13 +433,28 @@ export default function DraftScreen() {
 
       {/* Bottom Bar */}
       <View style={s.bottom}>
-        <View style={{ gap: 6 }}>
-          <Text style={s.pickCount}>{pickCount}/{TEAM} Picks</Text>
-          <View style={s.dots}>
-            {Array.from({ length: TEAM }).map((_, i) => (
-              <View key={i} style={[s.dot, { backgroundColor: picks[i] ? colors.brand : colors.surface }]} />
-            ))}
-          </View>
+        <View style={{ flex: 1, gap: 4 }}>
+          {canSubmit && (
+            <TextInput
+              style={s.teamNameInput}
+              placeholder="Team name..."
+              placeholderTextColor={colors.textMuted}
+              value={teamName}
+              onChangeText={setTeamName}
+              maxLength={30}
+              autoCapitalize="words"
+            />
+          )}
+          {!canSubmit && (
+            <View style={{ gap: 4 }}>
+              <Text style={s.pickCount}>{pickCount}/{TEAM} Picks</Text>
+              <View style={s.dots}>
+                {Array.from({ length: TEAM }).map((_, i) => (
+                  <View key={i} style={[s.dot, { backgroundColor: picks[i] ? colors.brand : colors.surface }]} />
+                ))}
+              </View>
+            </View>
+          )}
         </View>
         <TouchableOpacity
           style={[s.submitBtn, !canSubmit && { backgroundColor: colors.surface }]}
@@ -476,6 +512,7 @@ const s = StyleSheet.create({
   // Formation
   formation: { paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', gap: 8 },
   formationHint: { color: colors.textSecondary, fontSize: 14, fontWeight: '600', marginBottom: 4, letterSpacing: 0.3 },
+  captainHint: { color: colors.textMuted, fontSize: 11, fontWeight: '500', marginBottom: 2, textAlign: 'center' },
   formationRow: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
   slotWrap: { alignItems: 'center', gap: 4 },
   emptySlot: {
@@ -543,6 +580,11 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1,
     borderTopColor: colors.cardBorder, backgroundColor: colors.card,
+  },
+  teamNameInput: {
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cardBorder,
+    borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: colors.text,
+    fontSize: 14, fontWeight: '600',
   },
   pickCount: { color: colors.textSecondary, fontSize: 13, fontWeight: '600' },
   dots: { flexDirection: 'row', gap: 4 },

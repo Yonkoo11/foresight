@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ActivityIndicator, ScrollView,
-  TextInput, KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
@@ -12,7 +12,7 @@ import api from '../services/api';
 import { colors } from '../constants/colors';
 import { haptics } from '../utils/haptics';
 
-type LoginMethod = 'idle' | 'wallet' | 'twitter' | 'email';
+type LoginMethod = 'idle' | 'wallet';
 
 export default function AuthScreen() {
   const { signIn } = useMobileWallet();
@@ -20,9 +20,6 @@ export default function AuthScreen() {
   const navigation = useNavigation();
   const [activeMethod, setActiveMethod] = useState<LoginMethod>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
-  const [showEmailInput, setShowEmailInput] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   const isLoading = activeMethod !== 'idle';
 
@@ -66,70 +63,6 @@ export default function AuthScreen() {
       setActiveMethod('idle');
     }
   }, [signIn, login, navigation]);
-
-  // ── Twitter OAuth ─────────────────────────────────────────────
-  const handleTwitterLogin = useCallback(async () => {
-    try {
-      setActiveMethod('twitter');
-      setError(null);
-      haptics.impact();
-
-      const response = await api.post('/api/auth/twitter-mobile');
-
-      if (response.data.success) {
-        haptics.success();
-        await login(
-          response.data.data.accessToken,
-          response.data.data.refreshToken,
-          response.data.data.user,
-        );
-        navigation.goBack();
-      }
-    } catch (err: any) {
-      haptics.error();
-      const msg = err?.response?.data?.error
-        ?? (err?.message?.includes('Network') ? 'Network error. Check your connection.' : 'Twitter login is not available yet.');
-      setError(msg);
-    } finally {
-      setActiveMethod('idle');
-    }
-  }, [login, navigation]);
-
-  // ── Email Login ───────────────────────────────────────────────
-  const handleEmailSubmit = useCallback(async () => {
-    if (!email.trim() || !email.includes('@')) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    try {
-      setActiveMethod('email');
-      setError(null);
-      haptics.impact();
-
-      const response = await api.post('/api/auth/email-mobile', { email: email.trim() });
-
-      if (response.data.success && response.data.data?.accessToken) {
-        haptics.success();
-        await login(
-          response.data.data.accessToken,
-          response.data.data.refreshToken,
-          response.data.data.user,
-        );
-        navigation.goBack();
-      } else {
-        // Magic link sent
-        setEmailSent(true);
-        haptics.success();
-      }
-    } catch (err: any) {
-      haptics.error();
-      const msg = err?.response?.data?.error
-        ?? (err?.message?.includes('Network') ? 'Network error. Check your connection.' : 'Email login is not available yet.');
-      setError(msg);
-    } finally {
-      setActiveMethod('idle');
-    }
-  }, [email, login, navigation]);
 
   // ── Skip / Browse as Guest ────────────────────────────────────
   const handleSkip = useCallback(() => {
@@ -177,43 +110,11 @@ export default function AuthScreen() {
             )}
           </TouchableOpacity>
 
-          {/* More sign-in options note */}
-          <Text style={styles.comingSoonNote}>
-            More sign-in methods coming soon
-          </Text>
-
-          {emailSent ? (
-            <View style={styles.emailSentCard}>
-              <MaterialCommunityIcons name="email-check-outline" size={24} color={colors.success} />
-              <Text style={styles.emailSentText}>Check your email for a login link.</Text>
-            </View>
-          ) : (
-            <View style={styles.emailInputRow}>
-              <TextInput
-                style={styles.emailInput}
-                placeholder="you@example.com"
-                placeholderTextColor={colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                autoFocus={false}
-              />
-              <TouchableOpacity
-                style={[styles.emailSubmitBtn, (!email.includes('@') || isLoading) && { opacity: 0.5 }]}
-                onPress={handleEmailSubmit}
-                disabled={!email.includes('@') || isLoading}
-                activeOpacity={0.7}
-              >
-                {activeMethod === 'email' ? (
-                  <ActivityIndicator color={colors.background} size="small" />
-                ) : (
-                  <MaterialCommunityIcons name="arrow-right" size={20} color={colors.background} />
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* Powered-by badge */}
+          <View style={styles.mwaBadge}>
+            <MaterialCommunityIcons name="shield-check" size={14} color={colors.textMuted} />
+            <Text style={styles.mwaBadgeText}>Powered by Mobile Wallet Adapter</Text>
+          </View>
         </View>
 
         {/* Error message */}
@@ -305,54 +206,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.3,
   },
-  comingSoonNote: {
-    textAlign: 'center',
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-
-  // Email
-  emailInputRow: {
+  mwaBadge: {
     flexDirection: 'row',
-    gap: 8,
-    width: '100%',
-  },
-  emailInput: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: colors.text,
-    fontSize: 15,
-  },
-  emailSubmitBtn: {
-    backgroundColor: colors.brand,
-    width: 48,
-    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
   },
-  emailSentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
-    borderRadius: 12,
-    padding: 16,
-    width: '100%',
-  },
-  emailSentText: {
-    color: colors.success,
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
+  mwaBadgeText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '500',
   },
 
   // Error
