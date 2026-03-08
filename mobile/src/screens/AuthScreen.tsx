@@ -224,20 +224,18 @@ export default function AuthScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Demo Login — for emulator testing and demo video */}
-        {__DEV__ && (
-          <Animated.View entering={FadeInDown.delay(550).duration(400)}>
-            <TouchableOpacity
-              style={styles.demoButton}
-              onPress={handleDemoLogin}
-              disabled={isLoading}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons name="test-tube" size={14} color={colors.cyan} />
-              <Text style={styles.demoText}>Demo Login</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+        {/* Try Demo — always available for judges / users without wallet */}
+        <Animated.View entering={FadeInDown.delay(550).duration(400)}>
+          <TouchableOpacity
+            style={styles.demoButton}
+            onPress={handleDemoLogin}
+            disabled={isLoading}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="play-circle-outline" size={16} color={colors.cyan} />
+            <Text style={styles.demoText}>Try Demo</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)} style={styles.footer}>
           <View style={styles.solBadge}>
