@@ -103,6 +103,32 @@ export default function AuthScreen() {
     }
   }, [signIn, login, handlePostAuth]);
 
+  // ── Demo Login (emulator / demo video) ───────────────────
+  const handleDemoLogin = useCallback(async () => {
+    try {
+      setActiveMethod('wallet');
+      setError(null);
+      haptics.impact();
+
+      const response = await api.post('/api/auth/demo-login');
+
+      if (response.data.success) {
+        haptics.success();
+        await login(
+          response.data.data.accessToken,
+          response.data.data.refreshToken,
+          response.data.data.user,
+        );
+        handlePostAuth();
+      }
+    } catch (err: any) {
+      haptics.error();
+      setError(err.response?.data?.error || err.message || 'Demo login failed');
+    } finally {
+      setActiveMethod('idle');
+    }
+  }, [login, handlePostAuth]);
+
   // ── Skip / Browse as Guest ────────────────────────────────
   const handleSkip = useCallback(() => {
     haptics.selection();
@@ -197,6 +223,21 @@ export default function AuthScreen() {
             <Text style={styles.skipText}>Browse as guest</Text>
           </TouchableOpacity>
         </Animated.View>
+
+        {/* Demo Login — for emulator testing and demo video */}
+        {__DEV__ && (
+          <Animated.View entering={FadeInDown.delay(550).duration(400)}>
+            <TouchableOpacity
+              style={styles.demoButton}
+              onPress={handleDemoLogin}
+              disabled={isLoading}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="test-tube" size={14} color={colors.cyan} />
+              <Text style={styles.demoText}>Demo Login</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)} style={styles.footer}>
           <View style={styles.solBadge}>
@@ -364,6 +405,27 @@ const styles = StyleSheet.create({
     ...typography.bodySm,
     color: textLevels.muted,
     fontSize: 15,
+  },
+
+  // Demo login
+  demoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    minHeight: TOUCH_MIN,
+    borderWidth: 1,
+    borderColor: borders.subtle,
+    borderRadius: 8,
+    backgroundColor: elevation.surface,
+  },
+  demoText: {
+    ...typography.caption,
+    color: colors.cyan,
+    fontWeight: '600',
   },
 
   // Footer

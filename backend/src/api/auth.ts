@@ -436,6 +436,88 @@ router.post(
 );
 
 /**
+ * POST /api/auth/demo-login
+ * Demo auth for hackathon: creates/finds a demo user, returns tokens.
+ * No wallet signing needed. For emulator testing and demo videos.
+ */
+router.post(
+  '/demo-login',
+  authLimiter,
+  asyncHandler(async (req: Request, res: Response) => {
+    const DEMO_WALLET = 'DemoUser1111111111111111111111111111111111111';
+    const demoPrivyDid = `wallet:${DEMO_WALLET}`;
+
+    // Find or create demo user
+    const { user, isNewUser } = await findOrCreateUser(
+      demoPrivyDid,
+      {
+        privyDid: demoPrivyDid,
+        wallet: { address: DEMO_WALLET, chainType: 'solana' },
+      } as PrivyUserInfo,
+      { authProvider: 'demo' }
+    );
+
+    // If new, give them a recognizable username
+    if (isNewUser) {
+      await db('users').where({ id: user.id }).update({ username: 'DemoTrader' });
+      user.username = 'DemoTrader';
+    }
+
+    // Create JWT tokens
+    const accessToken = createAccessToken({
+      userId: user.id,
+      walletAddress: user.wallet_address || DEMO_WALLET,
+      privyDid: demoPrivyDid,
+      role: user.role,
+    });
+
+    const refreshToken = createRefreshToken({
+      userId: user.id,
+      walletAddress: user.wallet_address || DEMO_WALLET,
+      privyDid: demoPrivyDid,
+      role: user.role,
+    });
+
+    // Store session
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await db('sessions').insert({
+      id: uuidv4(),
+      user_id: user.id,
+      access_token: accessToken,
+      refresh_token: hashToken(refreshToken),
+      expires_at: expiresAt,
+      ip_address: req.ip,
+      user_agent: req.get('user-agent'),
+      created_at: db.fn.now(),
+    });
+
+    logger.info(`Demo login successful`, {
+      context: 'Auth API',
+      data: { userId: user.id, isNewUser, authProvider: 'demo' },
+    });
+
+    sendSuccess(res, {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        walletAddress: user.wallet_address || DEMO_WALLET,
+        username: user.username,
+        avatarUrl: user.avatar_url,
+        ctMasteryScore: user.ct_mastery_score,
+        ctMasteryLevel: user.ct_mastery_level,
+        referralCode: user.referral_code,
+        isFoundingMember: user.is_founding_member,
+        foundingMemberNumber: user.founding_member_number,
+      },
+      isNewUser,
+    });
+  })
+);
+
+/**
  * POST /api/auth/wallet-verify
  * Mobile auth: verify a Sign In With Solana (SIWS) signature from MWA.
  * Returns tokens in response body (NOT cookies) for mobile clients.
