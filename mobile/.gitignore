@@ -43,4 +43,5 @@ app-example
 
 # Build artifacts
 build-*.apk
+ct-foresight-*.apk
 android/

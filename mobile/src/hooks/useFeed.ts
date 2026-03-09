@@ -7,7 +7,7 @@ export function useCTFeed(filter: 'all' | 'highlights' | 'rising' = 'all') {
     queryKey: ['ct-feed', filter],
     queryFn: async (): Promise<{ tweets: Tweet[]; highlights: Tweet[] }> => {
       const { data } = await api.get('/api/ct-feed', { params: { filter, limit: 30 } });
-      return data.data;
+      return data.data ?? { tweets: [], highlights: [] };
     },
   });
 }

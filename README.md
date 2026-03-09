@@ -81,6 +81,6 @@ Backend runs on :3001, frontend on :5173.
 
 ## Built for
 
-Solana Graveyard Hackathon 2026, Tapestry Track.
+Monolith Solana Mobile Hackathon 2026, Tapestry Track.
 
 The thesis is simple: SocialFi died because every attempt was either pay-to-win NFT trading or bot-manipulated engagement farming. Foresight fixes both problems. Budget drafting means everyone starts equal. Multi-factor scoring means you can't game it with a bot army. And Tapestry gives us a real social layer without building it from scratch.

@@ -147,8 +147,8 @@ export default function InfluencerListScreen() {
         }
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
-            <View style={[styles.sectionDot, { backgroundColor: TIER_CONFIG[section.tier as TierKey].color }]} />
-            <Text style={[styles.sectionTitle, { color: TIER_CONFIG[section.tier as TierKey].color }]}>
+            <View style={[styles.sectionDot, { backgroundColor: TIER_CONFIG[section.tier as TierKey]?.color ?? textLevels.muted }]} />
+            <Text style={[styles.sectionTitle, { color: TIER_CONFIG[section.tier as TierKey]?.color ?? textLevels.muted }]}>
               {section.title}
             </Text>
             <Text style={styles.sectionCount}>{section.data.length}</Text>
@@ -174,10 +174,14 @@ export default function InfluencerListScreen() {
 
 // ─── Influencer Row Card ─────────────────────────────────────────────
 function InfluencerRow({ influencer }: { influencer: Influencer }) {
-  const tc = TIER_CONFIG[influencer.tier];
+  const tc = TIER_CONFIG[influencer.tier] ?? TIER_CONFIG.C;
 
   return (
-    <View style={styles.rowCard}>
+    <TouchableOpacity
+      style={styles.rowCard}
+      activeOpacity={0.7}
+      onPress={() => haptics.selection()}
+    >
       <Avatar
         uri={influencer.avatar}
         name={influencer.handle}
@@ -210,7 +214,7 @@ function InfluencerRow({ influencer }: { influencer: Influencer }) {
           </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

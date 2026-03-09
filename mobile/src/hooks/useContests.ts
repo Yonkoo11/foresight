@@ -51,7 +51,7 @@ export function useContestDetail(contestId: string) {
       const entriesRes = await api.get(`/api/v2/contests/${contestId}/entries`);
       const entries = entriesRes.data?.data?.entries ?? [];
       return {
-        ...contest,
+        ...(contest ?? {}),
         entries,
         prizePool: contest?.prizePool ?? 0,
         prizePoolFormatted: contest?.prizePoolFormatted,
@@ -59,6 +59,8 @@ export function useContestDetail(contestId: string) {
         status: contest?.status ?? 'open',
         endDate: contest?.endTime ?? contest?.endDate ?? new Date().toISOString(),
         lockTime: contest?.lockTime,
+        name: contest?.name ?? 'Contest',
+        id: contest?.id ?? contestId,
       };
     },
     enabled: !!contestId,

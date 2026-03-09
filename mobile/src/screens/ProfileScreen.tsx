@@ -44,7 +44,27 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
 
-  // Guest mode — show login prompt
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([refreshUser(), refetchFS()]);
+    setRefreshing(false);
+  }, [refreshUser, refetchFS]);
+
+  const copyAddress = useCallback(async () => {
+    if (!user?.walletAddress) return;
+    await Clipboard.setStringAsync(user.walletAddress);
+    haptics.success();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [user?.walletAddress]);
+
+  const copyReferral = useCallback(async () => {
+    if (!user?.referralCode) return;
+    await Clipboard.setStringAsync(user.referralCode);
+    haptics.success();
+  }, [user?.referralCode]);
+
+  // Guest mode — show login prompt (hooks must be above this)
   if (!isAuthenticated) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -65,26 +85,6 @@ export default function ProfileScreen() {
       </SafeAreaView>
     );
   }
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.all([refreshUser(), refetchFS()]);
-    setRefreshing(false);
-  }, [refreshUser, refetchFS]);
-
-  const copyAddress = useCallback(async () => {
-    if (!user?.walletAddress) return;
-    await Clipboard.setStringAsync(user.walletAddress);
-    haptics.success();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }, [user?.walletAddress]);
-
-  const copyReferral = useCallback(async () => {
-    if (!user?.referralCode) return;
-    await Clipboard.setStringAsync(user.referralCode);
-    haptics.success();
-  }, [user?.referralCode]);
 
   const shareScore = async () => {
     haptics.light();

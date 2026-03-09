@@ -384,7 +384,7 @@ function ContestHeroCard({
                   {
                     marginLeft: i > 0 ? -10 : 0,
                     zIndex: influencers.length - i,
-                    borderColor: TIER_CONFIG[inf.tier].color,
+                    borderColor: TIER_CONFIG[inf.tier]?.color ?? textLevels.muted,
                   },
                 ]}
               >
@@ -392,7 +392,7 @@ function ContestHeroCard({
                   uri={inf.avatar}
                   name={inf.handle}
                   size={28}
-                  borderColor={TIER_CONFIG[inf.tier].color}
+                  borderColor={TIER_CONFIG[inf.tier]?.color ?? textLevels.muted}
                 />
               </View>
             ))}
@@ -428,7 +428,7 @@ function ContestHeroCard({
 
 // ─── Influencer Chip (Horizontal Scroll) ──────────────────────────────
 function InfluencerChip({ influencer, navigation }: { influencer: Influencer; navigation: Nav }) {
-  const tc = TIER_CONFIG[influencer.tier];
+  const tc = TIER_CONFIG[influencer.tier] ?? TIER_CONFIG.C;
   return (
     <TouchableOpacity
       style={styles.infChip}

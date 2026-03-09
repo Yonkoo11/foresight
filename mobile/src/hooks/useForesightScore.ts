@@ -29,7 +29,7 @@ export function useFSLeaderboard(type: 'all_time' | 'season' | 'weekly' = 'seaso
     queryKey: ['fs-leaderboard', type],
     queryFn: async (): Promise<{ entries: LeaderboardEntry[]; total: number }> => {
       const { data } = await api.get('/api/v2/fs/leaderboard', { params: { type, limit } });
-      const raw = data.data;
+      const raw = data.data ?? { entries: [], total: 0 };
       // API returns `score` and `rank: null` — normalize to LeaderboardEntry shape
       const entries: LeaderboardEntry[] = (raw.entries ?? []).map((e: any, i: number) => ({
         rank: e.rank ?? i + 1,

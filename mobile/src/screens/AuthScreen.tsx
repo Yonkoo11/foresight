@@ -84,7 +84,7 @@ export default function AuthScreen() {
     const returnParams = route.params?.returnParams;
     if (returnTo && returnTo !== 'Auth') {
       navigation.replace(returnTo as any, returnParams);
-    } else {
+    } else if (navigation.canGoBack()) {
       navigation.goBack();
     }
   }, [navigation, route.params]);
@@ -103,8 +103,15 @@ export default function AuthScreen() {
       });
 
       const signInResult = account.signInResult;
-      if (!signInResult) {
-        throw new Error('Wallet did not return sign-in proof. Please try again.');
+      if (
+        !signInResult ||
+        !signInResult.signed_message ||
+        !signInResult.signature ||
+        !(signInResult.signed_message instanceof Uint8Array) ||
+        !(signInResult.signature instanceof Uint8Array) ||
+        signInResult.signature.length === 0
+      ) {
+        throw new Error('Wallet returned invalid sign-in data. Please try again.');
       }
 
       const response = await api.post('/api/auth/wallet-verify', {
@@ -159,7 +166,7 @@ export default function AuthScreen() {
   // ── Skip / Browse as Guest ────────────────────────────────
   const handleSkip = useCallback(() => {
     haptics.selection();
-    navigation.goBack();
+    if (navigation.canGoBack()) navigation.goBack();
   }, [navigation]);
 
   return (
@@ -211,10 +218,10 @@ export default function AuthScreen() {
 
         {/* ── Login Options ─────────────────────── */}
         <FadeInView delay={400} duration={400} style={styles.options}>
-          {/* Wallet Connect */}
+          {/* Try Demo — primary CTA for judges without wallets */}
           <AnimatedTouchable
             style={[styles.optionButton, buttonAnimStyle]}
-            onPress={handleWalletConnect}
+            onPress={handleDemoLogin}
             onPressIn={onPressIn}
             onPressOut={onPressOut}
             disabled={isLoading}
@@ -224,11 +231,22 @@ export default function AuthScreen() {
               <ActivityIndicator color={colors.background} size="small" />
             ) : (
               <>
-                <MaterialCommunityIcons name="wallet" size={20} color={colors.background} />
-                <Text style={styles.optionButtonText}>Connect Wallet</Text>
+                <MaterialCommunityIcons name="play-circle-outline" size={20} color={colors.background} />
+                <Text style={styles.optionButtonText}>Try Demo</Text>
               </>
             )}
           </AnimatedTouchable>
+
+          {/* Wallet Connect — secondary for users with MWA wallets */}
+          <TouchableOpacity
+            style={styles.walletButton}
+            onPress={handleWalletConnect}
+            disabled={isLoading}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="wallet" size={18} color={textLevels.primary} />
+            <Text style={styles.walletButtonText}>Connect Wallet</Text>
+          </TouchableOpacity>
 
           {/* Powered-by badge */}
           <View style={styles.mwaBadge}>
@@ -248,19 +266,6 @@ export default function AuthScreen() {
             activeOpacity={0.7}
           >
             <Text style={styles.skipText}>Browse as guest</Text>
-          </TouchableOpacity>
-        </FadeInView>
-
-        {/* Try Demo — always available for judges / users without wallet */}
-        <FadeInView delay={550} duration={400}>
-          <TouchableOpacity
-            style={styles.demoButton}
-            onPress={handleDemoLogin}
-            disabled={isLoading}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons name="play-circle-outline" size={16} color={colors.cyan} />
-            <Text style={styles.demoText}>Try Demo</Text>
           </TouchableOpacity>
         </FadeInView>
 
@@ -397,6 +402,26 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  walletButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.lg,
+    borderRadius: 14,
+    width: '100%',
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: borders.default,
+    backgroundColor: elevation.surface,
+  },
+  walletButtonText: {
+    ...typography.body,
+    color: textLevels.primary,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   mwaBadge: {
     flexDirection: 'row',

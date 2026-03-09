@@ -13,24 +13,42 @@ export function useMobileWallet() {
     useAuthorization();
 
   const connect = useCallback(async (): Promise<Account> => {
-    return await transact(async (wallet) => {
-      return await authorizeSession(wallet);
-    });
+    try {
+      return await transact(async (wallet) => {
+        return await authorizeSession(wallet);
+      });
+    } catch (err: any) {
+      if (err?.message?.includes('cancel')) {
+        throw new Error('Wallet connection cancelled');
+      }
+      throw new Error(err?.message || 'Failed to connect wallet. Is a Solana wallet app installed?');
+    }
   }, [authorizeSession]);
 
   const signIn = useCallback(
     async (signInPayload: SignInPayload): Promise<Account> => {
-      return await transact(async (wallet) => {
-        return await authorizeSessionWithSignIn(wallet, signInPayload);
-      });
+      try {
+        return await transact(async (wallet) => {
+          return await authorizeSessionWithSignIn(wallet, signInPayload);
+        });
+      } catch (err: any) {
+        if (err?.message?.includes('cancel')) {
+          throw new Error('Sign-in cancelled');
+        }
+        throw new Error(err?.message || 'Failed to sign in. Is a Solana wallet app installed?');
+      }
     },
     [authorizeSessionWithSignIn]
   );
 
   const disconnect = useCallback(async (): Promise<void> => {
-    await transact(async (wallet) => {
-      await deauthorizeSession(wallet);
-    });
+    try {
+      await transact(async (wallet) => {
+        await deauthorizeSession(wallet);
+      });
+    } catch {
+      // Disconnect errors are non-critical - clear local state regardless
+    }
   }, [deauthorizeSession]);
 
   const signAndSendTransaction = useCallback(

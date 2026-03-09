@@ -54,7 +54,7 @@ function FormationSlot({ influencer: inf, isCaptain, onTap, onRemove, onEmptyTap
   onTap: () => void; onRemove: () => void; onEmptyTap?: () => void;
 }) {
   const sz = isCaptain ? 72 : 64;
-  const tierColor = inf ? TIER_CONFIG[inf.tier].color : borders.default;
+  const tierColor = inf ? (TIER_CONFIG[inf.tier]?.color ?? borders.default) : borders.default;
 
   // Captain border pulse
   const pulseProgress = useSharedValue(0);
@@ -141,7 +141,7 @@ function FormationSlot({ influencer: inf, isCaptain, onTap, onRemove, onEmptyTap
 function PickerCard({ influencer: inf, isPicked, isDisabled, onAdd, onLongPress }: {
   influencer: Influencer; isPicked: boolean; isDisabled: boolean; onAdd: () => void; onLongPress: () => void;
 }) {
-  const tc = TIER_CONFIG[inf.tier];
+  const tc = TIER_CONFIG[inf.tier] ?? TIER_CONFIG.C;
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -202,7 +202,7 @@ function PickerCard({ influencer: inf, isPicked, isDisabled, onAdd, onLongPress 
 // --- Influencer Detail Sheet Content ---
 
 function InfluencerSheetContent({ influencer }: { influencer: Influencer }) {
-  const tc = TIER_CONFIG[influencer.tier];
+  const tc = TIER_CONFIG[influencer.tier] ?? TIER_CONFIG.C;
   return (
     <View style={s.sheetContent}>
       {/* Header */}
@@ -237,7 +237,7 @@ function InfluencerSheetContent({ influencer }: { influencer: Influencer }) {
         />
         <StatCard
           label="Engagement"
-          value={`${influencer.engagementRate.toFixed(1)}%`}
+          value={`${(influencer.engagementRate ?? 0).toFixed(1)}%`}
           icon="lightning-bolt"
         />
       </View>
@@ -576,7 +576,7 @@ export default function DraftScreen() {
         <View style={s.tierTabs}>
           {TIERS.map((tier, i) => {
             const active = tierFilter === tier;
-            const tc = tier ? TIER_CONFIG[tier as keyof typeof TIER_CONFIG].color : colors.brand;
+            const tc = tier ? (TIER_CONFIG[tier as keyof typeof TIER_CONFIG]?.color ?? colors.brand) : colors.brand;
             return (
               <TouchableOpacity key={tier || 'all'} activeOpacity={0.7}
                 style={[s.tierTab, active && { backgroundColor: tc + '22', borderColor: tc }]}
