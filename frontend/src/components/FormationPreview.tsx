@@ -89,9 +89,10 @@ export default function FormationPreview({
     const fetchTopInfluencers = async () => {
       try {
         const res = await axios.get(`${API_URL}/api/league/influencers`);
-        if (res.data.influencers && res.data.influencers.length >= 5) {
+        const fetched = (res.data.data ?? res.data).influencers || [];
+        if (fetched.length >= 5) {
           // Get a mix of tiers for the preview
-          const all = res.data.influencers;
+          const all = fetched;
           const sTier = all.filter((i: Influencer) => i.tier === 'S')[0];
           const aTier = all.filter((i: Influencer) => i.tier === 'A').slice(0, 2);
           const bTier = all.filter((i: Influencer) => i.tier === 'B')[0];

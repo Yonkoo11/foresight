@@ -212,7 +212,7 @@ export default function Compete() {
     } else if (mainTab === 'players') {
       if (!playersLoaded) {
         apiClient.get('/api/league/influencers').then(res => {
-          const data = res.data.influencers.map((i: any) => ({
+          const data = ((res.data.data ?? res.data).influencers || []).map((i: any) => ({
             id: i.id,
             name: i.name || i.display_name || '',
             handle: i.handle || i.twitter_handle || '',

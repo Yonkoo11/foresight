@@ -267,10 +267,12 @@ export default function ContestDetail() {
         console.error('Failed to load contest:', contestResult.reason);
       }
       if (entriesResult.status === 'fulfilled') {
-        setEntries(entriesResult.value.data.entries || []);
+        const d = entriesResult.value.data;
+        setEntries((d.data ?? d).entries || []);
       }
       if (influencersResult.status === 'fulfilled') {
-        setInfluencers(influencersResult.value.data.influencers || []);
+        const d = influencersResult.value.data;
+        setInfluencers((d.data ?? d).influencers || []);
       }
 
       // Fetch user's own entry if they have a session (wallet optional)

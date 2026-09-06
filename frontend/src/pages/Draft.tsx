@@ -197,7 +197,7 @@ export default function Draft() {
     try {
       const res = await apiClient.get('/api/league/influencers');
       // Transform data
-      const data = res.data.influencers.map((i: InfluencerApiResponse): Influencer => ({
+      const data = ((res.data.data ?? res.data).influencers || []).map((i: InfluencerApiResponse): Influencer => ({
         id: i.id,
         name: i.name || i.display_name || '',
         handle: i.handle || i.twitter_handle || '',
