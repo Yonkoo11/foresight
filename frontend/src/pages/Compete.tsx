@@ -334,10 +334,11 @@ export default function Compete() {
           ? apiClient.get('/api/v2/me/entries').catch(() => ({ data: { entries: [] } }))
           : Promise.resolve({ data: { entries: [] } }),
       ]);
-      setContests(contestsRes.data.contests || []);
+      const unwrap = (r: any) => r.data?.data ?? r.data ?? {};
+      setContests(unwrap(contestsRes).contests || []);
       // Most recent finalized first (already ordered by created_at desc from backend)
-      setArchivedContests((archivedRes.data.contests || []).slice(0, 10));
-      setMyEntries(entriesRes.data.entries || []);
+      setArchivedContests((unwrap(archivedRes).contests || []).slice(0, 10));
+      setMyEntries(unwrap(entriesRes).entries || []);
     } catch (error) {
       console.error('Error fetching contests:', error);
     } finally {

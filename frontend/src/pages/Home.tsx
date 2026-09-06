@@ -428,7 +428,8 @@ export default function Home() {
   useEffect(() => {
     apiClient.get('/api/v2/contests?status=open&limit=1')
       .then(r => {
-        const contests = r.data?.contests || r.data?.data || [];
+        const payload = r.data?.data ?? r.data ?? {};
+        const contests = payload.contests || (Array.isArray(payload) ? payload : []);
         const free = contests.find((c: any) => c.isFree || c.is_free) || contests[0];
         if (free?.id) setContestId(free.id);
         const count = free?.playerCount ?? free?.player_count;
