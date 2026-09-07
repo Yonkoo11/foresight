@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom';
 import {
-  DiscordLogo,
   XLogo,
   GithubLogo,
-  Book,
-  Globe,
 } from '@phosphor-icons/react';
 
 const Footer = () => {
@@ -26,25 +23,16 @@ const Footer = () => {
             {/* Social Links */}
             <div className="flex items-center gap-3">
               <a
-                href="https://discord.gg/foresight"
+                href="https://x.com/soligxbt"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg hover:shadow-gold-500/20"
-                aria-label="Join our Discord"
-              >
-                <DiscordLogo size={20} weight="fill" className="text-gray-300" />
-              </a>
-              <a
-                href="https://x.com/ForesightCT"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg hover:shadow-gold-500/20"
-                aria-label="Follow us on X"
+                aria-label="Follow @soligxbt on X"
               >
                 <XLogo size={20} weight="fill" className="text-gray-300" />
               </a>
               <a
-                href="https://github.com/foresight-ct"
+                href="https://github.com/Yonkoo11/foresight"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg hover:shadow-gold-500/20"
@@ -52,25 +40,15 @@ const Footer = () => {
               >
                 <GithubLogo size={20} weight="fill" className="text-gray-300" />
               </a>
-              <a
-                href="https://docs.foresight.ct"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg hover:shadow-gold-500/20"
-                aria-label="Read documentation"
-              >
-                <Book size={20} weight="fill" className="text-gray-300" />
-              </a>
-              <a
-                href="https://foresight.ct"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg hover:shadow-gold-500/20"
-                aria-label="Visit website"
-              >
-                <Globe size={20} weight="fill" className="text-gray-300" />
-              </a>
             </div>
+            <a
+              href="https://x.com/soligxbt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-sm text-gray-400 hover:text-gold-400 transition-colors"
+            >
+              @soligxbt
+            </a>
           </div>
 
           {/* Product Links */}
@@ -101,17 +79,7 @@ const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li>
                 <a
-                  href="https://docs.foresight.ct"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-gold-400 transition-colors"
-                >
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/foresight-ct"
+                  href="https://github.com/Yonkoo11/foresight"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-gold-400 transition-colors"
@@ -121,12 +89,12 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://discord.gg/foresight"
+                  href="https://x.com/soligxbt"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-gold-400 transition-colors"
                 >
-                  Community
+                  @soligxbt on X
                 </a>
               </li>
             </ul>

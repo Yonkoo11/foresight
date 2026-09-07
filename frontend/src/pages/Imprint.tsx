@@ -110,20 +110,9 @@ const Imprint = () => {
           <h2 className="text-2xl font-semibold text-white mb-3">Contact Information</h2>
           <div className="space-y-2">
             <p>
-              <strong className="text-white">Discord:</strong>{' '}
-              <a
-                href="https://discord.gg/foresight"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                Join our community
-              </a>
-            </p>
-            <p>
               <strong className="text-white">GitHub:</strong>{' '}
               <a
-                href="https://github.com/foresight-ct"
+                href="https://github.com/Yonkoo11/foresight"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-400 hover:text-cyan-300 transition-colors"
@@ -134,12 +123,12 @@ const Imprint = () => {
             <p>
               <strong className="text-white">X:</strong>{' '}
               <a
-                href="https://x.com/ForesightCT"
+                href="https://x.com/soligxbt"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-400 hover:text-cyan-300 transition-colors"
               >
-                @ForesightCT
+                @soligxbt
               </a>
             </p>
           </div>
