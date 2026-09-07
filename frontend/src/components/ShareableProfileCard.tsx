@@ -362,7 +362,7 @@ export default function ShareableProfileCard({ onClose, showModal = true }: Prop
   const buildTweetText = () => {
     if (!data) return '';
     const rankLabel = TIER_RANK_LABEL[data.tier] || data.tier.toUpperCase();
-    let t = `${rankLabel} on @soligxbt\n\n`;
+    let t = `${rankLabel} on @CTForesight\n\n`;
     t += `${data.totalScore.toLocaleString()} FS`;
     if (data.seasonRank) t += ` · Season #${data.seasonRank}`;
     if (data.effectiveMultiplier > 1) t += `\n${data.effectiveMultiplier.toFixed(2)}× multiplier`;

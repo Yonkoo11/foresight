@@ -123,6 +123,17 @@ const Imprint = () => {
             <p>
               <strong className="text-white">X:</strong>{' '}
               <a
+                href="https://x.com/CTForesight"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                @CTForesight
+              </a>
+            </p>
+            <p>
+              <strong className="text-white">Founder:</strong>{' '}
+              <a
                 href="https://x.com/soligxbt"
                 target="_blank"
                 rel="noopener noreferrer"

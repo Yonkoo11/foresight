@@ -23,11 +23,11 @@ const Footer = () => {
             {/* Social Links */}
             <div className="flex items-center gap-3">
               <a
-                href="https://x.com/soligxbt"
+                href="https://x.com/CTForesight"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg hover:shadow-gold-500/20"
-                aria-label="Follow @soligxbt on X"
+                aria-label="Follow @CTForesight on X"
               >
                 <XLogo size={20} weight="fill" className="text-gray-300" />
               </a>
@@ -42,13 +42,24 @@ const Footer = () => {
               </a>
             </div>
             <a
-              href="https://x.com/soligxbt"
+              href="https://x.com/CTForesight"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-3 text-sm text-gray-400 hover:text-gold-400 transition-colors"
             >
-              @soligxbt
+              @CTForesight
             </a>
+            <p className="mt-2 text-sm text-gray-500">
+              Built by{' '}
+              <a
+                href="https://x.com/soligxbt"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-gold-400 transition-colors"
+              >
+                @soligxbt
+              </a>
+            </p>
           </div>
 
           {/* Product Links */}
@@ -89,12 +100,12 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://x.com/soligxbt"
+                  href="https://x.com/CTForesight"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-gold-400 transition-colors"
                 >
-                  @soligxbt on X
+                  @CTForesight on X
                 </a>
               </li>
             </ul>
